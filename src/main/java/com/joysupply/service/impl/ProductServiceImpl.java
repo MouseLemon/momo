@@ -501,6 +501,7 @@ public class ProductServiceImpl extends BaseService implements ProductService {
                 String list3 = "{[" + list2.replace("=", ":") + "]}";
 
                 int index = list3.indexOf("imgId");
+                int testGit = list3.indexOf("imgId");
                 for (int i = 0; i < index; i ++) {
                     String imgId = list3.substring(index, 36);
                     System.out.println(imgId);
