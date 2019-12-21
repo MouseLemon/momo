@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-table-cell {
+        height: 100%;
+        width: 100%;
+    }
+    .layui-upload-img {
+        width: 92px;
+        height: 92px;
+        margin: 0 10px 10px 0;
+    }
+    .layui-tab-title {
+        border-bottom-width: 0px !important;
+    }
+
+    .layui-tab-title li {
+        padding: 0 5px !important;
+    }
+
+    .layui-tab-title li:first-child {
+        margin-left: 66px;
+    }
+
+    .layui-tab-title li > span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-tab-title li.layui-this > span {
+        border: 1px #00c1de solid;
+        background: #00c1de;
+        color: #fff;
+    }
+
+    .layui-tab-brief > .layui-tab-title .layui-this:after {
+        border: none !important;
+    }
+
+    .layui-tab-title li > i {
+        width: 100px;
+        height: 1px;
+        display: inline-block;
+        background: #ccc;
+        margin: 0 0 4px 10px;
+    }
+
+    .complete {
+        position: absolute;
+        right: 88px;
+        top: 30px;
+    }
+
+    .complete span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-form-select .layui-input {
+        padding-right: 0 !important;
+    }
+
+    .layui-disabled {
+        background: rgba(181, 181, 181, 0.16);
+    }
+</style>
+<div style="padding: 5px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-tab layui-tab-brief" lay-filter="tab1">
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <form class="layui-form" action="">
+                    <input type="hidden" id="popularId" th:value="${popularId}">
+                    <input type="hidden" id="preStatus" th:value="${preStatus}">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required">爆款标题:</span></label>
+                        <div class="layui-input-block">
+                            <input type="text" id="popularTitle" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input" th:value="${popularTitle}">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">爆款类型:</span></label>
+                            <div class="layui-input-block">
+                                <select id="popularType" lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${popularTypeItem.code}" th:each="popularTypeItem : ${popularTypeList}" th:text="${popularTypeItem.name}"
+                                            th:selected="${popularTypeItem.code eq popularType}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">爆款状态:</span></label>
+                            <div class="layui-input-block">
+                                <select id="status" lay-verify="required" lay-search="">
+                                    <option th:value="${status}" th:if="${status eq 0}" th:text="未过时" th:selected="${status}"></option>
+                                    <option th:value="${status}" th:if="${status eq 1}" th:text="已过时" th:selected="${status}"></option>
+                                    <option value="1" th:if="${status eq 0}">已过时</option>
+                                    <option value="0" th:if="${status eq 1}">未过时</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">爆款编码:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="popularCode" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input" th:value="${popularCode}">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">上架时间:</span></label>
+                            <div class="layui-input-block">
+                                <div>
+                                    <input type="text" class="layui-input" autocomplete="off" id="startTime" th:value="${date}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required">爆款简述:</span></label>
+                        <div class="layui-input-block">
+                            <input type="text" id="popularEasy" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input" th:value="${popularEasy}">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">爆款描述:</label>
+                        <div class="layui-input-block">
+                            <textarea id="popularDesc" name="desc" placeholder="请输入" class="layui-textarea" rows="5" th:text="${popularDesc}"></textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">附件:</label>
+                        <div class="layui-upload">
+                            <button type="button" class="layui-btn" id="files">上传图片</button>
+                            <input type="hidden" id="fileUrl">
+                            <input type="hidden" id="fileName">
+                            <div class="layui-upload-list">
+                                <img class="layui-upload-img" id="img" style="margin-left: 110px" th:src="${popularImg}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var popularImg = $("#popularImg").val();
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate', 'upload'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+        $('.layui-upload-img').click(function(){
+            var imgSrc = $(this).attr('src')
+            layer.open({
+                type: 1,
+                area: ['80%', '80%'], //宽高
+                shadeClose: true, //开启遮罩关闭
+                end: function (index, layero) {
+                    return false;
+                },
+                title: false,
+                content: '<img class="layui-table-cell" src="' + imgSrc + '" + "/>'
+                // ,skin:'layui-layer-nobg'
+                ,scrollbar:false
+            })
+        });
+
+        laydate.render({
+            elem: '#startTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#startTime").val("");
+                    tipinfo("开始时间不能晚于结束时间");
+                }
+            }
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#endTime").val("");
+                    tipinfo("结束时间不能早于开始时间");
+                }
+            }
+        });
+        var upload = layui.upload;
+        var uploadInst = upload.render({
+            elem: '#files',
+            url: '/file/uploadMultipleFile',
+            multiple: true,
+            data: {
+                indexpath: 'popular'
+            },
+            before: function(obj){
+                //预读本地文件示例，不支持ie8
+                obj.preview(function(index, file, result){
+                    $('#img').attr('src', result); //图片链接（base64）
+                });
+            }
+            ,done: function(res){
+                $("#fileUrl").val(res.url);
+                $("#fileName").val(res.name);
+                //如果上传失败
+                if(res.code > 0){
+                    return layer.msg('上传失败');
+                }
+                //上传成功
+            }
+            ,error: function(){
+            }
+        });
+
+        function compareData() {
+            var start = $("#startTime").val();
+            var end = $("#endTime").val();
+            if (start == null || start == "" || start == undefined) {
+                return false;
+            } else if (end == null || end == "" || end == undefined) {
+                return false;
+            } else {
+                if (end < start) {
+                    return true;
+                } else {
+                    return false;
+                }
+                return true;
+            }
+        };
+    });
+
+    function save() {
+        var fileUrl = $("#fileUrl").val();
+        var fileName = $("#fileName").val();
+        var popularId = $("#popularId").val();
+        var popularTitle = $("#popularTitle").val();
+        var popularType = $("#popularType option:selected").val();
+        var popularEasy = $("#popularEasy").val();
+        var popularDesc = $("#popularDesc").val();
+        var popularCode = $("#popularCode").val();
+        var status = $("#status option:selected").val();
+        var startTime = $("#startTime").val();
+
+        if (popularTitle == null || popularTitle == "") {
+            tipinfo("爆款标题不能为空");
+            return;
+        }
+        if (popularType == null || popularType == "") {
+            tipinfo("请选择爆款类型");
+            return;
+        }
+        if (popularEasy == null || popularEasy == "") {
+            tipinfo("爆款简述不能为空");
+            return;
+        }
+
+        if (popularDesc == null || popularDesc == "") {
+            tipinfo("爆款描述不能为空");
+            return;
+        }
+        if (popularCode == null || popularCode == "") {
+            tipinfo("爆款编码不能为空");
+            return;
+        }
+        if (status == null || status == "") {
+            tipinfo("请选择状态");
+            return;
+        }
+        if (startTime == null || startTime == "") {
+            tipinfo("请选择上架时间");
+            return;
+        }
+
+        if (fileName != '' && fileUrl != '' && fileName != null && fileUrl != null) {
+            var map = {
+                popularId: popularId,
+                popularTitle: popularTitle,
+                popularType: popularType,
+                popularEasy: popularEasy,
+                popularDesc: popularDesc,
+                popularCode: popularCode,
+                status: status,
+                startTime: startTime,
+                fileUrl: fileUrl,
+                fileName: fileName
+            };
+        } else {
+            var map = {
+                popularId: popularId,
+                popularTitle: popularTitle,
+                popularType: popularType,
+                popularEasy: popularEasy,
+                popularDesc: popularDesc,
+                popularCode: popularCode,
+                status: status,
+                startTime: startTime
+            };
+        }
+
+        $.ajax({
+            type: "post",
+            url: "/product/editPopular",
+            data: map,
+            dataType: 'json',
+            success: function (data) {
+                if (data.result == "FAILURE") {
+                    tipinfo(data.message);
+                } else {
+                    tipinfo("爆款保存成功!");
+                    closewindow(1);
+                }
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div>
+    <form class="layui-form" action="">
+        <div class="layui-form-item" style="margin-top: 20px">
+            <label class="layui-form-label"><span class="required">权限来源:</span></label>
+            <div class="layui-input-block" style="width: 70%">
+                <select id="source" lay-search="">
+                    <option th:value="${person.personCode}" th:each="person : ${personHaveTeacherAuthList}" th:text="${person.name}"></option>
+                </select>
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center;margin-top: 150px">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    var personCode = [[${personCode}]];
+</script>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+
+    function save() {
+        var map = {
+            "personCode": personCode,
+            "source": $("#source option:selected").val()
+        };
+        $.ajax({
+            type: "post",
+            url: "/teacher/copyOath",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                tipinfo("添加成功!");
+                debugger;
+                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                parent.layer.close(index);
+                parent.closewindow();
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>

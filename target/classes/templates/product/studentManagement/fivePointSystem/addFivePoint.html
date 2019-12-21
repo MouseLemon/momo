@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <input id="fivePointCode" type="hidden" th:value="${fivePoint?.data?.fivePointCode}">
+            <label class="layui-form-label"><span class="required">模板名称</span></label>
+            <div class="layui-input-block">
+                <input type="text" id="pointName" th:value="${fivePoint?.data?.pointName}"  lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+
+    function save() {
+        var pointName = $("#pointName").val();
+        if (pointName == null || pointName == "") {
+            tipinfo("模板名称不能为空");
+            return;
+        }
+        var map = {
+            "fivePointCode":$("#fivePointCode").val(),
+            "pointName": pointName,
+        };
+        $.ajax({
+            type: "post",
+            url: "/student/insEditFivePointList",
+            data: map,
+            success: function (data) {
+                if (data.result == "OK") {
+                    closewindow(1);
+                } else {
+                    tipinfo(data.message);
+                }
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>

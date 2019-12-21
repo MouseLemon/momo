@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+    <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+        <form class="layui-form" action="">
+            <div style="width: 80%;margin: 0 auto;margin-top: 10%">
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 30%">选择开始时间：</label>
+                    <div class="layui-input-block">
+                        <input type="text" style="width: 69%" name="startTime" id="test1" placeholder="请选择开始时间" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item" style="margin-top: 30px">
+                    <label class="layui-form-label" style="width: 30%">选择结束时间：</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="endTime" style="width: 69%" id="test2" placeholder="请选择结束时间" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</body>
+<script th:inline="javascript">
+    var startTime = [[${startTime}]];
+    var endTime = [[${endTime}]];
+</script>
+<script type="text/javascript">
+    var table;
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload'], function () {
+        table = layui.table;
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+
+        var ins1 = laydate.render({
+            elem: '#test1',
+            value: startTime,
+            format: 'yyyy-MM-dd', //可任意组合
+            min:startTime,
+            max:endTime
+        });
+
+        var ins2 = laydate.render({
+            elem: '#test2',
+            value: endTime,
+            format: 'yyyy-MM-dd',
+            min:startTime,
+            max:endTime
+        });
+    });
+
+</script>
+
+</html>

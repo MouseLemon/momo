@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+.layui-input {
+	width: 80% !important;
+}
+
+.layui-form-label {
+	width: 100px !important;
+}
+	.courseItem{
+		z-index: 22;
+	}
+</style>
+<link rel="stylesheet" th:href="@{/css/classRoom/unUse.css}">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+	<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+		<div class="layui-row layui-col-space10">
+			<div class="layui-anim layui-anim-upbit">
+				<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">
+					可用时间设置
+					<div class="joysupply-title-right">
+						<button class="layui-btn layui-btn-sm closeBtn">返回</button>
+						<button class="layui-btn layui-btn-sm sumbitBtn">提交</button>
+						<button class="layui-btn layui-btn-sm" id="copy">复制</button>
+					</div>
+				</h2>
+				<hr />
+				<form action="">
+					<span th:text="${roomLocName}"></span>><span
+						th:text="${classRoom?.roomNum}"></span> <input type="hidden"
+						name="week" id="week" th:value="${weeks}"> <input
+						type="hidden" name="roomId" id="roomId"
+						th:value="${classRoom?.roomId}"> <input type="hidden"
+						name="year" id="year" th:value="${year}">
+					<div class="joysupply-title-right" style="margin-bottom: 10px">
+						<label id="up" onclick="switchTime('up')"> <strong
+							style="color: #01AAED; margin-right: 20px; cursor: pointer;"><</strong></label>
+
+						<label id="time"></label><span id="week" th:text="${weekString}"></span>
+						<label id="next" onclick="switchTime('next')"><strong
+							style="color: #01AAED; margin-left: 20px; cursor: pointer;">></strong></label>
+
+					</div>
+					<table class="joysupply-plan-table">
+						<thead>
+							<tr>
+								<th>时段</th>
+								<th th:each="item:${cul}" th:text="${item}"></th>
+
+							</tr>
+						</thead>
+						<tbody class="courseTbody">
+							<tr th:each="info,infoStat : ${data}">
+								<td class="head" th:text="|${info.start_time}-${info.end_time}|"></td>
+								<td th:each="k : ${#numbers.sequence(0,6)}"
+									th:id="|${k}_${#strings.replace(info.start_time,':','')}|"
+									th:attr="data-timeStop=|${years[__${k}__]}-${months[__${k}__]}-${days[__${k}__]}-${weekDay[__${k}__]}-${info.start_time}-${info.end_time}|">
+								</td>
+							</tr>
+
+
+						</tbody>
+					</table>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="drafting_diolog">
+		<div class="drafting_bg"></div>
+		<div class="inner_drafting">
+			<div class="boxBorder"></div>
+			<div class="boxJiantou"></div>
+			<div class="tipCont">拖拽可进行复制</div>
+			<div class="tipBtn">我知道了</div>
+		</div>
+	</div>
+</body>
+
+<script th:src="@{/js/jquery-ui.js}"></script>
+
+<script type="text/html" id="planItem">
+		<div class="courseItem">{msg}</div>
+	</script>
+<script th:inline="javascript">
+    var list = [[${list}]];
+</script>
+<script th:inline="javascript">
+    var dateTime = [[${dateString}]];
+    var roomLocName = [[${roomLocName}]];
+    var flag = [[${flag}]]
+</script>
+
+<script type="text/javascript">
+		$(function() {
+			console.log(list);
+			for(var i = 0; i < list.length; i++) {
+				var week_day = list[i].weekDay;
+				var starTime = list[i].startTime.replace(":","");
+				var id = week_day+"_"+starTime;
+				var html = "<div class=\"courseItem ui-draggable ui-draggable-handle\" style=\"position: relative;\">不可用</div>"
+				$('#'+id).html(html)
+					
+			}
+			
+			
+			
+		})	
+		
+		// 上一周或下一周不可用时间段
+		function switchTime(param) {
+			 var roomId = $('#roomId').val();
+			 var date = $('#time').text();
+			 if(param == 'up') {
+				 
+				 location.href='/classRoom/setUnUseTime?roomId='+roomId+'&date='+date+'&up='+param+'&roomLocName='+roomLocName;
+			 }else if(param == 'next') {
+				 location.href='/classRoom/setUnUseTime?roomId='+roomId+'&date='+date+'&next='+param+'&roomLocName='+roomLocName;
+			 }
+		}
+		
+		var selTd;
+		var sad = 0;
+		var isSumbit = false; // 是否已提交
+		//JavaScript代码区域
+		layui.use(['element', 'layer', 'laydate'], function() {
+			var element = layui.element;
+			var layer = layui.layer;
+			var laydate = layui.laydate;
+			var week = 10;
+			var ins1 = laydate.render({
+				  elem: '#time'
+				  ,done: function(value, date, endDate){
+					    console.log(value); //得到日期生成的值，如：2017-08-18
+					    console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+					    console.log(dateTime); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+					    var roomId = $('#roomId').val();
+					    location.href='/classRoom/setUnUseTime?roomId='+roomId+'&date='+value+'&roomLocName='+roomLocName;
+					  }
+				 ,format: 'yyyy-MM-dd' //可任意组合
+				 ,value : dateTime
+				});
+			
+			
+			
+			$(".closeBtn").click(function() { //返回
+                //window.history.back();  //返回上一页
+                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                parent.layer.close(index); //再执行关闭   
+			});
+			
+			
+				var option=[];
+			$(".sumbitBtn").click(function() { //提交
+				
+				var roomId = $('#roomId').val();
+				var week = $('#week').val();
+				var year = $('#year').val();
+				isSumbit = true;
+				$('.joysupply-plan-table tbody td:not(".head")').each(function(n,i) {
+					var text = $(this).find('div').html();
+					if(text == '不可用') {
+						var data = this.getAttribute("data-timeStop");
+						option.push(data);
+						console.log(data)
+						
+					}
+				
+				})
+				$.post("/classRoom/saveUnUseTime",{option:option.join(","),roomId:roomId,week:week,year:year},function(data) {
+						if(data.result == 'OK') {
+							layer.msg("设置成功")
+						}else {
+							layer.msg(data.message)
+						}
+					})
+
+			})
+
+			function start(templeteA) {
+
+                $(".courseItem").draggable({
+                    start:function(){
+                        $(this).parent('td').css('position','relative');
+                        $(this).css({'position':'absolute','width':'fit-content'});
+                        $(this).parent().append(templeteA);
+                    },
+                    revert: false,
+                    stop: function(event, ui) {
+                        $(this).remove();
+                    }
+                });
+			}
+			// start();
+			$('.joysupply-plan-table tbody td:not(".head")').click(function() {
+				
+				selTd = $(this);
+				var text = $(this).find('div').html();
+				 if(text == '不可用') {
+					 $(this).find('div').remove();
+                 }else {
+                     var templeteA = $('#planItem').html().replace('{msg}', '不可用');
+                     $(selTd).append(templeteA);
+                     start(templeteA);
+                     if(flag) {
+						flag = false;
+						 $('.drafting_diolog').show();
+						 $('body').css("overflow", "hidden");//阻止页面滚动
+			             $('.boxBorder').css({'width':(selTd.innerWidth())+'px','height':(selTd.innerHeight())+'px','left':selTd.offset().left-2+'px','top':selTd.offset().top-$(window).scrollTop()-2+'px'})
+			             $('.boxJiantou').css({'left':(selTd.offset().left+(selTd.innerWidth())+20)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2)+'px'});
+			             $('.tipCont').css({'left':(selTd.offset().left+(selTd.innerWidth())+205)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2+13)+'px'})
+			             $('.tipBtn').css({'left':(selTd.offset().left+(selTd.innerWidth())+205)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2+103)+'px'})
+			           
+			             $('.drafting_diolog').click(function(){
+			             	 $(this).hide();
+			             	 $('body').css("overflow", "auto");
+			             })
+			             $('.tipBtn').click(function(){
+			               $('.drafting_diolog').hide()
+			               $('body').css("overflow", "auto");
+			               $.post('/hintInfo/saveHintInfo',{hintType:'01'})
+			               
+			             })// 点击 我知道了
+					}
+				}
+				
+			})
+
+			$('.joysupply-plan-table tbody td:not(".head")').droppable({
+				drop: function(event, ui) {
+					var sourceElement = $(ui.helper.context);
+					console.log(sourceElement)
+					//这种方式会报错，应该转换成jquery对象
+					//var sourceElement = ui.helper.context;
+					var targetElement = $(this);
+					var templeteA = $('#planItem').html().replace('{msg}', "不可用");
+					$(this).html(templeteA);
+					start(templeteA);
+					//$(ui.helper.context).html(2);
+				}
+			});
+			
+			
+			// 复制
+			$('#copy').click(function() {
+				if(isSumbit) {
+					layer.open({
+						type: 2,
+						title: ['复制', 'font-size:18px;'],
+						shadeClose: false,
+						area: ['600px', '430px'],
+						content: '/classRoom/planItem',
+					  	btn: ['确定', '取消'],
+					  	btnAlign: 'c',
+						yes: function(index, layero){
+						    
+						    var body = layer.getChildFrame('body', index);
+						    var form = layer.getChildFrame('form', index);
+							var formdata = form.serialize();
+							var roomId = $('#roomId').val();
+							var week = $('#week').val();
+							var year = $('#year').val();
+							console.log($(form).find('#test1').val())
+							var startTime = $(form).find('#test1').val();
+							var endTime = $(form).find('#test2').val();
+						 	$.post("/classRoom/copyUnUseTime",{option:option.join(","),roomId:roomId,week:week,year:year,startTime:startTime,endTime:endTime},function(data) {
+								if(data.result == 'OK') {
+									layer.close(index); //如果设定了yes回调，需进行手工关闭
+									layer.msg("设置成功")
+								}else {
+									layer.msg(data.message)
+								}
+							})  
+							
+							
+							
+						  }
+					});
+				}else {
+					layer.msg("请先提交当前设置")
+				}
+				
+			}) 
+		});
+		
+	
+	</script>
+
+</html>

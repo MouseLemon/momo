@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-table-cell {
+        height: 100%;
+        width: 100%;
+    }
+    .layui-upload-img {
+        width: 92px;
+        height: 92px;
+        margin: 0 10px 10px 0;
+    }
+    .layui-tab-title {
+        border-bottom-width: 0px !important;
+    }
+
+    .layui-tab-title li {
+        padding: 0 5px !important;
+    }
+
+    .layui-tab-title li:first-child {
+        margin-left: 66px;
+    }
+
+    .layui-tab-title li > span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-tab-title li.layui-this > span {
+        border: 1px #00c1de solid;
+        background: #00c1de;
+        color: #fff;
+    }
+
+    .layui-tab-brief > .layui-tab-title .layui-this:after {
+        border: none !important;
+    }
+
+    .layui-tab-title li > i {
+        width: 100px;
+        height: 1px;
+        display: inline-block;
+        background: #ccc;
+        margin: 0 0 4px 10px;
+    }
+
+    .complete {
+        position: absolute;
+        right: 88px;
+        top: 30px;
+    }
+
+    .complete span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px rgba(165, 165, 165, 0.34) solid;
+        margin-right: 7px;
+    }
+
+    .layui-form-select .layui-input {
+        padding-right: 0 !important;
+    }
+
+    .layui-disabled {
+        background: rgba(181, 181, 181, 0.16);
+    }
+</style>
+<div style="padding: 5px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-tab layui-tab-brief" lay-filter="tab1">
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <form class="layui-form" action="">
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">样板名称:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="suitName" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">样板编码:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="suitCode" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">样板地区:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="suitLocation" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">上架时间:</span></label>
+                            <div class="layui-input-block">
+                                <div>
+                                    <input type="text" class="layui-input" autocomplete="off" id="startTime">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">样板风格:</span></label>
+                            <div class="layui-input-block">
+                                <select id="suitType" lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${suitType.code}" th:each="suitType : ${suitTypeList}" th:text="${suitType.name}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">设计师:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="suitDesigner" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required">样板简介:</span></label>
+                        <div class="layui-input-block">
+                            <input type="text" id="suitEasy" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">样板描述:</label>
+                        <div class="layui-input-block">
+                            <textarea id="suitDesc" name="desc" placeholder="请输入" class="layui-textarea" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-show layui-row">
+                        <div class="layui-col-sm5">
+                            <label class="layui-form-label">附件:</label>
+                            <div class="layui-upload">
+                                <button type="button" class="layui-btn" id="files1">上传图片</button>
+                                <input type="hidden" id="fileUrl1">
+                                <input type="hidden" id="fileName1">
+                                <input type="hidden" id="fileXy1" value="1">
+                                <div class="layui-upload-list">
+                                    <img class="layui-upload-img" id="img1" style="margin-left: 110px">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm3">
+                            <div class="layui-upload">
+                                <button type="button" class="layui-btn" id="files2">上传图片</button>
+                                <input type="hidden" id="fileUrl2">
+                                <input type="hidden" id="fileName2">
+                                <input type="hidden" id="fileXy2" value="2">
+                                <div class="layui-upload-list">
+                                    <img class="layui-upload-img" id="img2" style="margin-left: 0px">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm3">
+                            <div class="layui-upload">
+                                <button type="button" class="layui-btn" id="files3" style="margin-left: 10px">上传图片</button>
+                                <input type="hidden" id="fileUrl3">
+                                <input type="hidden" id="fileName3">
+                                <input type="hidden" id="fileXy3" value="3">
+                                <div class="layui-upload-list">
+                                    <img class="layui-upload-img" id="img3" style="margin-left: 10px">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var form;
+    var imgNum = 0;
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate', 'upload'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        form = layui.form;
+        var laydate = layui.laydate;
+
+        $('.layui-upload-img').click(function(){
+            var imgSrc = $(this).attr('src')
+            if (imgSrc != null && imgSrc != '') {
+                layer.open({
+                    type: 1,
+                    area: ['80%', '80%'], //宽高
+                    shadeClose: true, //开启遮罩关闭
+                    end: function (index, layero) {
+                        return false;
+                    },
+                    title: false,
+                    content: '<img class="layui-table-cell" src="' + imgSrc + '" + "/>'
+                    // ,skin:'layui-layer-nobg'
+                    ,scrollbar:false
+                })
+            }
+        });
+
+        laydate.render({
+            elem: '#startTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#startTime").val("");
+                    tipinfo("开始时间不能晚于结束时间");
+                }
+            }
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#endTime").val("");
+                    tipinfo("结束时间不能早于开始时间");
+                }
+            }
+        });
+
+        function compareData() {
+            var start = $("#startTime").val();
+            var end = $("#endTime").val();
+            if (start == null || start == "" || start == undefined) {
+                return false;
+            } else if (end == null || end == "" || end == undefined) {
+                return false;
+            } else {
+                if (end < start) {
+                    return true;
+                } else {
+                    return false;
+                }
+                return true;
+            }
+        };
+        var upload = layui.upload;
+        //普通图片上传 * 3
+        var uploadInst1 = upload.render({
+            elem: '#files1',
+            url: '/file/uploadMultipleFile',
+            multiple: true,
+            data: {
+                indexpath: 'suit'
+            },
+            before: function(obj){
+                //预读本地文件示例，不支持ie8
+                obj.preview(function(index, file, result){
+                    $('#img1').attr('src', result); //图片链接（base64）
+                });
+            }
+            ,done: function(res){
+                $("#fileUrl1").val(res.url);
+                $("#fileName1").val(res.name);
+                //如果上传失败
+                if(res.code > 0){
+                    return layer.msg('上传失败');
+                }
+                //上传成功
+            }
+            ,error: function(){
+            }
+        });
+
+        var uploadInst2 = upload.render({
+            elem: '#files2',
+            url: '/file/uploadMultipleFile',
+            multiple: true,
+            data: {
+                indexpath: 'suit'
+            },
+            before: function(obj){
+                //预读本地文件示例，不支持ie8
+                obj.preview(function(index, file, result){
+                    $('#img2').attr('src', result); //图片链接（base64）
+                });
+            }
+            ,done: function(res){
+                $("#fileUrl2").val(res.url);
+                $("#fileName2").val(res.name);
+                //如果上传失败
+                if(res.code > 0){
+                    return layer.msg('上传失败');
+                }
+                //上传成功
+            }
+            ,error: function(){
+            }
+        });
+
+        var uploadInst3 = upload.render({
+            elem: '#files3',
+            url: '/file/uploadMultipleFile',
+            multiple: true,
+            data: {
+                indexpath: 'suit'
+            },
+            before: function(obj){
+                //预读本地文件示例，不支持ie8
+                obj.preview(function(index, file, result){
+                    $('#img3').attr('src', result); //图片链接（base64）
+                });
+            }
+            ,done: function(res){
+                $("#fileUrl3").val(res.url);
+                $("#fileName3").val(res.name);
+                //如果上传失败
+                if(res.code > 0){
+                    return layer.msg('上传失败');
+                }
+                //上传成功
+            }
+            ,error: function(){
+            }
+        });
+
+
+    });
+
+    function save() {
+        var fileUrl1 = $("#fileUrl1").val();
+        var fileName1 = $("#fileName1").val();
+        var fileXy1 = $("#fileXy1").val();
+        var fileUrl2 = $("#fileUrl2").val();
+        var fileName2 = $("#fileName2").val();
+        var fileXy2 = $("#fileXy2").val();
+        var fileUrl3 = $("#fileUrl3").val();
+        var fileName3 = $("#fileName3").val();
+        var fileXy3 = $("#fileXy3").val();
+
+        var suitName = $("#suitName").val();
+        var suitCode = $("#suitCode").val();
+        var suitLocation = $("#suitLocation").val();
+        var suitType = $("#suitType option:selected").val();
+        var suitDesigner = $("#suitDesigner").val();
+        var suitEasy = $("#suitEasy").val();
+        var suitDesc = $("#suitDesc").val();
+        var startTime = $("#startTime").val();
+
+        if (suitName == null || suitName == "") {
+            tipinfo("样板名称不能为空");
+            return;
+        }
+        if (suitCode == null || suitCode == "") {
+            tipinfo("样板编码不能为空");
+            return;
+        }
+        if (suitLocation == null || suitLocation == "") {
+            tipinfo("地区不能为空");
+            return;
+        }
+
+        if (suitType == null || suitType == "") {
+            tipinfo("请选择样板风格");
+            return;
+        }
+        if (suitDesigner == null || suitDesigner == "") {
+            tipinfo("设计师不能为空");
+            return;
+        }
+        if (suitEasy == null || suitEasy == "") {
+            tipinfo("简介不能为空");
+            return;
+        }
+        if (suitDesc == null || suitDesc == "") {
+            tipinfo("描述不能为空");
+            return;
+        }
+        if (startTime == null || startTime == "") {
+            tipinfo("请选择上架时间");
+            return;
+        }
+        var map = {
+            fileName1: fileName1,
+            fileName2: fileName2,
+            fileName3: fileName3,
+            fileUrl1: fileUrl1,
+            fileUrl2: fileUrl2,
+            fileUrl3: fileUrl3,
+            fileXy1: fileXy1,
+            fileXy2: fileXy2,
+            fileXy3: fileXy3,
+            suitName: suitName,
+            suitCode: suitCode,
+            suitLocation: suitLocation,
+            suitType: suitType,
+            suitDesigner: suitDesigner,
+            suitEasy: suitEasy,
+            suitDesc: suitDesc,
+            startTime:startTime
+        };
+        $.ajax({
+            type: "post",
+            url: "/product/addSuit",
+            data: map,
+            dataType: 'json',
+            success: function (data) {
+                if (data.result == "FAILURE") {
+                    tipinfo(data.message);
+                } else {
+                    tipinfo("样板间保存成功!");
+                    closewindow(1);
+                }
+            },
+            error: function (data) {
+                tipinfo("样板间保存失败");
+            }
+        });
+    }
+
+</script>
+
+</html>

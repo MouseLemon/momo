@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-tab-title {
+        border-bottom-width: 0px !important;
+    }
+
+    .layui-tab-title li {
+        padding: 0 5px !important;
+    }
+
+    .layui-tab-title li:first-child {
+        margin-left: 66px;
+    }
+
+    .layui-tab-title li > span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-tab-title li.layui-this > span {
+        border: 1px #00c1de solid;
+        background: #00c1de;
+        color: #fff;
+    }
+
+    .layui-tab-brief > .layui-tab-title .layui-this:after {
+        border: none !important;
+    }
+
+    .layui-tab-title li > i {
+        width: 100px;
+        height: 1px;
+        display: inline-block;
+        background: #ccc;
+        margin: 0 0 4px 10px;
+    }
+
+    .complete {
+        position: absolute;
+        right: 88px;
+        top: 30px;
+    }
+
+    .complete span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-form-select .layui-input {
+        padding-right: 0 !important;
+    }
+
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-tab layui-tab-brief" lay-filter="tab1">
+        <ul class="layui-tab-title">
+            <li class="layui-this"><span>1</span>填写项目基本信息<i></i></li>
+            <li><span>2</span>填写项目收益信息<i></i></li>
+        </ul>
+        <div class="complete"><span>3</span>完成</div>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <form class="layui-form" action="">
+                    <input type="hidden" id="projectId" th:value="${projectId}">
+                    <input type="hidden" id="status" th:value="${status}">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required">项目名称:</span></label>
+                        <div class="layui-input-block">
+                            <input type="text" id="projectName" readonly autocomplete="off" class="layui-input layui-disabled"
+                                   th:value="${projectName}">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-show">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目类型:</span></label>
+                            <div class="layui-input-block">
+                                <select id="projectType" disabled lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${projectTypeItem.code}"
+                                            th:each="projectTypeItem : ${projectTypeList}" th:text="${projectTypeItem.name}"
+                                            th:selected="${projectTypeItem.name eq projectType}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目语种:</span></label>
+                            <div class="layui-input-block">
+                                <select id="language" disabled lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${languageItem.code}" th:each="languageItem : ${languageList}"
+                                            th:text="${languageItem.name}"
+                                            th:selected="${languageItem.name eq language}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-show">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目部名称:</span></label>
+                            <div class="layui-input-block">
+                                <select id="depName" disabled lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${organizeStruct.organizeCode}"
+                                            th:each="organizeStruct : ${structList}"
+                                            th:text="${organizeStruct.organizeName}"
+                                            th:selected="${organizeStruct.organizeCode eq depCode}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目编码:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="projectCode" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input" th:value="${projectCode}"
+                                       disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">项目说明:</label>
+                        <div class="layui-input-block">
+                            <textarea id="projectDesc" disabled class="layui-textarea layui-disabled"
+                                      th:text="${projectDesc}" rows="8"></textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">开始时间:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" disabled class="layui-input layui-disabled" id="startTime" th:value="${startTime}">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">结束时间:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" disabled class="layui-input layui-disabled" id="endTime" th:value="${endTime}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">课时总数:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="countHour" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${countHour}">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">启动人数:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="startPersonCount" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${startPersonCount}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="next()">下一步
+                    </button>
+                    <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">
+                        取消
+                    </button>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">退费人数:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="returnFeeCount" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${returnFeeCount}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">插班人数:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="joinClassCount" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${joinClassCount}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">当前人数:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="currentCount" disabled class="layui-input layui-disabled"
+                                       th:value="${currentCount}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label"><span class="required">收费方式:</span></label>
+                            <div class="layui-input-block">
+                                <select id="feeType" disabled class="layui-input layui-disabled">
+                                    <option value=""></option>
+                                    <option th:value="${feeTypeItem.code}" th:each="feeTypeItem : ${feeTypeList}"
+                                            th:text="${feeTypeItem.name}"
+                                            th:selected="${feeTypeItem.name eq feeType}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label"><span class="required">学时学费:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="feeHour" disabled autocomplete="off" placeholder="请输入" class="layui-input layui-disabled"
+                                       th:value="${feeHour}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label"><span class="required">单人学费:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="feeSingle" disabled autocomplete="off" placeholder="请输入" class="layui-input layui-disabled"
+                                       th:value="${feeSingle}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">启动学费:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="startFee" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${startFee}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">增加学费:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="addFee" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${addFee}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">减少学费:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="subFee" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${subFee}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">当前收入:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="currentIncome" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${currentIncome}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">课酬支出:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="kcExpend" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${kcExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">硬件支出:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="hardwareExpend" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${hardwareExpend}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">管理支出:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="manageExpend" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${manageExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">广告支出:</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="adExpend" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${adExpend}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">代理支出</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="agentExpend" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${agentExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">总收益</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="totalIncome" disabled autocomplete="off" class="layui-input layui-disabled"
+                                       th:value="${totalIncome}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate', 'upload'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#startTime',
+            type: 'date'
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'date'
+        });
+    });
+
+    function next() {
+        $('.layui-tab-title').children().eq(0).removeClass('layui-this').next().addClass('layui-this');
+        $('.layui-tab-content').children().eq(0).removeClass('layui-show').next().addClass('layui-show');
+    }
+
+    function isPositiveNum(param) {
+        var reg = /^(([1-9][0-9]*)|0)$/;
+        if (null == param.match(reg)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function isMoney(param) {
+        var reg = /^(([1-9][0-9]*)|(([0]\.\d{1,2}|[1-9][0-9]*\.\d{1,2})))$/;
+        if (null == param.match(reg)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+</script>
+
+</html>

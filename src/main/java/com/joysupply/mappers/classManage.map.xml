@@ -1,0 +1,1066 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ClassManageDao">
+    <resultMap type="ProjectInfo" id="projectInfoMap">
+        <id property="project_id" column="project_id"/>
+        <result property="project_name" column="project_name"/>
+        <result property="count_hour" column="count_hour"/>
+        <result property="status" column="status"/>
+        <result property="project_type" column="project_type"/>
+        <result property="creater" column="creater"/>
+        <result property="create_time" column="create_time"/>
+        <result property="start_time" column="start_time"/>
+        <result property="end_time" column="end_time"/>
+    </resultMap>
+    <resultMap type="ProjectSchedulePlan" id="projectSchedulePlanMap">
+        <id property="project_id" column="project_id"/>
+        <result property="teacher_code" column="teacher_code"/>
+        <result property="class_date" column="class_date"/>
+        <result property="start_time" column="start_time"/>
+        <result property="end_time" column="end_time"/>
+    </resultMap>
+
+    <!-- 获取课程管理列表，start_time是开始日期，end_time是结束日期 -->
+    <select id="getClassManageList" parameterType="hashMap" resultType="hashMap">
+        SELECT distinct
+            pi.project_id,
+            pi.project_code,
+            pi.project_name,
+            pi.start_time,
+            pi.end_time,
+            pi.count_hour,
+            b.pkNum,
+            b.pjsNum,
+            (
+                select ppp.status from project_schedule_plan ppp
+                where ppp.project_id = b.project_id
+                group by ppp.status
+                order by pi.create_time
+                limit 1
+            ) status
+        from project_info pi
+        left join (
+            select
+                count(schedule_id) pkNum,
+                count(class_room_id) pjsNum,
+                project_id,
+                status
+            from project_schedule_plan
+            group by project_id
+        ) b on b.project_id = pi.project_id
+        <where>
+            pi.status != 1
+            <if test="personCode != null and personCode !=''">
+                and pi.project_id in(select data_code from person_data_auth where p_code = #{personCode} and auth_type = 2)
+            </if>
+            <if test="project_name != null and project_name != ''">and project_name like "%"#{project_name}"%"</if>
+            <if test="completePk != null and completePk != '' and completePk == 1">and b.pkNum >= pi.count_hour</if>
+            <if test="completeProom != null and completeProom != '' and completeProom == 1">and b.pjsNum >= pi.count_hour</if>
+        </where>
+        ORDER BY pi.create_time desc
+    </select>
+
+    <select id="getClassManageListA" parameterType="hashMap" resultType="hashMap">
+        SELECT distinct
+            pi.project_id,
+            pi.project_code,
+            pi.project_name,
+            pi.start_time,
+            pi.end_time,
+            pi.count_hour,
+            b.pkNum,
+            b.pjsNum,
+            b.status
+        from project_info pi
+        left join (
+            select
+                count(schedule_id) pkNum,
+                count(class_room_id) pjsNum,
+                project_id,
+                status
+            from project_schedule_plan
+            group by project_id
+            order by pi.create_time
+        ) b on b.project_id = pi.project_id
+        <where>
+            pi.status != 1
+            <if test="personCode != null and personCode !=''">
+                and pi.project_id in (
+                    select data_code from person_data_auth
+                    where p_code in (
+                        SELECT person_code FROM person
+                        where organize_code in (
+                            SELECT organize_code FROM person
+                            where person_code = #{personCode}
+                        )
+                    )
+                    and auth_type = 2
+                )
+            </if>
+            <if test="project_name != null and project_name != ''">and project_name like "%"#{project_name}"%"</if>
+            <if test="completePk != null and completePk != '' and completePk == 1">and b.pkNum >= pi.count_hour</if>
+            <if test="completeProom != null and completeProom != '' and completeProom == 1">and b.pjsNum >= pi.count_hour</if>
+        </where>
+        ORDER BY pi.create_time desc
+    </select>
+
+    <!-- 根据项目id查询项目 -->
+    <select id="getProjectInfo" resultMap="projectInfoMap">
+        select
+            project_id,
+            project_name,
+            count_hour,
+            status,
+            project_type,
+            creater,
+            create_time,
+            start_time,
+            end_time
+        from project_info
+        where project_id = #{project_id}
+	</select>
+
+    <!-- 根据project_id查询 -->
+    <select id="getSavedCourseByProjectId" parameterType="hashmap" resultType="hashmap">
+        select
+            psp.schedule_id,
+            psp.project_id,
+            d2.name as course_name,
+            psp.teacher_code,
+            ti.teacher_name,
+            d.name as class_room_type,
+            psp.class_room_type classRoomType,
+            psp.class_date,
+            psp.start_time,
+            psp.end_time,
+            psp.base_fee,
+            psp.person_count,
+            psp.person_factor,
+            psp.course_factor,
+            psp.fee_total,
+            psp.week_day,
+            c.room_num as roomNum,
+            d3.`name` as roomLoc,
+            psp.class_room_id
+        from project_schedule_plan psp
+        left join teacher_info ti on psp.teacher_code = ti.teacher_code
+        left join data_dic d on d.code = psp.class_room_type
+        left join data_dic d2 on d2.code = psp.course_name
+        left join class_room c on c.room_id = psp.class_room_id
+        left join data_dic d3 on d3.code = c.room_loc
+        <where>
+            <if test="roomPlan != null and roomPlan != ''">
+                and psp.status = #{roomPlan}
+            </if>
+            <if test="project_id != null and project_id != ''">
+                and project_id = #{project_id}
+            </if>
+            <if test="grade_id != null and grade_id != ''">
+                and grade_id = #{grade_id}
+            </if>
+            <if test="roomId != null and roomId != ''">
+                and psp.class_room_id = #{roomId}
+            </if>
+            <if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+                and psp.class_date between #{xyStart} and #{xyEnd}
+            </if>
+            <if test="ids != null and nowPlan != null and nowPlan != '' and nowPlan == 1">
+                and psp.schedule_id in
+                <foreach collection="ids" open="(" separator="," close=")" item="id">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="ids != null and nowPlan == ''">
+                and psp.schedule_id not in
+                <foreach collection="ids" open="(" separator="," close=")" item="id">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+        order by psp.start_time
+    </select>
+    <!-- 根据project_id查询 -->
+    <select id="listIsPlanByProject" parameterType="hashmap" resultType="java.lang.Integer">
+        select
+            count(distinct psp.class_room_id)
+        from project_schedule_plan psp
+        <where>
+            <if test="roomPlan != null and roomPlan != ''">
+                and psp.status = #{roomPlan}
+            </if>
+            <if test="project_id != null and project_id != ''">
+                and psp.project_id = #{project_id}
+            </if>
+            <if test="roomId != null and roomId != ''">
+                and psp.class_room_id = #{roomId}
+            </if>
+            <if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+                and psp.class_date between #{xyStart} and #{xyEnd}
+            </if>
+            <if test="ids != null and nowPlan == ''">
+                and psp.schedule_id not in
+                <foreach collection="ids" open="(" separator="," close=")" item="id">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据schedule_id查询当前课程信息 -->
+    <select id="getProjectSchedulePlanSheet" parameterType="string" resultType="hashMap">
+        select
+            psp.schedule_id,
+            psp.project_id,
+            psp.course_name,
+            d2.name as class_name,
+            dd.name as classroom_name,
+            psp.teacher_code,
+            psp.grade_id,
+            psp.class_room_type,
+            psp.class_date,
+            psp.start_time,
+            psp.end_time,
+            psp.base_fee,
+            psp.person_factor,
+            psp.course_factor,
+            psp.person_count,
+            psp.fee_total,
+            psp.year,
+            psp.week,
+            psp.status,
+            psp.class_room_id,
+            psp.schedule_type,
+            psp.add_fee_count,
+            psp.week_day,
+            ti.teacher_name
+        from project_schedule_plan psp
+        left join teacher_info ti on psp.teacher_code = ti.teacher_code
+        left join data_dic d2 on d2.code = psp.course_name
+        left join data_dic dd on dd.code = psp.class_room_type
+        where schedule_id = #{schedule_id}
+    </select>
+
+    <!-- 修改课程信息《保存》 -->
+    <update id="saveEdit" parameterType="hashMap">
+        update project_schedule_plan psp
+        set
+            psp.course_name = #{course_name},
+            psp.teacher_code = #{teacher_code},
+            psp.class_room_type = #{class_room_type},
+            psp.class_room_id = null,
+            psp.class_date = #{class_date},
+            psp.start_time = #{start_time},
+            psp.end_time = #{end_time},
+            psp.base_fee = #{base_fee},
+            psp.person_count = #{person_count},
+            psp.person_factor = #{person_factor},
+            psp.course_factor = #{course_factor},
+            psp.fee_total = #{fee_total},
+            psp.status = #{status}
+        where psp.schedule_id = #{schedule_id}
+    </update>
+
+    <!-- 修改课程信息《删除》 -->
+    <delete id="deleteEdit" parameterType="hashmap">
+		<![CDATA[
+			delete from project_schedule_plan where schedule_id = #{schedule_id}
+        ]]>
+	</delete>
+
+    <!-- 添加课程信息《保存》 -->
+    <insert id="saveAdd" parameterType="hashMap">
+        insert into project_schedule_plan (
+            schedule_id,
+            project_id,
+            grade_id,
+            course_name,
+            teacher_code,
+            class_room_type,
+            class_date,
+            start_time,
+            end_time,
+            base_fee,
+            person_count,
+            person_factor,
+            course_factor,
+            fee_total,
+            week_day,
+            status
+        )
+        values(
+            #{schedule_id},
+            #{project_id},
+            #{grade_id},
+            #{course_name},
+            #{teacher_code},
+            #{class_room_type},
+            #{class_date},
+            #{start_time},
+            #{end_time},
+            #{base_fee},
+            #{person_count},
+            #{person_factor},
+            #{course_factor},
+            #{fee_total},
+            #{week_day},
+            #{status}
+        )
+
+    </insert>
+
+    <!-- 获取课程管理列表，start_time是开始日期，end_time是结束日期 -->
+    <select id="classRoomPlanList" parameterType="hashMap" resultType="hashMap">
+        SELECT
+            pi.project_id,
+            pi.project_name,
+            pi.project_code,
+            pi.start_time,
+            pi.end_time,
+            pi.count_hour,
+            COUNT(psp.schedule_id) AS pkNum,
+            COUNT(psp.class_room_id) AS pjsNum,
+            pi.current_count as currentCount,
+            o.organize_name as organizeName,
+            gi.grade_code,
+            gi.grade_id
+        FROM project_info pi
+        left join project_schedule_plan psp on psp.project_id = pi.project_id
+        left join organize_struct o on o.organize_code = pi.dep_name
+        left join grade_info gi on gi.project_id = pi.project_id
+        WHERE pi.project_id = psp.project_id
+        and pi.dep_name = o.organize_code
+        AND psp.status = 1
+        <if test="project_name != null and project_name != ''">
+            and project_name like "%${project_name}%"
+        </if>
+        and pi.project_id in
+        <foreach collection="projectAuth" open="(" separator="," close=")" item="item">
+            #{item.projectId}
+        </foreach>
+        GROUP BY pi.project_id
+        <if test="finish != null and finish == 1">
+            HAVING pkNum = pjsNum
+        </if>
+        <if test="finish != null and finish == 2">
+            HAVING pkNum != pjsNum
+        </if>
+        ORDER BY pi.start_time desc
+    </select>
+
+    <update id="returnPKA">
+        update project_schedule_plan
+        set status = #{status}
+        where grade_id = #{gradeId}
+    </update>
+
+    <update id="returnPK">
+        update project_schedule_plan
+        set status = #{status}
+        where project_id in
+            <foreach collection="ids" open="(" separator="," close=")" item="id">
+                #{id}
+            </foreach>
+    </update>
+
+    <select id="getClassRoomInfoByScheduleId" resultType="ProjectSchedulePlan" flushCache="true">
+    	SELECT
+			class_room_type,
+			class_date,
+			person_count,
+			class_room_id,
+			start_time,
+			end_time,
+			teacher_code
+		FROM
+			project_schedule_plan
+		WHERE
+			schedule_id = #{_parameter}
+    </select>
+
+    <update id="saveRoomPlan">
+    	update project_schedule_plan
+    	set
+    	    class_room_id = #{roomId},
+    	    class_room_type = #{classRoomType}
+    	where schedule_id = #{scheduleId}
+    </update>
+
+    <!-- 修改所有内容状态，提交按钮 -->
+    <update id="submitBtn" parameterType="hashmap">
+        <foreach collection="list" index="index" item="item" open="" separator=";" close="">
+            update project_schedule_plan
+            set status = #{item.status}
+            where grade_id = #{item.grade_id}
+        </foreach>
+    </update>
+
+    <!-- 修改列表状态 -->
+    <update id="updateListStatus" parameterType="hashMap">
+        update project_info pi
+        set pi.status = #{status}
+        where pi.project_id = #{project_id}
+    </update>
+
+    <!-- 根据教师姓名查询课程 -->
+    <select id="getCourseByTeacherName" resultMap="projectSchedulePlanMap">
+        SELECT
+			ti.teacher_name,
+			d2.name,
+			psp.class_date,
+			psp.start_time,
+			psp.end_time
+		FROM project_schedule_plan psp
+		LEFT JOIN teacher_info ti ON psp.teacher_code = ti.teacher_code
+		left join data_dic d2 on d2.code = psp.course_name
+		WHERE ti.teacher_name = #{teacher_name}
+	</select>
+
+    <!-- 根据teacher_name查询已存在课程 -->
+    <select id="getSavedCourseByTeacherName" parameterType="hashmap" resultType="hashmap">
+        select
+            psp.schedule_id,
+            psp.project_id,
+            d2.name as course_name,
+            psp.teacher_code,
+            ti.teacher_name,
+            d.name as class_room_type,
+            psp.class_date,
+            psp.start_time,
+            psp.end_time,
+            psp.base_fee,
+            psp.person_count,
+            psp.person_factor,
+            psp.course_factor,
+            psp.fee_total,
+            psp.week_day
+        from project_schedule_plan psp
+        left join teacher_info ti on psp.teacher_code = ti.teacher_code
+        left join data_dic d on d.code = psp.class_room_type
+        left join data_dic d2 on d2.code = psp.course_name
+        <where>
+            <if test="teacher_name != null and teacher_name != ''">
+                and teacher_name = #{teacher_name}
+            </if>
+            <if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+                and class_date between #{xyStart} and #{xyEnd}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="isPlan" resultType="java.lang.String">
+        SELECT
+            schedule_id
+        FROM
+            project_schedule_plan
+        WHERE class_room_id = #{roomId}
+        AND class_date = #{class_date}
+        AND start_time &gt;= '${startTime}'
+        AND (end_time &lt;= '${endTime}' or start_time &lt;='${endTime}')
+        AND class_room_id IS NOT NULL
+        group by class_room_id
+    </select>
+
+    <select id="getUnUseCountBy" resultType="java.lang.Integer">
+		SELECT
+			count(0)
+        FROM room_unuse_time_frame
+        WHERE `year` = #{year}
+        AND `month` = #{month}
+        AND `day` = #{day}
+        AND start_time = #{starTime}
+        AND end_time &lt;= #{endTime}
+        and room_id = #{room_id}
+	</select>
+
+    <!-- 复制教室排课 -->
+    <select id="copyRoomPlan">
+        update project_schedule_plan
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="class_room_id =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.schedule_id!=null">
+                        when schedule_id=#{i.schedule_id} then #{i.class_room_id}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where schedule_id in
+        <foreach collection="list" separator="," item="i" index="index" open="(" close=")">
+            #{i.schedule_id}
+        </foreach>
+    </select>
+
+
+    <!-- 复制排课，复制专用 -->
+    <select id="getSavedCourseByProjectIdCopy" parameterType="hashmap" resultType="hashmap" flushCache="true">
+        select
+            psp.schedule_id,
+            psp.project_id,
+            d2.name as course_name,
+            psp.teacher_code,
+            psp.course_name as course_name_fz,
+            ti.teacher_name,
+            d.code as class_room_type,
+            psp.class_date,
+            psp.start_time,
+            psp.end_time,
+            psp.base_fee,
+            psp.person_count,
+            psp.grade_id,
+            psp.person_factor,
+            psp.course_factor,
+            psp.fee_total,
+            psp.week_day,
+            c.room_num as roomNum,
+            d3.`name` as roomLoc,
+            psp.class_room_id
+        from project_schedule_plan psp
+        left join teacher_info ti on psp.teacher_code = ti.teacher_code
+        left join data_dic d on d.code = psp.class_room_type
+        left join data_dic d2 on d2.code = psp.course_name
+        left join class_room c on c.room_id = psp.class_room_id
+        left join data_dic d3 on d3.code = c.room_loc
+        <where>
+            <if test="project_id != null and project_id != ''">
+                and project_id = #{project_id}
+            </if>
+            <if test="grade_id != null and grade_id != ''">
+                and grade_id = #{grade_id}
+            </if>
+            <if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+                and psp.class_date between #{xyStart} and #{xyEnd}
+            </if>
+            <if test="ids != null">
+                and psp.schedule_id in
+                <foreach collection="ids" open="(" separator="," close=")" item="id">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectTargetDateSchedules" parameterType="hashmap" resultType="hashmap" flushCache="true">
+        select
+            psp.schedule_id,
+            psp.project_id,
+            d2.name as course_name,
+            psp.teacher_code,
+            psp.course_name as course_name_fz,
+            ti.teacher_name,
+            d.code as class_room_type,
+            psp.class_date,
+            psp.start_time,
+            psp.end_time,
+            psp.base_fee,
+            psp.person_count,
+            psp.grade_id,
+            psp.person_factor,
+            psp.course_factor,
+            psp.fee_total,
+            psp.week_day,
+            c.room_num as roomNum,
+            d3.name as roomLoc,
+            psp.class_room_id
+        from project_schedule_plan psp
+        left join teacher_info ti on psp.teacher_code = ti.teacher_code
+        left join data_dic d on d.code = psp.class_room_type
+        left join data_dic d2 on d2.code = psp.course_name
+        left join class_room c on c.room_id = psp.class_room_id
+        left join data_dic d3 on d3.code = c.room_loc
+        where psp.class_date between #{xyStart} and #{xyEnd}
+        and psp.teacher_code in
+        <foreach collection="teacherList" item="teacherList" open="(" separator="," close=")">
+            #{teacherList}
+        </foreach>
+    </select>
+
+    <!-- 提交课程管理列表 -->
+    <update id="submitHadPk1" parameterType="hashMap">
+        update project_schedule_plan
+        set status = 1
+        where project_id in
+        <foreach collection="list" separator="," item="i" index="index" open="(" close=")">
+            #{i}
+        </foreach>
+    </update>
+
+    <!-- 回显系数 -->
+    <select id="backCoefficient" parameterType="hashMap" resultType="hashMap">
+        select base_fee, person_factor, course_factor
+        from project_teacher_kc_factor
+        where project_id = #{project_id}
+        and course_name = #{course_name}
+        and teacher_code = #{teacher_code}
+	</select>
+
+    <!-- 提交当前课表成功后，将消息插入pm表 -->
+    <insert id="insertPersonMessage" parameterType="integer">
+        insert into person_message (
+            row_id,
+            person_code,
+            message_content,
+            message_time,
+            is_reading,
+            type
+        )
+        values
+        <foreach collection="list" item="list" index="index" separator=",">
+            (
+            #{list.row_id},
+            #{list.person_code},
+            #{list.message_content},
+            #{list.message_time},
+            #{list.is_reading},
+            #{list.type}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectSendMessagePerson" parameterType="java.lang.String" resultType="hashMap">
+        select person_code, name from person
+        where person_code in (
+            select person_code
+            from person_role
+            where person_code in (
+                select p_code from person_data_auth
+                where auth_type = 2 and data_code = #{project_id}
+            )
+            and (role_code = 12 or role_code = 19)
+        )
+    </select>
+
+    <select id="selectManySendMessagePerson" parameterType="hashMap" resultType="hashMap">
+        select
+            person_code,
+            name
+        from person
+        where person_code in (
+            select person_code from person_role
+            where person_code in (
+                select p_code from person_data_auth
+                where auth_type = 2 and data_code in
+                <foreach collection="list" item="list" index="index" open="(" separator="," close=")">
+                    #{list}
+                </foreach>
+            )
+            and (role_code = 12 or role_code = 19)
+        )
+    </select>
+
+    <select id="selectClassManagePerson" parameterType="hashMap" resultType="hashMap">
+        select
+            person_code,
+            name
+        from person
+        where person_code in (
+            select person_code
+            from person_role
+            where role_code = 19
+        )
+    </select>
+
+    <select id="selectManySendMessagePersonPro" parameterType="hashMap" resultType="hashMap">
+        select
+            person_code,
+            name
+        from person
+            where person_code in (
+                select person_code from person_role
+                where person_code in (
+                    select p_code from person_data_auth
+                    where auth_type = 2 and data_code in
+                    <foreach collection="list" item="list" index="index" open="(" separator="," close=")">
+                        #{list}
+                    </foreach>
+                )
+                and role_code = 14
+            )
+    </select>
+
+    <select id="selectManySendMessagePersonPro2" parameterType="hashMap" resultType="hashMap">
+        select
+            person_code,
+            name
+        from person
+        where person_code in (
+            select person_code from person_role
+            where role_code = 18
+        )
+    </select>
+
+    <select id="getPkCount" parameterType="string" resultType="integer">
+        select count(0) num
+        from project_schedule_plan
+        where project_id = #{project_id}
+    </select>
+
+    <!-- 复制排课2 -->
+    <insert id="copyClassPlan">
+        <foreach collection="list" index="index" item="item" open="" separator=";" close="">
+            insert into project_schedule_plan (
+                schedule_id,
+                project_id,
+                grade_id,
+                course_name,
+                teacher_code,
+                class_room_type,
+                class_date,
+                start_time,
+                end_time,
+                base_fee,
+                person_count,
+                person_factor,
+                course_factor,
+                fee_total,
+                week_day,
+                status
+            ) values (
+                #{item.schedule_id},
+                #{item.project_id},
+                #{item.grade_id},
+                #{item.course_name},
+                #{item.teacher_code},
+                #{item.class_room_type},
+                #{item.class_date},
+                #{item.start_time},
+                #{item.end_time},
+                #{item.base_fee},
+                #{item.person_count},
+                #{item.person_factor},
+                #{item.course_factor},
+                #{item.fee_total},
+                #{item.week_day},
+                #{item.status}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectFromPTKF" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+          project_id,
+          course_name,
+          teacher_code
+        from project_teacher_kc_factor
+        where project_id = #{project_id}
+        and course_name = #{course_name}
+        and teacher_code = #{teacher_code}
+    </select>
+
+    <insert id="insertPtkf" parameterType="hashMap">
+        insert into project_teacher_kc_factor (
+            project_id,
+            course_name,
+            teacher_code,
+            base_fee,
+            person_factor,
+            course_factor
+        ) values (
+            #{project_id},
+            #{course_name},
+            #{teacher_code},
+            #{base_fee},
+            #{person_factor},
+            #{course_factor}
+        )
+    </insert>
+
+    <update id="updatePtkf" parameterType="hashMap">
+        update project_teacher_kc_factor
+        set
+            base_fee = #{base_fee},
+            person_factor = #{person_factor},
+            course_factor = #{course_factor}
+        where project_id = #{project_id}
+        and course_name = #{course_name}
+        and teacher_code = #{teacher_code}
+    </update>
+
+    <select id="getPkCountByTeacherCode" resultType="int">
+        select count (0) from project_schedule_plan
+        where teacher_code = #{_parameter}
+    </select>
+
+    <!-- 查询 当前日期,当前时间段,是否存在当前老师的课程 -->
+    <select id="selectScheduleOrNotAdd" resultType="hashMap">
+        select count(0) from project_schedule_plan
+        where teacher_code = #{teacher_code}
+        and class_date = #{class_date}
+        and #{start_time} between start_time and end_time
+    </select>
+
+    <select id="selectScheduleOrNotEdit" resultType="hashMap">
+        select * from project_schedule_plan
+        where schedule_id != #{schedule_id}
+        and teacher_code = #{teacher_code}
+        and class_date = #{class_date}
+        and #{start_time} between start_time and end_time
+    </select>
+
+    <select id="getHadCountKcTime" parameterType="hashmap" resultType="hashmap">
+        select
+            start_time,
+            end_time
+        from course_fee
+        where project_id = #{project_id}
+    </select>
+
+    <select id="getTempPlan" resultType="map" flushCache="true">
+        SELECT
+            psp.course_name,
+            d.`name` as class_room_type,
+            psp.start_time,
+            psp.end_time,
+            psp.week_day,
+            t.teacher_name,
+            psp.schedule_id
+        FROM
+            project_schedule_plan psp,
+            class_room c,
+            data_dic d,
+            teacher_info t
+        WHERE psp.class_room_id = c.room_id
+        AND psp.teacher_code = t.teacher_code
+        AND c.room_type = d.`code`
+        AND psp.schedule_type = 2
+        <if test="roomId != null and roomId != ''">
+            and psp.class_room_id = #{roomId}
+        </if>
+        <if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+            and psp.class_date between #{xyStart} and #{xyEnd}
+        </if>
+    </select>
+
+    <select id="selectBlank" parameterType="hashMap" resultType="hashMap">
+        select
+            schedule_id,
+            start_time,
+            end_time
+        from project_schedule_plan
+        where grade_id = #{grade_id}
+        and class_date = #{nowDate}
+        and #{nowStartTime} > start_time
+        order by start_time desc
+        limit 1
+    </select>
+
+    <select id="selectBlank2" parameterType="hashMap" resultType="hashMap">
+        select
+            schedule_id,
+            start_time,
+            end_time
+        from project_schedule_plan
+        where grade_id = #{grade_id}
+        and class_date = #{class_date}
+        and start_time > #{start_time}
+        order by start_time
+        limit 1
+    </select>
+
+    <select id="getNowScheduleOrNot" parameterType="hashMap" resultType="hashMap">
+        SELECT schedule_id from
+        project_schedule_plan
+        where project_id = #{project_id}
+        and class_date = #{class_date}
+        and start_time BETWEEN #{start_time} and #{end_time}
+    </select>
+
+    <select id="getTeacherSchedule" parameterType="hashMap" resultType="hashMap">
+        SELECT schedule_id from
+        project_schedule_plan
+        where teacher_code = #{teacher_code}
+        and class_date = #{class_date}
+        and start_time BETWEEN #{start_time} and #{end_time}
+    </select>
+
+    <select id="getProjectStartPersonCount" parameterType="string" resultType="integer">
+        select current_count as start_person_count from project_info
+        where project_id = #{project_id}
+    </select>
+
+    <!-- 查询data_dic中是否有当前课程 -->
+    <select id="selectCourseNameFromDataDic" parameterType="string" resultType="hashMap">
+        select
+            code,
+            name,
+            parent_code,
+            note,
+            createTime,
+            isfixed
+        from data_dic
+        where name = #{courseInput}
+        and parent_code = 25
+    </select>
+
+    <!-- 创建课 -->
+    <insert id="createCourse" parameterType="hashMap">
+        insert into data_dic (
+            code,
+            name,
+            parent_code,
+            note,
+            createTime,
+            isfixed
+        ) values (
+            #{code},
+            #{name},
+            #{parent_code},
+            #{note},
+            #{createTime},
+            #{isfixed}
+        )
+    </insert>
+
+    <select id="selectTeacher" parameterType="hashMap" resultType="hashMap">
+        select
+            teacher_code,
+            teacher_name,
+            id_card
+        from teacher_info
+        <where>
+            status = 1
+            <if test="personCode != null and personCode !=''">
+                and teacher_code in (select data_code from person_data_auth where p_code = #{personCode} and auth_type = 3)
+            </if>
+            <if test="teacherName != null and teacherName !=''">
+                and teacher_name like "${teacherName}%"
+            </if>
+        </where>
+        order by convert(teacher_name using gb2312)
+    </select>
+
+    <select id="selectAllProject" parameterType="hashMap" resultType="hashMap">
+        select psp.teacher_code from project_schedule_plan psp
+        <where>
+            psp.teacher_code in
+            <foreach collection="tList" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+            and psp.class_date between #{startDate} and #{endDate}
+        </where>
+    </select>
+
+    <select id="getYstartAndYend" parameterType="string" resultType="hashMap">
+        select * from time_sheet
+        where #{selectStartTime} between start_time and end_time limit 1
+    </select>
+
+    <select id="validate" parameterType="string" resultType="hashMap">
+        select status from project_schedule_plan
+        where project_id = #{projectId}
+        group by status
+    </select>
+
+    <select id="getGradeClassA" parameterType="hashMap" resultType="hashMap">
+        select
+			grade_id, project_id, grade_code
+		from grade_info
+		where grade_code like "${gradeCode}%"
+		and project_id = #{projectId}
+    </select>
+
+    <select id="getGradeClassB" parameterType="hashMap" statementType="CALLABLE" resultType="hashMap">
+        {call getGradeClass(#{grade_code})}
+    </select>
+
+    <select id="getGradeListA" parameterType="hashMap" resultType="hashMap">
+        SELECT
+            gi.grade_id gradeId,
+            gi.grade_name gradeName,
+            gi.grade_code gradeCode,
+            gi.project_id projectId,
+            gi.person_count personCount,
+            pi.project_name projectName,
+            pi.start_time startDate,
+            pi.end_time endDate,
+            pi.count_hour totalKs
+        FROM grade_info gi
+        left join project_info pi on pi.project_id = gi.project_id
+        WHERE gi.grade_code like "${gradeCode}%"
+        and gi.project_id = #{projectId}
+    </select>
+
+    <select id="getGradeListB" parameterType="hashMap" statementType="CALLABLE" resultType="hashMap">
+        {call getGradeList(#{gradeCode})}
+    </select>
+
+    <select id="getAllGradeInfo" resultType="hashmap">
+        select * from grade_info
+        <where>
+            <if test="grade_id != null and grade_id !=''">
+                grade_id = #{grade_id}
+            </if>
+        </where>
+    </select>
+
+    <select id="getAllKcInfo" resultType="hashmap">
+        select
+            project_id,
+            project_code,
+            start_time,
+            end_time,
+            count_hour,
+            start_person_count
+        from project_info
+    </select>
+
+    <select id="getAllBmInfo" parameterType="hashMap" statementType="CALLABLE" resultType="hashMap">
+        {call getAllBmInfo()}
+    </select>
+
+    <select id="getBmGradeInfo" parameterType="hashMap" statementType="CALLABLE" resultType="hashMap">
+        {call getBmGradeInfo(#{grade_id})}
+    </select>
+
+    <insert id="insertGradeInfo">
+        <foreach collection="list" index="index" item="item" open="" separator=";" close="">
+            insert into grade_info (
+                grade_id,
+                grade_name,
+                grade_code,
+                project_id,
+                person_count
+            ) values (
+                #{item.grade_id},
+                #{item.grade_name},
+                #{item.grade_code},
+                #{item.project_id},
+                #{item.person_count}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getGradePersonCount" resultType="hashMap">
+        select
+            count(schedule_id) pkNum,
+            count(class_room_id) pjsNum,
+            status,
+            grade_id
+        from project_schedule_plan
+        <where>
+            grade_id in
+            <foreach collection="list" open="(" separator="," close=")" item="item">
+                #{item.gradeId}
+            </foreach>
+        </where>
+        group by grade_id
+    </select>
+
+    <select id="getGradePersonCountPjs" resultType="hashMap">
+        select
+            count(schedule_id) pkNum,
+            count(class_room_id) pjsNum,
+            status,
+            grade_id
+        from project_schedule_plan
+        <where>
+            grade_id in
+            <foreach collection="list" open="(" separator="," close=")" item="item">
+                #{item.gradeId}
+            </foreach>
+        </where>
+        and status = 1
+        group by grade_id
+    </select>
+
+</mapper>

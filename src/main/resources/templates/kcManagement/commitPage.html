@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style type="text/css">
+    .clearfix:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+
+    .clearfix {
+        zoom: 1;
+    }
+
+    .sub_cont {
+        min-width: 385px;
+        display: flex;
+        justify-content: center;
+        margin: 65px auto 0;
+        clear: both;
+    }
+
+    .sub_cont dl {
+        position: relative;
+        float: left;
+        margin-right: 70px;
+        text-align: center;
+        cursor: pointer;
+        width: 80px;
+    }
+
+    #addPerson {
+        margin-right: 0;
+    }
+
+    .dl_jt {
+        position: absolute;
+        width: 90px;
+        height: 10px;
+        background: url(/img/jiantou.png) no-repeat;
+        background-size: 100% 100%;
+        left: 70px;
+        top: 15px;
+    }
+
+    .sub_cont dl dt {
+        width: 35px;
+        height: 35px;
+        border: 2px #fff solid;
+        background: #ccc;
+        border-radius: 50%;
+        box-shadow: 0 0 20px #ccc;
+        line-height: 35px;
+        text-align: center;
+        color: #fff;
+        margin: 0 auto;
+    }
+
+    .sub_cont dl > dd {
+        line-height: 20px;
+        margin-top: 12px;
+    }
+
+    .shenpi dt {
+        background: #00c1de !important;
+    }
+
+    .sp_diolog1, .sp_diolog2, .sp_diolog3, .sb_success {
+        display: none;
+    }
+
+    .sp_diolog1_btn {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .shenpi-selectStyle {
+        /*width: 250px;*/
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .shenpi-selectStyle > div {
+        width: 250px;
+    }
+
+    .sb_loading, .sb_success {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        display: none;
+    }
+
+    .inner_loading, .inner_success {
+        width: 668px;
+        height: 125px;
+        border-radius: 4px;
+        border: 1px #ccc solid;
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        margin-left: -334px;
+        background: #fff;
+        text-align: center;
+    }
+
+    .inner_loading p {
+        margin-top: 40px;
+    }
+
+    .inner_loading img {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .Rotation {
+        -webkit-transform: rotate(360deg);
+        animation: layui-rotate 2s linear infinite;
+        -moz-animation: layui-rotate 2s linear infinite;
+        -webkit-animation: layui-rotate 2s linear infinite;
+        -o-animation: layui-rotate 2s linear infinite;
+    }
+
+    .inner_success {
+        position: relative;
+    }
+
+    .inner_success img {
+        width: 40px;
+        height: 40px;
+        float: left;
+        margin: 20px 15px 0 40px;
+
+    }
+
+    .inner_success > div {
+        float: left;
+        margin-top: 20px;
+    }
+
+    .inner_success > div h1 {
+        text-align: left;
+    }
+
+    .inner_success > div p {
+        line-height: 36px;
+    }
+
+    .closeBtn {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        background: url(img/close.png) no-repeat;
+        background-size: 100% 100%;
+        position: absolute;
+        right: 5px;
+        top: 5px;
+    }
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <div class="sub_diolog">
+        <input id="projectIdList" type="hidden" th:value="${projectIdList}">
+        <input id="changeIdList" type="hidden" th:value="${changeIdList}">
+        <input id="personCode1" type="hidden">
+        <input id="personCode2" type="hidden">
+        <input id="personCode3" type="hidden">
+        <div class="sub_cont clearfix">
+            <dl id="delPerson">
+                <dt>-</dt>
+                <dd class="joysupply-txt-color-assist"></dd>
+                <div class="dl_jt"></div>
+            </dl>
+
+            <div class="shenpi">
+                <dl id="audit1">
+                    <dt id="shenpi1">1</dt>
+                    <dd class="joysupply-txt-color-assist" id="auditDd1">审批人1</dd>
+                    <div class="dl_jt"></div>
+                </dl>
+                <dl id="audit2" style="display: none">
+                    <dt id="shenpi2">2</dt>
+                    <dd class="joysupply-txt-color-assist" id="auditDd2">审批人2</dd>
+                    <div class="dl_jt"></div>
+                </dl>
+
+                <dl id="audit3" style="display: none">
+                    <dt id="shenpi3">3</dt>
+                    <dd class="joysupply-txt-color-assist" id="auditDd3">审批人3</dd>
+                    <div class="dl_jt"></div>
+                </dl>
+            </div>
+            <dl id="addPerson">
+                <dt>+</dt>
+                <dd class="joysupply-txt-color-assist"></dd>
+            </dl>
+        </div>
+        <div class="layui-form-item sp_diolog1_btn">
+            <button class="layui-btn layui-btn-sm submit_btn" onclick="commit()">确定</button>
+            <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+
+</div>
+<!--添加审批人1-->
+<div class="sp_diolog1 layui-form">
+    <div class="layui-form-item shenpi-selectStyle">
+        <label class="layui-form-label">审批人1：</label>
+        <div class="layui-input-block">
+            <select name="" lay-verify="required" id="shenpi_select1">
+                <option value=""></option>
+                <option th:value="${person.personCode}" th:each="person : ${personList}" th:text="${person.name}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item sp_diolog1_btn">
+        <button class="layui-btn layui-btn-sm shenpi1_btn1">确定</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm shenpi1_btn2">取消</button>
+    </div>
+</div>
+<!--添加审批人2-->
+<div class="sp_diolog2 layui-form">
+    <div class="layui-form-item shenpi-selectStyle">
+        <label class="layui-form-label">审批人2：</label>
+        <div class="layui-input-block">
+            <select name="" lay-verify="required" id="shenpi_select2">
+                <option value=""></option>
+                <option th:value="${person.personCode}" th:each="person : ${personList}" th:text="${person.name}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item sp_diolog1_btn">
+        <button class="layui-btn layui-btn-sm shenpi2_btn1">确定</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm shenpi2_btn2">取消</button>
+    </div>
+</div>
+<!--添加审批人3-->
+<div class="sp_diolog3 layui-form">
+    <div class="layui-form-item shenpi-selectStyle">
+        <label class="layui-form-label">审批人3：</label>
+        <div class="layui-input-block">
+            <select name="" lay-verify="required" id="shenpi_select3">
+                <option value=""></option>
+                <option th:value="${person.personCode}" th:each="person : ${personList}" th:text="${person.name}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item sp_diolog1_btn">
+        <button class="layui-btn layui-btn-sm shenpi3_btn1">确定</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm shenpi3_btn2">取消</button>
+    </div>
+</div>
+<!--提交加载中弹框-->
+<div class="sb_loading">
+    <div class="inner_loading">
+        <p><img src="/img/loading.png" class="Rotation"><span>处理中...</span></p>
+    </div>
+</div>
+<!--提交成功弹框-->
+<div class="sb_success">
+<input type="hidden" id="startTime" th:value="${startTime}">
+<input type="hidden" id="endTime" th:value="${endTime}">
+</div>
+</body>
+<script>
+    var layer;
+    layui.use(['element', 'layer', 'form'], function () {
+        var element = layui.element;
+        layer = layui.layer;
+        var form = layui.form;
+        //点击审批人1
+        var index1;
+        $('#shenpi1').click(function () {
+            index1 = layer.open({
+                title: "选择审批人",
+                type: 1,
+                btnAlign: 'c',
+                area: ['460px', '248px'],
+                content: $('.sp_diolog1')
+            });
+        })
+        //审批人1 - 确定
+        $('.shenpi1_btn1').click(function () {
+            var isSelected = $("#shenpi_select1 option:selected").val();
+            if (isSelected == null || isSelected == "") {
+                tipinfo("请选择审批人!");
+                return;
+            }
+            $('#auditDd1').text($("#shenpi_select1 option:selected").text());
+            var sf = $("#shenpi_select1 option:selected").val();
+            var ss = $("#shenpi_select2 option:selected").val();
+            var st = $("#shenpi_select3 option:selected").val();
+            $('#personCode1').val(sf);
+            $('.sp_diolog1 .layui-anim-upbit>dd').css('display', 'block');
+            $('.sp_diolog2 .layui-anim-upbit>dd').css('display', 'block');
+            $('.sp_diolog3 .layui-anim-upbit>dd').css('display', 'block');
+
+            $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+            $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+
+            if (ss != null && ss != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+                $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+            }
+            if (st != null && st != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+                $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+            }
+            layer.close(index1);
+        })
+        $('.shenpi1_btn2').click(function () {
+            layer.close(index1);
+        })
+        //点击审批人2
+        var index2;
+        $('#shenpi2').click(function () {
+            index2 = layer.open({
+                title: "选择审批人",
+                type: 1,
+                btnAlign: 'c',
+                area: ['460px', '248px'],
+                content: $('.sp_diolog2')
+            });
+        })
+        //审批人2 - 确定
+        $('.shenpi2_btn1').click(function () {
+            var isSelected = $("#shenpi_select2 option:selected").val();
+            if (isSelected == null || isSelected == "") {
+                tipinfo("请选择审批人!");
+                return;
+            }
+            $('#auditDd2').text($("#shenpi_select2 option:selected").text());
+            var sf = $("#shenpi_select1 option:selected").val();
+            var ss = $("#shenpi_select2 option:selected").val();
+            var st = $("#shenpi_select3 option:selected").val();
+            $('#personCode2').val(ss);
+            $('.sp_diolog1 .layui-anim-upbit>dd').css('display', 'block');
+            $('.sp_diolog2 .layui-anim-upbit>dd').css('display', 'block');
+            $('.sp_diolog3 .layui-anim-upbit>dd').css('display', 'block');
+            $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+            $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+            if (sf != null && sf != "") {
+                $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+                $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+            }
+            if (st != null && st != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+                $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+            }
+            layer.close(index2);
+        })
+        $('.shenpi2_btn2').click(function () {
+            layer.close(index2);
+        })
+        //点击审批人3
+        var index3;
+        $('#shenpi3').click(function () {
+            index3 = layer.open({
+                title: "选择审批人",
+                type: 1,
+                btnAlign: 'c',
+                area: ['460px', '248px'],
+                content: $('.sp_diolog3')
+            });
+        })
+        //审批人3 - 确定
+        $('.shenpi3_btn1').click(function () {
+            var isSelected = $("#shenpi_select3 option:selected").val();
+            if (isSelected == null || isSelected == "") {
+                tipinfo("请选择审批人!");
+                return;
+            }
+            $('#auditDd3').text($("#shenpi_select3 option:selected").text());
+            var sf = $("#shenpi_select1 option:selected").val();
+            var ss = $("#shenpi_select2 option:selected").val();
+            var st = $("#shenpi_select3 option:selected").val();
+            $('#personCode3').val(st);
+            $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+            $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'none');
+            if (sf != null && sf != "") {
+                $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+                $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + sf + ']').css('display', 'none');
+            }
+            if (ss != null && ss != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+                $('.sp_diolog3 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'none');
+            }
+            layer.close(index3);
+        })
+        $('.shenpi3_btn2').click(function () {
+            layer.close(index3);
+        })
+        /*$('.submit_btn').click(function () {
+
+
+        })*/
+    });
+    //添加审批人
+    var i = 1;
+    $('#addPerson').click(function () {
+        if (i == 1) {
+            $('.sub_cont').css('min-width', "440px");
+            $('#audit2').css('display', "block");
+            i++;
+        } else if (i == 2) {
+            $('.sub_cont').css('min-width', "570px");
+            $('#audit3').css('display', "block");
+            i++;
+        } else {
+            return;
+        }
+    })
+    $('#delPerson').click(function () {
+        if (i == 2) {
+            $('.sub_cont').css('min-width', "310px");
+            $('#audit2').css('display', "none");
+            var ss = $("#shenpi_select2 option:selected").val();
+            var select = "dd[lay-value='']";
+            $('#shenpi_select2').siblings("div.layui-form-select").find('dl').find(select).click();
+            $('#personCode2').val("");
+            if (ss != null && ss != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + ss + ']').css('display', 'block');
+            }
+            $('#auditDd2').text("审批人2");
+            i--;
+        } else if (i == 3) {
+            $('.sub_cont').css('min-width', "440px");
+            $('#audit3').css('display', "none");
+            var st = $("#shenpi_select3 option:selected").val();
+            var select = "dd[lay-value='']";
+            $('#shenpi_select3').siblings("div.layui-form-select").find('dl').find(select).click();
+            $('#personCode3').val("");
+            if (st != null && st != "") {
+                $('.sp_diolog1 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'block');
+                $('.sp_diolog2 .layui-anim-upbit>dd[lay-value=' + st + ']').css('display', 'block');
+            }
+            $('#auditDd3').text("审批人3");
+            i--;
+        } else {
+            return;
+        }
+    })
+    
+    
+    function commit() {
+        var projectIdList = $("#projectIdList").val();
+        var personCode1 = $("#personCode1").val();
+        var personCode2 = $("#personCode2").val();
+        var personCode3 = $("#personCode3").val();
+        var startTime = $("#startTime").val();
+        var endTime = $("#endTime").val();
+        console.log(personCode1);
+        if (personCode1 == null || personCode1 == "") {
+            tipinfo("请选择审批人!");
+            return;
+        }
+        var map = {
+            projectIdList: projectIdList,
+            personCode1: personCode1,
+            personCode2: personCode2,
+            personCode3: personCode3,
+            startTime:startTime,
+            endTime:endTime
+        };
+        
+        $.ajax({
+            type: "post",
+            url: "/kcManager/commit",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+               closewindow(1);
+            },
+            error: function (data) {
+                layer.alert(data.msg, {icon: 2});
+            }
+        });
+    }
+
+    /* function commit() {
+        var projectIdList = $("#projectIdList").val();
+        var changeIdList = $("#changeIdList").val();
+        var personCode1 = $("#personCode1").val();
+        if (personCode1 == null || personCode1 == "") {
+            tipinfo("请选择审批人!");
+            return;
+        }
+        var personCode2 = $("#personCode2").val();
+        var personCode3 = $("#personCode3").val();
+        var map = {
+            projectIdList: projectIdList,
+            changeIdList: changeIdList,
+            personCode1: personCode1,
+            personCode2: personCode2,
+            personCode3: personCode3
+        };
+        $.ajax({
+            type: "post",
+            url: "/project/commitProject",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                closewindow(1);
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+        layer.closeAll();
+        window.parent.close();
+        $('.sb_loading').show();
+        setTimeout(function () {
+            $('.sb_loading').hide();
+            $('.sb_success').show();
+        }, 2000);
+        setTimeout(function () {
+            $('.sb_success').hide();
+        }, 4000);
+        $('.closeBtn').click(function () {
+            $('.sb_success').hide();
+        })
+    } */
+</script>
+
+</html>

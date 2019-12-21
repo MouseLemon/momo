@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <!--<section>-->
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height: 95%;"
+             class="layui-anim layui-anim-upbit">
+            <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">成绩管理</h2>
+            <hr/>
+            <div class="layui-form clearfix">
+                <div class="layui-row">
+                    <div class="layui-col-md12 layui-col-lg8">
+                            <div class="layui-form-item layui-col-md12">
+                                <div class="layui-col-md4">
+                                    <label class="layui-form-label">学员姓名</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="studentName" placeholder="请输入学员名称" autocomplete="off"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <label class="layui-form-label">学号</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="serial" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-col-md4">
+                                    <label class="layui-form-label">项目名称</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="projectName" placeholder="请输入项目名称" autocomplete="off"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md12">
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">起始时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="startTime" placeholder="yyyy-MM-dd" autocomplete="off"
+                                           class="layui-input" id="test1" lay-key="1">
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">截止时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="endTime" placeholder="yyyy-MM-dd" autocomplete="off"
+                                           class="layui-input" id="test2" lay-key="2">
+                                </div>
+                            </div>
+                            <div class="layui-col-md4" style="text-align: center;">
+                                <input type="radio" lay-filter="nameType" name="type" value="1" title="百分制"
+                                       checked="">
+                                <div class="layui-unselect layui-form-radio layui-form-radioed"><i
+                                        class="layui-anim layui-icon"></i>
+                                    <div>百分制</div>
+                                </div>
+                                <input type="radio" lay-filter="nameType" name="type" value="2" title="评级">
+                                <div class="layui-unselect layui-form-radio"><i class="layui-anim layui-icon"></i>
+                                    <div>评级</div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="layui-col-md12 layui-col-lg4 mt5">
+                        <div class="layui-col-md12">
+                            <button class="layui-btn layui-btn-sm ml20" id="search">搜索</button>
+                            <button id="searchStudents" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'cjgl_add'}">新建</button>
+                            <button class="layui-btn layui-btn-sm" id="export" th:each="func:${session.funcList}" th:if="${func == 'cjgl_export'}">模板下载</button>
+                            <button class="layui-btn layui-btn-sm" id="import" th:each="func:${session.funcList}" th:if="${func == 'cjgl_import'}">批量导入</button>
+                        </div>
+                        <div class="layui-col-md12" style="margin-top: 20px">
+                            <button class="layui-btn layui-btn-sm ml20" id="printCertificate" onclick="printTemplate(2)"
+                                    th:each="func:${session.funcList}" th:if="${func == 'cjgl_printCerti'}">打印证书
+                            </button>
+                            <button id="printScore" class="layui-btn layui-btn-sm" onclick="printTemplate(1)"
+                                    th:each="func:${session.funcList}" th:if="${func == 'cjgl_printScore'}">打印成绩
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <table class="layui-table" lay-skin="line" id="scoreTable" lay-filter="scoreTable">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <div id="tablePage"></div>
+        </div>
+    </div>
+    <!--</section>-->
+</div>
+</div>
+</div>
+<script th:inline="javascript">
+    var fivePint = [[${fivePintAll}]];
+</script>
+<script th:src="@{/js/project/score.js}"></script>
+</body>
+</html>

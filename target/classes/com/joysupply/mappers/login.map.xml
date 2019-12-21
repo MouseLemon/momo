@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.LoginDao">
+    <insert id="saveSystemUser" parameterType="SystemUser">
+        <![CDATA[
+            INSERT INTO 
+                  system_user(
+                      person_code
+                      ,password
+                      ,user_name
+                      ,is_enable
+                  )
+            VALUES (
+                #{personCode}
+                ,#{password}
+                ,#{userName}
+                ,#{isEnable}
+            )
+        ]]>
+    </insert>
+    <update id="updateSystemUser" parameterType="SystemUser">
+        <![CDATA[
+            UPDATE SET 
+                password = #{password}
+                ,user_name = #{userName}
+                ,is_enable = #{isEnable}
+            FROM 
+                system_user
+            WHERE 
+                person_code = #{person_code}
+        ]]>
+    </update>
+    <select id="selSystemUserByName" parameterType="SystemUser" resultType="SystemUser">
+        <![CDATA[
+            SELECT 
+                person_code personCode
+                ,password password
+                ,user_name userName
+                ,is_enable isEnable
+                ,user_type userType
+            FROM 
+                system_user
+            WHERE 
+                user_name = #{userName}
+                AND password = #{password}
+                AND is_enable = 1
+        ]]>
+    </select>
+    <select id="queryUserByPersonCode" parameterType="java.lang.String" resultType="SystemUser">
+            SELECT
+                person_code personCode
+                ,password password
+                ,user_name userName
+                ,is_enable isEnable
+                ,user_type userType
+            FROM
+                system_user
+            WHERE
+                person_code = #{personCode}
+                AND is_enable = 1
+    </select>
+</mapper>

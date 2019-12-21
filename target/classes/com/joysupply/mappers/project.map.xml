@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProjectDao">
+
+    <resultMap type="Project" id="projectMap">
+        <id property="projectId" column="project_id"/>
+        <result property="projectCode" column="project_code"/>
+        <result property="projectName" column="project_name"/>
+        <result property="language" column="language"/>
+        <result property="depName" column="dep_name"/>
+        <result property="depCode" column="organize_code"/>
+        <result property="projectDesc" column="project_desc"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="countHour" column="count_hour"/>
+        <result property="startPersonCount" column="start_person_count"/>
+        <result property="returnFeeCount" column="return_fee_count"/>
+        <result property="joinClassCount" column="join_class_count"/>
+        <result property="currentCount" column="current_count"/>
+        <result property="feeType" column="fee_type"/>
+        <result property="feeHour" column="fee_hour"/>
+        <result property="feeSingle" column="fee_single"/>
+        <result property="startFee" column="start_fee"/>
+        <result property="addFee" column="add_fee"/>
+        <result property="subFee" column="sub_fee"/>
+        <result property="currentIncome" column="current_income"/>
+        <result property="kcExpend" column="kc_expend"/>
+        <result property="hardwareExpend" column="hardware_expend"/>
+        <result property="manageExpend" column="manage_expend"/>
+        <result property="adExpend" column="ad_expend"/>
+        <result property="agentExpend" column="agent_expend"/>
+        <result property="totalIncome" column="total_income"/>
+        <result property="payHour" column="pay_hour"/>
+        <result property="payed" column="payed"/>
+        <result property="status" column="status"/>
+        <result property="projectType" column="project_type"/>
+        <result property="approvaler" column="approvaler"/>
+        <result property="creater" column="creater"/>
+        <result property="personCode" column="person_code"/>
+        <result property="createTime" column="create_time"/>
+        <result property="tempCode" column="tempCode"/>
+    </resultMap>
+    <resultMap type="Project" id="projectHistoryMap">
+        <id property="changeId" column="change_id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="projectCode" column="project_code"/>
+        <result property="projectName" column="project_name"/>
+        <result property="language" column="language"/>
+        <result property="depName" column="dep_name"/>
+        <result property="depCode" column="organize_code"/>
+        <result property="upCode" column="up_code"/>
+        <result property="projectDesc" column="project_desc"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="countHour" column="count_hour"/>
+        <result property="startPersonCount" column="start_person_count"/>
+        <result property="returnFeeCount" column="return_fee_count"/>
+        <result property="joinClassCount" column="join_class_count"/>
+        <result property="currentCount" column="current_count"/>
+        <result property="feeType" column="fee_type"/>
+        <result property="feeHour" column="fee_hour"/>
+        <result property="feeSingle" column="fee_single"/>
+        <result property="startFee" column="start_fee"/>
+        <result property="addFee" column="add_fee"/>
+        <result property="subFee" column="sub_fee"/>
+        <result property="currentIncome" column="current_income"/>
+        <result property="kcExpend" column="kc_expend"/>
+        <result property="hardwareExpend" column="hardware_expend"/>
+        <result property="manageExpend" column="manage_expend"/>
+        <result property="adExpend" column="ad_expend"/>
+        <result property="agentExpend" column="agent_expend"/>
+        <result property="totalIncome" column="total_income"/>
+        <result property="payHour" column="pay_hour"/>
+        <result property="payed" column="payed"/>
+        <result property="status" column="status"/>
+        <result property="projectType" column="project_type"/>
+        <result property="approvaler" column="approvaler"/>
+        <result property="creater" column="creater"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    <resultMap type="ProjectAddFile" id="projectAddFileMap">
+        <id property="rowId" column="row_id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="addName" column="add_name"/>
+        <result property="uploader" column="uploader"/>
+        <result property="uploadTime" column="upload_time"/>
+        <result property="url" column="url"/>
+    </resultMap>
+    <resultMap type="ProjectApproveOption" id="projectApproveOptionMap">
+        <id property="rowId" column="row_id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="personCode" column="person_code"/>
+        <result property="approveDateTime" column="approve_date_time"/>
+        <result property="approveResult" column="approve_result"/>
+        <result property="approveOption" column="approve_option"/>
+        <result property="approveOrder" column="approve_order"/>
+        <result property="submitType" column="submit_type"/>
+    </resultMap>
+    <select id="getProjectList" parameterType="hashMap" resultType="hashMap">
+        select
+        pi.project_id projectId,pi.project_code projectCode,pi.project_name projectName,d.name language,os.organize_name depName,os.organize_code,os.up_code upCode,pi.start_time
+        startTime,pi.end_time endTime,
+        pi.count_hour countHour,pi.current_count currentCount,pi.total_income totalIncome,pi.pay_hour payHour,pi.payed payed,pi.status status,dc.name projectType,
+        pi.creater creater,pi.create_time createTime,p.name name,pi.tempCode
+        from project_info pi
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join person p on pi.approvaler = p.person_code
+        left join data_dic d on pi.language = d.code
+        left join data_dic dc on pi.project_type = dc.code
+        <where>
+            <if test="projectName != null and projectName !=''">
+                and pi.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType !=''">
+                and pi.project_type = #{projectType}
+            </if>
+            <if test="organizeCode != null and organizeCode !=''">
+                and pi.dep_name like "${organizeCode}%"
+            </if>
+            <if test="depName != null and depName !=''">
+                and pi.dep_name like "%${depName}%"
+            </if>
+            <if test="startTime != null and startTime !=''">
+                and pi.start_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime !=''">
+                and #{endTime} >= pi.end_time
+            </if>
+            <if test="isOver == 1">
+                and curdate() > pi.end_time
+            </if>
+            <if test="isOver == 0">
+                and pi.end_time >= curdate()
+            </if>
+            <if test="personCode != null and personCode !=''">
+                and project_id in(select data_code from person_data_auth where p_code = #{personCode})
+            </if>
+            <if test="projectInFeeList != null and projectInFeeList.size>0">
+                and project_id not in
+                <foreach collection="projectInFeeList" open="(" close=")" separator="," item="item">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="getProjectListA" parameterType="hashMap" resultType="hashMap">
+        select
+        pi.project_id projectId,pi.project_code projectCode,pi.project_name projectName,d.name language,os.organize_name depName,os.organize_code,os.up_code upCode,pi.start_time
+        startTime,pi.end_time endTime,
+        pi.count_hour countHour,pi.current_count currentCount,pi.total_income totalIncome,pi.pay_hour payHour,pi.payed payed,pi.status status,dc.name projectType,
+        pi.creater creater,pi.create_time createTime,p.name name,pi.tempCode
+        from project_info pi
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join person p on pi.approvaler = p.person_code
+        left join data_dic d on pi.language = d.code
+        left join data_dic dc on pi.project_type = dc.code
+        <where>
+            <if test="projectName != null and projectName !=''">
+                and pi.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType !=''">
+                and pi.project_type = #{projectType}
+            </if>
+            <if test="organizeCode != null and organizeCode !=''">
+                and pi.dep_name like "${organizeCode}%"
+            </if>
+            <if test="depName != null and depName !=''">
+                and pi.dep_name like "%${depName}%"
+            </if>
+            <if test="startTime != null and startTime !=''">
+                and pi.start_time >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime !=''">
+                and #{endTime} >= pi.end_time
+            </if>
+            <if test="isOver == 1">
+                and curdate() > pi.end_time
+            </if>
+            <if test="isOver == 0">
+                and pi.end_time >= curdate()
+            </if>
+            <if test="personCode != null and personCode !=''">
+                and project_id in (
+                    select data_code from person_data_auth where p_code in (
+                        SELECT person_code FROM person
+                        where organize_code in (
+                            SELECT organize_code FROM person
+                            where person_code = #{personCode}
+                        )
+                    )
+                )
+            </if>
+            <if test="projectInFeeList != null and projectInFeeList.size>0">
+                and project_id not in
+                <foreach collection="projectInFeeList" open="(" close=")" separator="," item="item">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="getProjectListNoPage" parameterType="string" resultMap="projectMap">
+        select project_id ,project_code,project_name,start_time,end_time,tempCode from project_info
+        <where>
+            <if test="_parameter != null and _parameter !=''">
+                project_id in(select data_code from person_data_auth where p_code = #{_parameter} and auth_type = 2)
+            </if>
+        </where>
+        order by convert(project_name using gb2312)
+    </select>
+
+    <select id="getProjectListNoPageA" parameterType="string" resultMap="projectMap">
+        select project_id ,project_code,project_name,start_time,end_time,tempCode from project_info
+        <where>
+            <if test="_parameter != null and _parameter !=''">
+                and project_id in (
+                    select data_code from person_data_auth where p_code in (
+                        SELECT person_code FROM person
+                        where organize_code in (
+                            SELECT organize_code FROM person
+                            where person_code = #{_parameter}
+                            and auth_type = 2
+                        )
+                    )
+                )
+            </if>
+        </where>
+        order by convert(project_name using gb2312)
+    </select>
+
+    <select id="getProject" parameterType="string" resultMap="projectMap">
+        select project_id,project_code,project_name,dl.name language,os.organize_name dep_Name,os.organize_code
+        ,project_desc,start_time,end_time,count_hour,start_person_count,return_fee_count,
+        join_class_count,current_count,df.name fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,ad_expend,
+        agent_expend,total_income,pay_hour,payed,d.name project_type,pi.create_time,p.name creater,p.person_code
+        from project_info pi
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join person p on pi.creater = p.person_code
+        left join data_dic d on pi.project_type = d.code
+        left join data_dic dl on pi.language = dl.code
+        left join data_dic df on pi.fee_type = df.code
+        where project_id = #{projectId}
+    </select>
+    <select id="getOriginProject" parameterType="string" resultMap="projectMap">
+        select project_id,project_code,project_name,language,dep_name,project_desc,start_time,end_time,count_hour,start_person_count,return_fee_count,join_class_count,
+            current_count,fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,ad_expend,agent_expend,total_income,
+            pay_hour,payed,status,project_type,approvaler,creater,create_time
+        from project_info
+        where project_id = #{projectId}
+    </select>
+    <select id="getChangeProject" parameterType="string" resultMap="projectHistoryMap">
+        select change_id,project_id,project_code,project_name,dl.name language,os.organize_name dep_Name,os.organize_code,
+        project_desc,start_time,end_time,count_hour,start_person_count,return_fee_count,
+        join_class_count,current_count,df.name fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,ad_expend,
+        agent_expend,total_income,pay_hour,payed,d.name project_type,pi.create_time,p.name creater
+        from project_info_hist pi
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join person p on pi.creater = p.person_code
+        left join data_dic d on pi.project_type = d.code
+        left join data_dic dl on pi.language = dl.code
+        left join data_dic df on pi.fee_type = df.code
+        where change_id = #{changeId}
+    </select>
+    <insert id="addProject" parameterType="Project">
+        insert into project_info(project_id,project_code,project_name,language,dep_name,project_desc,start_time,end_time,count_hour,start_person_count,
+        return_fee_count,join_class_count,current_count,fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,
+        ad_expend,agent_expend,total_income,pay_hour,payed,status,project_type,creater,create_time
+        ) values(
+        #{projectId},#{projectCode}, #{projectName}, #{language}, #{depName}, #{projectDesc}, #{startTime}, #{endTime}, #{countHour}, #{startPersonCount}, #{returnFeeCount},
+        #{joinClassCount}, #{currentCount}, #{feeType}, #{feeHour}, #{feeSingle}, #{startFee}, #{addFee}, #{subFee}, #{currentIncome}, #{kcExpend}, #{hardwareExpend},
+        #{manageExpend}, #{adExpend}, #{agentExpend}, #{totalIncome}, #{payHour}, #{payed}, 1, #{projectType}, #{creater}, #{createTime}
+        )
+    </insert>
+    <insert id="changeProject" parameterType="Project">
+        insert into project_info_hist(change_id,project_id,project_code,project_name,language,dep_name,project_desc,start_time,end_time,count_hour,start_person_count,
+        return_fee_count,join_class_count,current_count,fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,
+        ad_expend,agent_expend,total_income,pay_hour,payed,status,project_type,creater,create_time
+        ) values(
+        #{changeId},#{projectId},#{projectCode}, #{projectName}, #{language}, #{depName}, #{projectDesc}, #{startTime}, #{endTime}, #{countHour}, #{startPersonCount},
+        #{returnFeeCount},#{joinClassCount}, #{currentCount}, #{feeType}, #{feeHour}, #{feeSingle}, #{startFee}, #{addFee}, #{subFee}, #{currentIncome}, #{kcExpend},
+        #{hardwareExpend},#{manageExpend}, #{adExpend}, #{agentExpend}, #{totalIncome}, #{payHour}, #{payed},#{status}, #{projectType}, #{creater}, #{createTime}
+        )
+    </insert>
+    <delete id="delProject" parameterType="string">
+        delete from project_info where project_id = #{projectId}
+    </delete>
+    <update id="updProject" parameterType="Project">
+        update project_info
+        <set>
+            <if test="projectName != null and projectName !=''">
+                project_name = #{projectName},
+            </if>
+            <if test="projectCode != null and projectCode !=''">
+                project_code = #{projectCode},
+            </if>
+            <if test="language != null and language !=''">
+                language = #{language},
+            </if>
+            <if test="depName != null and depName !=''">
+                dep_name = #{depName},
+            </if>
+            <if test="projectDesc != null and projectDesc !=''">
+                project_desc = #{projectDesc},
+            </if>
+            <if test="startTime != null and startTime !=''">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null and endTime !=''">
+                end_time = #{endTime},
+            </if>
+            <if test="countHour != null and countHour !=''">
+                count_hour = #{countHour},
+            </if>
+            <if test="startPersonCount != null and startPersonCount !=''">
+                start_person_count = #{startPersonCount},
+            </if>
+            <if test="returnFeeCount != null and returnFeeCount !=''">
+                return_fee_count = #{returnFeeCount},
+            </if>
+            <if test="joinClassCount != null and joinClassCount !=''">
+                join_class_count = #{joinClassCount},
+            </if>
+            <if test="currentCount != null and currentCount !=''">
+                current_count = #{currentCount},
+            </if>
+            <if test="feeType != null and feeType !=''">
+                fee_type = #{feeType},
+            </if>
+            <if test="feeHour != null and feeHour !=''">
+                fee_hour = #{feeHour},
+            </if>
+            <if test="feeSingle != null and feeSingle !=''">
+                fee_single = #{feeSingle},
+            </if>
+            <if test="startFee != null and startFee !=''">
+                start_fee = #{startFee},
+            </if>
+            <if test="addFee != null and addFee !=''">
+                add_fee = #{addFee},
+            </if>
+            <if test="subFee != null and subFee !=''">
+                sub_fee = #{subFee},
+            </if>
+            <if test="currentIncome != null and currentIncome !=''">
+                current_income = #{currentIncome},
+            </if>
+            <if test="kcExpend != null and kcExpend !=''">
+                kc_expend = #{kcExpend},
+            </if>
+            <if test="hardwareExpend != null and hardwareExpend !=''">
+                hardware_expend = #{hardwareExpend},
+            </if>
+            <if test="manageExpend != null and manageExpend !=''">
+                manage_expend = #{manageExpend},
+            </if>
+            <if test="adExpend != null and adExpend !=''">
+                ad_expend = #{adExpend},
+            </if>
+            <if test="agentExpend != null and agentExpend !=''">
+                agent_expend = #{agentExpend},
+            </if>
+            <if test="totalIncome != null and totalIncome !=''">
+                total_income = #{totalIncome},
+            </if>
+            <if test="payHour != null and payHour !=''">
+                pay_hour = #{payHour},
+            </if>
+            <if test="payed != null and payed !=''">
+                payed = #{payed},
+            </if>
+            <if test="projectType != null and projectType !=''">
+                project_type = #{projectType},
+            </if>
+            <if test="status == 2">
+                status = 1,approvaler = null
+            </if>
+        </set>
+        where project_id = #{projectId}
+    </update>
+    <update id="updProjectKC" parameterType="Project">
+        update project_info
+        <set>
+            <if test="payHour != null and payHour !=''">
+                pay_hour = #{payHour},
+            </if>
+            <if test="payed != null and payed !=''">
+                total_income = cast((cast((total_income + IFNULL(payed,0)) as DECIMAL(10,2)) - #{payed} ) as DECIMAL(10,2)),
+                payed = #{payed},
+            </if>
+        </set>
+        where project_id = #{projectId}
+    </update>
+    <update id="updProjectByChange" parameterType="Project">
+        update project_info
+        <set>
+            <if test="projectName != null and projectName !=''">
+                project_name = #{projectName},
+            </if>
+            <if test="language != null and language !=''">
+                language = #{language},
+            </if>
+            <if test="depName != null and depName !=''">
+                dep_name = #{depName},
+            </if>
+            <if test="projectDesc != null and projectDesc !=''">
+                project_desc = #{projectDesc},
+            </if>
+            <if test="startTime != null and startTime !=''">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null and endTime !=''">
+                end_time = #{endTime},
+            </if>
+            <if test="countHour != null and countHour !=''">
+                count_hour = #{countHour},
+            </if>
+            <if test="startPersonCount != null and startPersonCount !=''">
+                start_person_count = #{startPersonCount},
+            </if>
+            <if test="returnFeeCount != null and returnFeeCount !=''">
+                return_fee_count = #{returnFeeCount},
+            </if>
+            <if test="joinClassCount != null and joinClassCount !=''">
+                join_class_count = #{joinClassCount},
+            </if>
+            <if test="currentCount != null and currentCount !=''">
+                current_count = #{currentCount},
+            </if>
+            <if test="feeType != null and feeType !=''">
+                fee_type = #{feeType},
+            </if>
+            <if test="feeHour != null and feeHour !=''">
+                fee_hour = #{feeHour},
+            </if>
+            <if test="feeSingle != null and feeSingle !=''">
+                fee_single = #{feeSingle},
+            </if>
+            <if test="startFee != null and startFee !=''">
+                start_fee = #{startFee},
+            </if>
+            <if test="addFee != null and addFee !=''">
+                add_fee = #{addFee},
+            </if>
+            <if test="subFee != null and subFee !=''">
+                sub_fee = #{subFee},
+            </if>
+            <if test="currentIncome != null and currentIncome !=''">
+                current_income = #{currentIncome},
+            </if>
+            <if test="kcExpend != null and kcExpend !=''">
+                kc_expend = #{kcExpend},
+            </if>
+            <if test="hardwareExpend != null and hardwareExpend !=''">
+                hardware_expend = #{hardwareExpend},
+            </if>
+            <if test="manageExpend != null and manageExpend !=''">
+                manage_expend = #{manageExpend},
+            </if>
+            <if test="adExpend != null and adExpend !=''">
+                ad_expend = #{adExpend},
+            </if>
+            <if test="agentExpend != null and agentExpend !=''">
+                agent_expend = #{agentExpend},
+            </if>
+            <if test="totalIncome != null and totalIncome !=''">
+                total_income = #{totalIncome},
+            </if>
+            <if test="payHour != null and payHour !=''">
+                pay_hour = #{payHour},
+            </if>
+            <if test="payed != null and payed !=''">
+                payed = #{payed},
+            </if>
+            <if test="projectType != null and projectType !=''">
+                project_type = #{projectType},
+            </if>
+        </set>
+        where project_id = #{projectId}
+    </update>
+    <update id="updChange" parameterType="Project">
+        update project_info_hist
+        <set>
+            <if test="projectName != null and projectName !=''">
+                project_name = #{projectName},
+            </if>
+            <if test="projectCode != null and projectCode !=''">
+                project_code = #{projectCode},
+            </if>
+            <if test="language != null and language !=''">
+                language = #{language},
+            </if>
+            <if test="depName != null and depName !=''">
+                dep_name = #{depName},
+            </if>
+            <if test="projectDesc != null and projectDesc !=''">
+                project_desc = #{projectDesc},
+            </if>
+            <if test="startTime != null and startTime !=''">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null and endTime !=''">
+                end_time = #{endTime},
+            </if>
+            <if test="countHour != null and countHour !=''">
+                count_hour = #{countHour},
+            </if>
+            <if test="startPersonCount != null and startPersonCount !=''">
+                start_person_count = #{startPersonCount},
+            </if>
+            <if test="returnFeeCount != null and returnFeeCount !=''">
+                return_fee_count = #{returnFeeCount},
+            </if>
+            <if test="joinClassCount != null and joinClassCount !=''">
+                join_class_count = #{joinClassCount},
+            </if>
+            <if test="currentCount != null and currentCount !=''">
+                current_count = #{currentCount},
+            </if>
+            <if test="feeType != null and feeType !=''">
+                fee_type = #{feeType},
+            </if>
+            <if test="feeHour != null and feeHour !=''">
+                fee_hour = #{feeHour},
+            </if>
+            <if test="feeSingle != null and feeSingle !=''">
+                fee_single = #{feeSingle},
+            </if>
+            <if test="startFee != null and startFee !=''">
+                start_fee = #{startFee},
+            </if>
+            <if test="addFee != null and addFee !=''">
+                add_fee = #{addFee},
+            </if>
+            <if test="subFee != null and subFee !=''">
+                sub_fee = #{subFee},
+            </if>
+            <if test="currentIncome != null and currentIncome !=''">
+                current_income = #{currentIncome},
+            </if>
+            <if test="kcExpend != null and kcExpend !=''">
+                kc_expend = #{kcExpend},
+            </if>
+            <if test="hardwareExpend != null and hardwareExpend !=''">
+                hardware_expend = #{hardwareExpend},
+            </if>
+            <if test="manageExpend != null and manageExpend !=''">
+                manage_expend = #{manageExpend},
+            </if>
+            <if test="adExpend != null and adExpend !=''">
+                ad_expend = #{adExpend},
+            </if>
+            <if test="agentExpend != null and agentExpend !=''">
+                agent_expend = #{agentExpend},
+            </if>
+            <if test="totalIncome != null and totalIncome !=''">
+                total_income = #{totalIncome},
+            </if>
+            <if test="payHour != null and payHour !=''">
+                pay_hour = #{payHour},
+            </if>
+            <if test="payed != null and payed !=''">
+                payed = #{payed},
+            </if>
+            <if test="projectType != null and projectType !=''">
+                project_type = #{projectType},
+            </if>
+            <if test="status == 2">
+                status = 1,approvaler = null
+            </if>
+        </set>
+        where change_id = #{changeId}
+    </update>
+    <insert id="addProjectAddFile" parameterType="ProjectAddFile">
+        insert into project_add_file values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.rowId},#{item.projectId},#{item.addName},#{item.uploader},#{item.uploadTime},#{item.url})
+        </foreach>
+    </insert>
+    <insert id="addAccessory" parameterType="ProjectAddFile">
+        insert into project_add_file values(#{rowId},#{projectId},#{addName},#{uploader},#{uploadTime},#{url})
+    </insert>
+    <select id="getChangeList" parameterType="hashMap" resultMap="projectHistoryMap">
+        select change_Id,project_id,project_code,project_name,dl.name language,os.organize_name,os.up_code,
+        pih.dep_name,os.organize_code,project_desc,start_time,end_time,count_hour,start_person_count,
+        return_fee_count,join_class_count,current_count,df.name fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,
+        ad_expend,
+        agent_expend,total_income,pay_hour,payed,status,d.name project_type,pih.create_time,p.name creater
+        from project_info_hist pih
+        left join organize_struct os on pih.dep_name = os.organize_code
+        left join person p on pih.creater = p.person_code
+        left join data_dic d on pih.project_type = d.code
+        left join data_dic dl on pih.language = dl.code
+        left join data_dic df on pih.fee_type = df.code
+        <where>
+            project_id = #{projectId}
+            <if test="projectName != null and projectName != ''">
+                and pih.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                and pih.project_type = #{projectType}
+            </if>
+        </where>
+    </select>
+    <select id="getAccessoryList" parameterType="hashMap" resultMap="projectAddFileMap">
+        select row_id,project_id ,add_name,p.name uploader,upload_time,url
+        from project_add_file paf
+        left join person p on paf.uploader = p.person_code
+        where project_id = #{projectId}
+    </select>
+    <select id="getProjectAuditOpionList" parameterType="hashMap" resultType="hashMap">
+        select pao.row_id rowId,pao.approve_date_time,pi.project_name projectName,os.organize_name depName,os.organize_code,d.name projectType,pao.approve_option
+        approveOption,p.name name ,
+        pao.approve_date_time approveDateTime,pao.approve_result approveResult
+        from project_approve_option pao
+        left join person p on pao.person_code = p.person_code
+        left join project_info pi on pao.project_id = pi.project_id
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join data_dic d on pi.project_type = d.code
+        <where>
+            pao.approve_result != 0
+            <if test="projectId != null and projectId != ''">
+                and pao.project_id = #{projectId} and pao.submit_type = 1
+            </if>
+            <if test="projectName != null and projectName != ''">
+                and pi.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                and d.code = #{projectType}
+            </if>
+        </where>
+    </select>
+    <select id="getChangeAuditOpionList" parameterType="hashMap" resultType="hashMap">
+        select pao.row_id rowId,pi.project_name projectName,os.organize_name depName,os.organize_code,d.name projectType,pao.approve_option approveOption,p.name name ,
+        pao.approve_date_time approveDateTime,pao.approve_result approveResult
+        from project_approve_option pao
+        left join person p on pao.person_code = p.person_code
+        left join project_info_hist pi on pao.change_id = pi.change_id
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join data_dic d on pi.project_type = d.code
+        <where>
+            pao.approve_result != 0
+            <if test="changeId != null and changeId != ''">
+                and pao.change_id = #{changeId} and pao.submit_type = 2
+            </if>
+            <if test="projectName != null and projectName != ''">
+                and pi.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                and d.code = #{projectType}
+            </if>
+        </where>
+    </select>
+    <delete id="delAccessory" parameterType="ProjectAddFile">
+        delete from project_add_file where row_id = #{rowId}
+    </delete>
+    <delete id="delApprove" parameterType="Project">
+        delete from project_approve_option
+        <where>
+            <if test="changeId!= null and changeId !=''">
+                change_id = #{changeId}
+            </if>
+            <if test="projectId!= null and projectId !=''">
+                and project_id = #{projectId}
+            </if>
+            and approve_result = 0
+        </where>
+    </delete>
+    <insert id="addProjectApproveOption" parameterType="ProjectApproveOption">
+        insert into project_approve_option(row_id,project_id,change_id,person_code,approve_order,submit_type) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.rowId},#{item.projectId},#{item.changeId},#{item.personCode},#{item.approveOrder},#{item.submitType})
+        </foreach>
+    </insert>
+    <update id="commitProject" parameterType="hashMap">
+        update project_info set status = 2,approvaler = #{approvaler},submitter = #{submitter},submit_time = #{submitTime} where project_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="commitChange" parameterType="hashMap">
+        update project_info_hist set status = 2,approvaler = #{approvaler},submitter = #{submitter},submit_time = #{submitTime} where change_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <select id="getChangeInAudit" parameterType="Project" resultType="int">
+        select count(change_id) from project_info_hist where project_id = #{projectId} and status in (1,2,4)
+    </select>
+    <select id="getOriginChange" parameterType="string" resultMap="projectHistoryMap">
+        select change_id,project_id,project_code,project_name,language,dep_name,project_desc,start_time,end_time,count_hour,start_person_count,return_fee_count,
+            join_class_count,current_count,fee_type,fee_hour,fee_single,start_fee,add_fee,sub_fee,current_income,kc_expend,hardware_expend,manage_expend,ad_expend,agent_expend,
+            total_income,pay_hour,payed,status,project_type,opinion,approvaler,creater,approval_time,create_time
+        from
+            project_info_hist
+        where change_id = #{changeId}
+    </select>
+    <select id="checkProjectCode" parameterType="Project" resultType="int">
+        select count(*) from project_info
+        <where>project_code = #{projectCode}
+            <if test="projectId != null and projectId !=''">
+                and project_id != #{projectId}
+            </if>
+        </where>
+    </select>
+    <select id="getCommitProjectList" parameterType="hashMap" resultType="hashMap">
+        select * from(
+            select project_name projectName,status,submit_time submitTime,1 submitType from project_info where submitter = #{personCode}
+            union
+            select project_name projectName,status,submit_time submitTime,2 submitType from project_info_hist where submitter = #{personCode}
+        )t
+    </select>
+    <update id="updateTempCode" parameterType="hashMap">
+        update project_info set tempCode = #{tempCode} where project_id = #{projectId}
+    </update>
+    <select id="getProjectIdByProjectCode" parameterType="string" resultType="string">
+        select project_id from project_info where project_code = #{projectCode}
+    </select>
+
+    <select id="getByBmProjectInfo" statementType="CALLABLE" parameterType="hashMap" resultType="map">
+        {call getByBmProjectInfo(#{projectCode,jdbcType=INTEGER,mode=IN})}
+    </select>
+
+    <insert id="addGrade" parameterType="hashMap">
+        insert into grade_info (
+            grade_id,grade_name,grade_code,project_id,person_count
+        ) values (
+            #{grade_id}, #{grade_name}, #{grade_code}, #{project_id}, #{person_count}
+        )
+    </insert>
+
+    <select id="countProject" statementType="CALLABLE" parameterType="hashMap" resultType="Integer">
+        {call countProject(#{project_code})}
+    </select>
+
+</mapper>

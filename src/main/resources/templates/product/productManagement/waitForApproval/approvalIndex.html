@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">待审批列表</h2>
+                <hr/>
+                <div class="layui-form" action="">
+                    <div class="layui-row">
+                        <div class="layui-col-lg10 layui-col-md12">
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">项目名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="projectName" placeholder="请输入" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">项目类型</label>
+                                <div class="layui-input-block">
+                                    <select id="projectType">
+                                        <option value=""></option>
+                                        <option th:value="${projectType.code}" th:each="projectType : ${projectTypes}" th:text="${projectType.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">项目语种</label>
+                                <div class="layui-input-block">
+                                    <select id="languageType" lay-verify="required" lay-search="">
+                                        <option value=""></option>
+                                        <option th:value="${projectType.code}" th:each="projectType : ${languages}" th:text="${projectType.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-lg2 layui-col-md12" style="margin-top: 5px;">
+                            <button class="layui-btn layui-btn-sm" onclick="search()" style="margin-left: 40px;">搜索</button>
+                            <button class="layui-btn layui-btn-sm" onclick="approval()" th:each="func:${session.funcList}" th:if="${func == 'dsplb_audit'}">审批</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="layui-table" lay-skin="line" id="approveOption" lay-filter="tableContent" style="margin-top: 0px">
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="projectNameTlb">
+    <a class="joysupply-txt-color-on" lay-event="projectInfo">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="projectCodeTim">
+    <a class="joysupply-txt-color-on" lay-event="projectInfo">{{d.projectCode}}</a>
+</script>
+<script type="text/javascript">
+    var tableIns;
+    var projectName, projectType, languageType;
+    var params = {};
+    var table;
+    layui.use(['table','element'], function () {
+        table = layui.table;
+        element = layui.element;
+        tableIns = table.render({
+            id: "id",
+            elem: '#approveOption',
+            cellMinWidth: 80,
+            totalRow: true,
+            skin: 'line',
+            url: '/projectApproveOption/waitOpioninData', //数据接口
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        type: 'checkbox',
+                        totalRowText: '合计',
+                        width: '5%',
+                        fixed: 'left',
+                        align: 'center',
+                    },
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        toolbar: '#projectNameTlb',
+                        width: '15%',
+                        fixed: 'left'
+                    },
+                    {
+                        field: 'projectCode',
+                        title: '项目编码',
+                        fixed: 'left',
+                        width: '10%',
+                        toolbar: '#projectCodeTim'
+
+                    },
+                    {
+                        field: 'depName',
+                        title: '项目部名称',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'projectType',
+                        title: '项目类型',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'language',
+                        title: '项目语种',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'countHour',
+                        title: '总课时',
+                        totalRow: true,
+                        decimals: '0',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'totalIncome',
+                        title: '总收益',
+                        totalRow: true,
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'payHour',
+                        title: '已发课酬课时',
+                        width: '15%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'payed',
+                        title: '已发课酬',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'startTime',
+                        title: '启动时间',
+                        width: '15%',
+                        align: 'center',
+                        fixed: 'right'
+                    },
+                    {
+                        field: 'endTime',
+                        title: '结束时间',
+                        width: '15%',
+                        align: 'center',
+                        fixed: 'right'
+                    }
+                ]
+            ],
+            done: function (res) {
+                for (var i = 0; i < res.data.length; i++) {
+                    var totalIncome = 0;
+                    if(res.data[i].totalIncome != null && res.data[i].totalIncome != ""){
+                        totalIncome = res.data[i].totalIncome;
+                    }
+                    if (totalIncome > 0) {
+                        // $("tr[data-index="+(i)+"]").css("background", "#6affff");
+                    } else{
+                        $("tr[data-index="+(i)+"]").css("color", "#f00");
+                    }
+                }
+            }
+        });
+
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var projectId = data.projectId;
+            var submitType = data.submitType;
+            var layEvent = obj.event;
+            var projectCode = obj.data.id;
+            var status = obj.data.auditType;
+            if (layEvent === 'opinion') {
+                openwindow("/projectApproveOption/opinionList?projectId=" + projectId + "&submitType=" + submitType, "审批意见", "800", "550", false, reload);
+            } else if (layEvent === 'projectInfo') {
+                openwindow("/projectApproveOption/displayProject?projectId=" + projectCode + "&status=" + status, "项目信息", "800", "670", false, null);
+            }
+        });
+    });
+
+    function search() {
+        obtainParam();
+        reload();
+    };
+
+    function obtainParam() {
+        projectName = $("#projectName").val();
+        projectType = $("#projectType option:selected").val();
+        languageType = $("#languageType option:selected").val();
+        params = {
+            projectName: projectName,
+            projectType: projectType,
+            languageType: languageType,
+        };
+    }
+
+    function reload() {
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    }
+
+    function approval() {
+        var checkStatus = table.checkStatus('id');
+        var data = checkStatus.data;
+        var projectIdList = "";
+        var changeIdList = "";
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].auditType == 1) {
+                projectIdList += (data[i].id + ",");
+            }
+            if (data[i].auditType == 2) {
+                changeIdList += (data[i].id + ",");
+            }
+        }
+        if (projectIdList == "" && changeIdList == "") {
+            tipinfo("所选列表不包含可审批项目和变更,请重新选择!");
+            return;
+        }
+        openwindow("/projectApproveOption/auditPage?projectIdList=" + projectIdList + "&changeIdList=" + changeIdList, "项目审批", "800", "250", false, reload);
+    }
+</script>
+</body>
+</html>

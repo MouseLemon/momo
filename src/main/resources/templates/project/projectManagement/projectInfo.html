@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height: 95%;"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">爆款单品表</h2>
+                <hr/>
+                <div class="layui-form layui-row" action="">
+                    <div class="layui-col-lg9 layui-col-md12">
+                        <div class="layui-form-item layui-col-md12">
+                            <div class=" layui-col-md4">
+                                <label class="layui-form-label">爆款名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="productName" placeholder="请输入" class="layui-input">
+                                </div>
+                            </div>
+                            <div class=" layui-col-md4">
+                                <label class="layui-form-label">爆款类型</label>
+                                <div class="layui-input-block">
+                                    <select id="productType">
+                                        <option value=""></option>
+                                        <option th:value="${productType.code}"
+                                                th:each="productType : ${productTypeList}"
+                                                th:text="${productType.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!--<div class=" layui-col-md4">-->
+                                <!--<label class="layui-form-label">项目部名称</label>-->
+                                <!--<div class="layui-input-block">-->
+                                    <!--<select id="depName">-->
+                                        <!--<option value=""></option>-->
+                                        <!--<option th:value="${struct.organizeCode}" th:each="struct : ${structList}"-->
+                                                <!--th:text="${struct.organizeName}"></option>-->
+                                    <!--</select>-->
+                                <!--</div>-->
+                            <!--</div>-->
+                        </div>
+                        <div class="layui-col-md12">
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">开始时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" class="layui-input" id="startTime" lay-key="1">
+                                </div>
+                            </div>
+                            <div class="layui-col-md4">
+                                <label class="layui-form-label">结束时间</label>
+                                <div class="layui-input-block">
+                                    <input type="text" class="layui-input" id="endTime" lay-key="2">
+                                </div>
+                            </div>
+                            <!--<div class="layui-col-md4" id="radioDiv" align="center">-->
+                                <!--<label class="layui-form-label">项目状态</label>-->
+                                <!--<div class="layui-input-block">-->
+                                    <!--<select id="isOver">-->
+                                        <!--<option value="">所有</option>-->
+                                        <!--<option value="0">未结束项目</option>-->
+                                        <!--<option value="1">已结束项目</option>-->
+                                    <!--</select>-->
+                                <!--</div>-->
+                            <!--</div>-->
+                        </div>
+                    </div>
+                    <div class="layui-col-lg3 layui-col-md12" style="margin-top:5px;">
+                        <button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit=""
+                                lay-filter="LAY-app-contlist-search" onclick="search()" style="margin-left: 40px;">
+                            搜索
+                        </button>
+                        <button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit=""
+                                lay-filter="LAY-app-contlist-search" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_add'}" onclick="add()">
+                            新建
+                        </button>
+                        <!--<button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit=""-->
+                                <!--lay-filter="LAY-app-contlist-search" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_commit'}" onclick="commit()">-->
+                            <!--提交-->
+                        <!--</button>-->
+                    </div>
+                </div>
+                <table class="layui-table" lay-skin="line" id="researchOffice" lay-filter="tableContent" style="margin-top: 0px">
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="operation">
+    {{# if(d.status == 1){ }}
+    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_edit'}">编辑</a>
+    <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_del'}">删除</a>
+    {{# }else if(d.status == 2){ }}
+    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_edit'}">编辑</a>
+    {{# }else if(d.status == 3){ }}
+    <a class="joysupply-txt-color-on" lay-event="auditOpion" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_auditOpinion'}">审批意见</a>
+    <a class="joysupply-txt-color-on" lay-event="change" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_change'}">变更</a>
+    {{# }else if(d.status == 4){ }}
+    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_edit'}">编辑</a>
+    <a class="joysupply-txt-color-on" lay-event="auditOpion" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_auditOpinion'}">审批意见</a>
+    <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_del'}">删除</a>
+    {{# }else{ }}
+    {{# } }}
+    <a class=" joysupply-txt-color-on" lay-event="accessory" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_accessoryManage'}">附件</a>
+    {{# if(d.tempCode != null && d.tempCode !=""){ }}
+    <a class=" joysupply-txt-color-on" lay-event="template" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_tempManage'}">成绩模板</a>
+    {{# }else{ }}
+    <a class=" joysupply-txt-color-error" lay-event="template" th:each="func:${session.funcList}" th:if="${func == 'xmxxb_tempManage'}">成绩模板</a>
+    {{# } }}
+</script>
+<script type="text/html" id="status">
+    {{# if(d.status == 1){ }}
+    <span>未提交</span>
+    {{# }else if(d.status == 2 || d.status == 6){ }}
+    <span>待审核</span>
+    {{# }else if(d.status == 3){ }}
+    <span>已审批</span>
+    {{# }else if(d.status == 4){ }}
+    <span>已驳回</span>
+    {{# }else{ }}
+    {{# } }}
+</script>
+<script type="text/html" id="productNameTim">
+    <a class="joysupply-txt-color-on" lay-event="productInfo">{{d.productName}}</a>
+</script>
+<script type="text/html" id="productCodeTim">
+    <a class="joysupply-txt-color-on" lay-event="productInfo">{{d.productCode}}</a>
+</script>
+<script type="text/javascript">
+    var tableIns;
+    var table;
+    var layer;
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table', 'laydate'], function () {
+        var laydate = layui.laydate;
+        var element = layui.element;
+        var form = layui.form;
+        layer = layui.layer;
+        table = layui.table;
+        laydate.render({
+            elem: '#startTime',
+            type: 'date'
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'date'
+        });
+        tableIns = table.render({
+            id: 'id',
+            elem: '#researchOffice',
+            skin: 'line',
+            totalRow: true,
+            cellMinWidth: 80,
+            url: '/project/getProjectList', //数据接口
+            where: {isAuthList: 0},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        type: 'checkbox',
+                        totalRowText: '合计',
+                        fixed: 'left',
+                        width: '5%'
+                    },
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        fixed: 'left',
+                        width: '10%',
+                        toolbar: '#projectNameTim'
+                    },
+                    {
+                        field: 'projectCode',
+                        title: '项目编码',
+                        fixed: 'left',
+                        width: '10%',
+                        toolbar: '#projectCodeTim'
+
+                    },
+                    {
+                        field: 'depName',
+                        title: '项目部名称',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'projectType',
+                        title: '项目类型',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'language',
+                        title: '项目语种',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'currentCount',
+                        title: '当前人数',
+                        totalRow: true,
+                        align: 'center',
+                        decimals: '0',
+                        width: '10%'
+                    },
+                    {
+                        field: 'countHour',
+                        title: '总课时',
+                        totalRow: true,
+                        align: 'center',
+                        decimals: '0',
+                        width: '10%'
+                    },
+                    {
+                        field: 'totalIncome',
+                        title: '总收益',
+                        totalRow: true,
+                        align: 'center',
+                        width: '10%'
+                    },
+                    {
+                        field: 'payHour',
+                        title: '已发课酬课时',
+                        decimals: '0',
+                        totalRow: true,
+                        align: 'center',
+                        width: '13%'
+                    },
+                    {
+                        field: 'payed',
+                        title: '已发课酬',
+                        totalRow: true,
+                        align: 'center',
+                        width: '10%'
+                    },
+                    {
+                        field: 'startTime',
+                        title: '启动时间',
+                        width: '11%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'endTime',
+                        title: '结束时间',
+                        width: '11%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'status',
+                        title: '状态',
+                        templet: '#status',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'name',
+                        title: '审批人',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        title: '操作',
+                        fixed: 'right',
+                        align: 'center',
+                        toolbar: '#operation',
+                        width: '21%'
+                    }
+                ]
+            ],
+            done: function (res, curr, count) {
+                // console.log($("tr[data-index=0]").css("background","#ff0"));
+                for (var i = 0; i < res.data.length; i++) {
+                    var totalIncome = 0;
+                    if (res.data[i].totalIncome != null && res.data[i].totalIncome != "") {
+                        totalIncome = res.data[i].totalIncome;
+                    }
+                    if (totalIncome > 0) {
+                        // $("tr[data-index="+(i)+"]").css("background", "#6affff");
+                    } else {
+                        $("tr[data-index=" + (i) + "]").css("color", "#f00");
+                    }
+                }
+            }
+        });
+
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var projectId = data.projectId;
+            var tempCode = data.tempCode;
+            var status = data.status;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/project/editProjectPage?projectId=" + projectId + "&status=" + status, "修改项目信息", "800", "670", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.confirm("您确定要删除吗？", {
+                        icon: 3,
+                        title: "删除确认"
+                    },
+                    function (index) {
+                        var map = {"projectId": projectId};
+                        $.ajax({
+                            type: "post",
+                            url: '/project/delProject',
+                            data: JSON.stringify(map),
+                            contentType: "application/json",
+                            success: function (data) {
+                                tipinfo("删除成功!")
+                                tableIns.reload({
+                                    page: {
+                                        curr: 1
+                                    }
+                                });
+                            },
+                            error: function () {
+                                tipinfo(data.message);
+                            }
+                        })
+                        layer.close(index);
+                    },
+                    function (index) {
+                        layer.close(index);
+                    });
+            } else if (layEvent === 'accessory') {
+                openwindow("/project/accessoryPage?projectId=" + projectId, "附件", "1000", "720", false, reload);
+            } else if (layEvent === 'auditOpion') {
+                openwindow("/project/auditOptionPage?projectId=" + projectId, "审批意见", "1200", "720", false, reload);
+            } else if (layEvent === 'change') {
+                openwindow("/project/changePage?projectId=" + projectId, "变更", "1000", "760", false, reload);
+            } else if (layEvent === 'projectInfo') {
+                openwindow("/projectApproveOption/displayProject?projectId=" + projectId + "&status=1", "项目信息", "800", "670", false, null);
+            } else if (layEvent === 'template') {
+                openwindow("/project/choseTemplate?projectId=" + projectId + "&tempCode=" + tempCode, "选择成绩模板", "500", "250", false, reload)
+            }
+        });
+    });
+
+    function search() {
+        var projectName = $("#productName").val();
+        var projectType = $("#productType option:selected").val();
+        var depName = $("#depName option:selected").val();
+        var startTime = $("#startTime").val();
+        var endTime = $("#endTime").val();
+        var isOver = $('#isOver option:selected').val();
+        if (isOver == null || isOver == "") {
+            isOver = -1;
+        }
+        var params = {
+            isAuthList: 0,
+            productName: productName,
+            productType: productType,
+            depName: depName,
+            startTime: startTime,
+            endTime: endTime,
+            isOver: isOver
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+
+    function add() {
+        openwindow("/project/addProjectPage", "新建项目", "800", "670", false, reload);
+    }
+
+    function reload() {
+        var params = {
+            isAuthList: 0
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

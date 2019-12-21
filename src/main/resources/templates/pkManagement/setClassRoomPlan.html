@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+    #layui-laydate2, #test-n1, .layui-laydate-main {
+        width: 100% !important
+    }
+
+    .layui-laydate-content {
+        width: 100%
+    }
+
+    .layui-laydate-content table {
+        width: 100%
+    }
+
+    .checked {
+        /*color: #00c1de !important;*/
+        color: #F00 !important;
+    }
+    .plan{
+        color: #1BC3A2 !important;
+    }
+
+    #layui-laydate2 {
+        pointer-events: none;
+        height: 278px;
+    }
+    td div {
+        text-align: left;
+    }
+    body .demo-class .layui-layer-btn0 {background:#00c1de; background-color:#00c1de;border-color:#00c1de}
+</style>
+<link rel="stylesheet" th:href="@{/css/classRoom/unUse.css}">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+
+    <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">
+        安排教室
+        <div class="joysupply-title-right" style="margin-right: 0">
+            <button class="layui-btn layui-btn-sm closeBtn">返回</button>
+            <button class="layui-btn layui-btn-sm returnPK">退回排课</button>
+            <button class="layui-btn layui-btn-sm copy" id="copy">复制</button>
+        </div>
+    </h2>
+
+    <hr/>
+
+    <div class="layui-row layui-col-space10">
+        <div class="layui-anim layui-anim-upbit" style="width: 75%; float: left">
+            <form action="">
+                <input type="hidden" name="week" id="week" th:value="${weeks}">
+                <input type="hidden" name="roomId" id="roomId" th:value="${classRoom?.roomId}">
+                <input type="hidden" name="year" id="year" th:value="${year}">
+                <input type="hidden" name="year" id="grade_id" th:value="${grade_id}">
+
+                <p class="joysupply-txt-title" th:text="|${projectName} - ${grade_code}|" style="text-align: center"></p>
+                <div class="layui-row" style="margin: 10px 0 5px">
+                    <div class="layui-col-lg4" style="margin-top:5px;"> </div>
+                    <div class="layui-col-lg4" style="text-align: center">
+                        <div class="joysupply-txt-normal" id="dayAndDay"
+                             th:text="|起始日期:${startTime}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;截至日期:${endTime}|">
+                        </div>
+                        <input type="hidden" th:value="${endTime}" id="endTime">
+                        <input type="hidden" th:value="${startTime}" id="startTime">
+                        <input type="hidden" th:value="${projectId}" id="projectId">
+                        <input type="hidden" th:value="${projectName}" id="projectName">
+                    </div>
+                    <div class="layui-col-lg4" style="text-align: right">
+                        <label id="up" onclick="switchTime('up')">
+                            <strong style="color: #01AAED; margin-right: 20px; cursor: pointer;">
+                                <
+                            </strong>
+                        </label>
+
+                        <label id="time"></label>
+
+                        <span id="week" th:text="${weekString}"></span>
+
+                        <label id="next" onclick="switchTime('next')">
+                            <strong style="color: #01AAED; margin-left: 20px; cursor: pointer;">
+                                >
+                            </strong>
+                        </label>
+                    </div>
+                </div>
+
+                <table class="joysupply-plan-table" style="table-layout: fixed;">
+                    <thead>
+                    <tr>
+                        <th>时段</th>
+                        <th th:each="item:${cul}" th:text="${item}"></th>
+                    </tr>
+                    </thead>
+                    <tbody class="courseTbody">
+                    <tr th:each="info,infoStat : ${data}">
+                        <td class="head" th:text="|${info.start_time}-${info.end_time}|"></td>
+                        <td th:each="k : ${#numbers.sequence(0,6)}"
+                            th:id="|${k}_${#strings.replace(info.start_time,':','')}|"
+                            th:attr="data-timeStop=|${months[__${k}__]}-${days[__${k}__]}-${weekDay[__${k}__]}-${info.start_time}-${info.end_time}|">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="site-demo-laydate" style="width: 23%; float: right; position: fixed;right: 0;top: 116px;">
+    <form class="layui-form" action="">
+        <div class="layui-form-item" >
+            <label class="layui-form-label">教室类型：</label>
+            <div class="layui-input-block">
+                <select name="classRoomType" id="classRoomType" class="layui-input" lay-search lay-filter="getClassRoomType">
+                    <option value=""></option>
+                    <option th:each="item:${roomType}" th:value="${item.code}" th:text="${item.name}"></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" >
+            <label class="layui-form-label">所属位置：</label>
+            <div class="layui-input-block">
+                <select name="roomLoc" id="roomLoc" class="layui-input" lay-search lay-filter="getRoomLoc">
+                    <option value=""></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item roomNum">
+            <label class="layui-form-label">教室号：</label>
+            <div class="layui-input-block">
+
+                <select name="roomNum" id="roomNum" class="layui-input"
+                        lay-search lay-filter="getRoomNum">
+                    <option value=""></option>
+                </select>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">座位数：</label>
+            <div class="layui-input-block">
+                <input type="text" id="seating" name="seating" autocomplete="off" readonly="readonly" class="layui-input"
+                       th:value="${classRoom?.seating}" style="border: none">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: auto">该教室已排情况：</label>
+            <div class="layui-input-block" style="margin-left: 142px;padding-top: 9px;line-height: 20px;">
+                <div id="isPlan" name="isPlan"></div>
+            </div>
+        </div>
+
+
+    </form>
+    <div class="layui-form-item layui-row">
+        <div class="layui-col-md4">
+            <button class="layui-btn layui-btn-sm savePlan">保存教室</button>
+        </div>
+        <div class="layui-col-md4">
+            <button class="layui-btn layui-btn-sm idleRoom">查看空闲时间</button>
+        </div>
+        <div class="layui-col-md4">
+            <button class="layui-btn layui-btn-sm total" style="margin-left: 20px">总课表&emsp;</button>
+        </div>
+    </div>
+
+</div>
+</body>
+
+
+<script th:src="@{/js/jquery-ui.js}"></script>
+<script type="text/html" id="planItem">
+    <div class="courseItem">{msg}</div>
+</script>
+<script th:inline="javascript">
+    var list = [[${list}]];
+</script>
+<script th:inline="javascript">
+    var dateTime = [[${dateString}]];
+</script>
+<script th:inline="javascript">
+    var thisYear = [[${year}]];
+    var timeSheetList = [[${data}]]
+    var ostartTime = [[${startTime}]]
+    var oendTime = [[${endTime}]]
+    var xyStart = [[${xyStart}]]
+    var xyEnd = [[${xyEnd}]]
+    // var currentCount = [[${person_count}]]
+    var projectName = [[${projectName}]]
+</script>
+
+<script type="text/javascript">
+
+    var class_room_type;  // 教室类型
+    var class_date;		  // 课程开始时间
+    var person_count;	  // 人数
+    var scheduleId;		  // 排课计划id
+    var starTime;		  // 几点开始
+    var endTime;		 // 几点结束
+    var id;              // 当前td的id
+    $(function () {
+        $(".total").click(function () {
+            var roomLoc = $("#roomLoc").val();
+            var roomNum = $("#roomNum").val();
+            var roomName = $(".roomNum .layui-this").text();
+            console.log(class_date);
+            if (class_date == 'undefined' || class_date == null || class_date == '') {
+                tipinfo("请先选择课程, 再进行查看 !");
+                return false;
+            } else {
+                window.open('/scheduleView/courseSearchView?startTime='+class_date+'&endTime='+class_date+'&roomLoc='+roomLoc
+                    +'&roomNum='+roomNum+'&roomName='+roomName);
+            }
+        })
+
+        for (var i = 0; i < list.length; i++) {
+            var week_day = list[i].week_day;
+            var start = list[i].start_time.replace(":", "");
+            var schedule_id = list[i].schedule_id;
+            var course_name = list[i].course_name;
+            var class_room_type = list[i].class_room_type;
+            var classRoomType = list[i].classRoomType;
+            var teacher_name = list[i].teacher_name;
+            var start_time = list[i].start_time;
+            var end_time = list[i].end_time;
+            var roomNum = list[i].roomNum;
+            var roomLoc = list[i].roomLoc;
+            var person_count = list[i].person_count;
+            for (var j = 0; j < timeSheetList.length; j++) {
+                var st = parseInt(timeSheetList[j].start_time.replace(":", ""));
+                var et = parseInt(timeSheetList[j].end_time.replace(":", ""));
+                var startTime = parseInt(start);
+                if (startTime >= st && startTime <= et) {
+                    var id = week_day + "_" + timeSheetList[j].start_time.replace(":", "");
+                    // 展示空白格数据
+                    // 课程名称，位置(查出来的)/教室类型，教师，开始时间-结束时间
+                    var html =
+                        "<div class='courseItem ui-draggable ui-draggable-handle viewStyle' style='position: relative;cursor:pointer;'>"
+                        + "<input type='hidden' value='" + schedule_id + "'>"
+                        + course_name
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle viewStyle' style='position: relative;cursor:pointer;'>"
+                        + "<input type='hidden' id='classRoomType' value='"+classRoomType+"'><span id='class_room_type'>"+class_room_type+"</sapn>"
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle viewStyle' style='position: relative;cursor:pointer;'>"
+                        + teacher_name
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle viewStyle' style='position: relative;cursor:pointer;'>"
+                        + start_time + "-" + end_time
+                        + "</div>"
+                    +
+                        "<div class='courseItem ui-draggable ui-draggable-handle viewStyle' style='position: relative;cursor:pointer;'>"
+                        + "学生人数：" +person_count
+                        + "</div>"
+
+                    if (roomNum != undefined && roomLoc != undefined) {
+                        html += "<div class=\"courseItem ui-draggable ui-draggable-handle isPlan viewStyle\" style=\"position: relative;cursor:pointer;\">" + roomLoc + "  " + roomNum + "</div>"
+                        $('#' + id).addClass("plan");
+                    }
+                    $('#' + id).html(html);
+                    break;
+                }
+            }
+        }
+
+
+    })
+
+    // 上一周或下一周不可用时间段
+    function switchTime(param) {
+        var date = $('#time').text();
+        var project_id = $('#projectId').val();
+        var endTime = $('#endTime').val();
+        var startTime = $('#startTime').val();
+        var gradeId = $('#grade_id').val();
+        if (param == 'up') {
+            var url = '/classManage/classRoomPlan?projectId=' + project_id
+                + '&date=' + date
+                + '&endTime=' + endTime
+                + '&startTime=' + startTime
+                + "&projectName=" + projectName + "&gradeId=" + gradeId
+                + "&up=" + param;
+            url = encodeURI(url);
+            location.href = url;
+        } else if (param == 'next') {
+            var url = '/classManage/classRoomPlan?projectId=' + project_id
+                + '&date=' + date
+                + '&endTime=' + endTime
+                + '&startTime=' + startTime
+                + "&projectName=" + projectName + "&gradeId=" + gradeId
+                + "&next=" + param;
+            url = encodeURI(url);
+            location.href = url;
+        }
+    }
+
+    var selTd;
+    var sad = 0;
+    var isSumbit = false; // 是否已提交
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'laydate', 'form'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var week = 10;
+        var ins1 = laydate.render({
+            elem: '#time'
+            , done: function (value, date, endDate) {
+                var date = value;
+                var project_id = $('#projectId').val();
+                var endTime = $('#endTime').val();
+                var startTime = $('#startTime').val();
+                var url = '/classManage/classRoomPlan?projectId=' + project_id
+                    + '&date=' + date
+                    + '&endTime=' + endTime
+                    + '&startTime=' + startTime
+                    + "&projectName=" + projectName;
+                url = encodeURI(url);
+                location.href = url;
+            }
+            , format: 'yyyy-MM-dd' //可任意组合
+            , value: dateTime
+        });
+
+        $(".closeBtn").click(function () { //返回
+            window.parent.location.reload();
+        });
+
+        var option = [];
+
+        // 点击排教室
+        var old;
+        var hasClass = false;
+        $('.joysupply-plan-table tbody td:not(".head")').click(function () {
+            if(hasClass) {
+                $(old).addClass("plan")
+            }
+            var option = "<option value=''>请选择</option>";
+            $("select[name='roomLoc']").html(option);
+            $("select[name='roomNum']").html(option);
+            form.render('select');
+            $('#seating').val("");
+            $('#roomType').val("");
+            $('#isPlan').html("");
+
+            if(classRoomType == undefined || !$(this).hasClass("checked")) {
+                classRoomType = $(this).find('#classRoomType').val();
+            }
+            $("select[name='classRoomType']").val(classRoomType);
+            form.render('select');
+
+            $('.checked').removeClass("checked");
+            if($(this).hasClass("plan") ||  $(this).hasClass("newPlan")) {
+                hasClass = true;
+            }else {
+                hasClass = false;
+            }
+            old = $(this);
+
+            $(this).removeClass("plan")
+            $(this).addClass("checked");
+            selTd = $(this);
+            var text = $(this).find('div').html();
+            if (text == null || text == '' || text == undefined) {
+                return false;
+            }
+            scheduleId = $(this).find('input').val();
+
+            // 根据排课计划id查询该计划的教室信息
+            $.post('/classManage/getClassRoomInfoByScheduleId', {
+                scheduleId: scheduleId,
+                year: thisYear,
+                classRoomType:classRoomType
+            }, function (data) {
+                class_room_type = data.schedulePlan.class_room_type;  // 教室类型
+                class_date = data.schedulePlan.class_date;		  // 课程开始时间
+                person_count = data.schedulePlan.person_count;	  // 人数
+                starTime = data.schedulePlan.start_time;		  // 几点开始
+                endTime = data.schedulePlan.end_time;		 // 几点结束
+                var time = data.schedulePlan.class_date;
+                var msg = data.msg;
+                var roomLocList = data.roomLocList;
+                if (roomLocList != null && roomLocList != undefined && roomLocList.length > 0) {
+                    var html = "<option value=''>请选择</option>";
+                    for (var i = 0; i < roomLocList.length; i++) {
+                        html += "<option value='" + roomLocList[i].dataCode + "'>" + roomLocList[i].buildingName + "</option>"
+                    }
+
+                    $('#roomLoc').html(html);
+                    form.render('select');
+                }
+                var nowDate = new Date(time);
+                $('.layui-this').removeClass('layui-this');
+                console.log(nowDate.getFullYear() + "-" + nowDate.getMonth() + "-" + nowDate.getDate());
+                $("td[lay-ymd = '" + nowDate.getFullYear() + "-" + (nowDate.getMonth()+1) + "-" + nowDate.getDate() + "']").addClass('layui-this');
+                $('.site-demo-laydate').show();
+                if (msg != undefined) {
+                    $("select[name='roomLoc']").val("");
+                    $("select[name='roomNum']").val("");
+                    form.render('select');
+                    $('#seating').val("");
+                    $('#roomType').val("");
+                    $('#isPlan').html("");
+                    return false;
+                }
+
+                // 回显数据
+                if (data.idleRoom != undefined && data.roomPlan != undefined && class_room_type == classRoomType) {
+                    var room_loc = data.roomPlan.room_loc;
+                    var seating = data.roomPlan.seating;
+                    var room_num = data.roomPlan.room_num;
+                    var room_id = data.roomPlan.room_id;
+                    var roomType = data.roomPlan.roomType;
+                    var isPlan = data.roomPlan.isPlan;
+                    var idleRoom = data.idleRoom;
+                    $('#seating').val(seating);
+                    $('#roomType').val(roomType);
+                    $('#isPlan').html(isPlan);
+                    var html = "";
+                    for (var i = 0; i < idleRoom.length; i++) {
+                        html += "<option value='" + idleRoom[i].roomId + "'>" + idleRoom[i].roomNum + "</option>"
+
+                    }
+                    $('#roomNum').html(html);
+                    $("select[name='roomLoc']").val(room_loc);
+                    roomLocValue = room_loc;
+                    $("select[name='roomNum']").val(room_id);
+                    form.render('select');
+
+                } else {
+
+                    $("select[name='roomLoc']").val("");
+                    $("select[name='roomNum']").val("");
+                    form.render('select');
+                    $('#seating').val("");
+                    $('#roomType').val("");
+                    $('#isPlan').html("");
+                }
+
+            });
+            id = this.getAttribute("id");
+        })
+
+
+        $('.idleRoom').click(function () {
+            if (classRoomType == undefined || person_count == undefined || class_date == undefined) {
+                layer.msg("请选择课程")
+                return false;
+            }
+
+            layer.open({
+                type: 2,
+                title: ['查看空闲时间', 'font-size:18px;'],
+                skin: 'demo-class',
+                shadeClose: false,
+                area: ['700px', '480px'],
+                content: '/classManage/idleRoom?roomType=' + classRoomType + '&seating=' + person_count + '&classDate=' + class_date,
+                btn: ['确定', '取消'],
+                btnAlign: 'c'
+            });
+        })
+
+        // 点击查询空闲教室
+        var roomLocValue = '';
+        form.on('select(getRoomLoc)', function (data) {
+            var roomLoc = data.value;
+            roomLocValue = roomLoc;
+            $('#seating').val("");
+            $('#roomType').val("");
+            $('#isPlan').html("");
+
+            if (roomLoc == '') {
+                $('#roomNum').html('');
+                form.render('select');
+                return false;
+            }
+
+            var success = function (response) {
+                if (response.success == true) {
+                    var idleRoom = response.idleRoom;
+                    var html = "<option value=''>请选择</option>";
+                    for (var i = 0; i < idleRoom.length; i++) {
+                        html += "<option value='" + idleRoom[i].roomId + "'>" + idleRoom[i].roomNum + "</option>"
+                    }
+                    $('#roomNum').html(html);
+                    form.render('select');
+                } else {
+                    $("select[name='roomLoc']").val("");
+                    $("select[name='roomNum']").val("");
+                    form.render('select');
+                    layer.alert(response.msg, {icon: 2}, function () {
+                        layer.closeAll();
+                    })
+                }
+            }
+
+            $.ajax({
+                url: "/classRoom/getIdleRoom",
+                type: "post",
+                data: {
+                    roomLoc: roomLoc,
+                    class_room_type: classRoomType,
+                    class_date: class_date,
+                    person_count: person_count,
+                    starTime: starTime,
+                    endTime: endTime,
+                    year: thisYear,
+                    scheduleId: scheduleId
+                },
+                dataType: "json",
+                success: success,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    layer.msg('网络异常', {icon: 2})
+                }
+            });
+        });
+        // 点击选择教室类型
+        var classRoomType
+        form.on('select(getClassRoomType)', function (data) {
+            classRoomType = data.value;
+            $(old).click();
+        });
+
+        // 点击查询教室详情
+        form.on('select(getRoomNum)', function (data) {
+            var roomId = data.value;
+            var success = function (response) {
+                $('#seating').val(response.seating);
+                $('#roomType').val(response.roomType);
+                $('#isPlan').html(response.isPlan);
+            }
+
+            $.ajax({
+                url: "/classRoom/getRoomPlan",
+                type: "post",
+                data: {
+                    roomId: roomId,
+                    starTime: starTime,
+                    endTime: endTime,
+                    year: thisYear,
+                    class_date:
+                    class_date
+                },
+                dataType: "json",
+                success: success,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    layer.msg('网络异常', {icon: 2})
+                }
+            });
+        });
+
+        // 保存排课
+        $('.savePlan').click(function () {
+            var roomId = $('#roomNum').val();
+            if (roomId == null || roomId == undefined || roomId == '') {
+                layer.msg('请选择教室');
+                return false;
+            }
+
+            $.ajax({
+                url: "/classManage/saveRoomPlan",
+                type: "post",
+                data: {
+                    scheduleId: scheduleId,
+                    roomId: roomId,
+                    starTime: starTime,
+                    endTime: endTime,
+                    class_date: class_date,
+                    year: thisYear,
+                    classRoomType : classRoomType
+                },
+                dataType: "json",
+                success: function (rep) {
+                    if (rep.result == 'OK') {
+                        $(old).find('#classRoomType').val(classRoomType);
+                        var roomTypeName = $("dd[lay-value='"+classRoomType+"']").text();
+                        console.log(roomTypeName);
+                        $(old).find('#class_room_type').html(roomTypeName);
+                        hasClass = true;
+                        layer.msg('保存成功');
+                        var roomLocName = $("dd[lay-value='"+roomLocValue+"']").text();
+                        var roomNum = $(".layui-select-title:last").find('input').val();
+                        console.log(roomLocName)
+                        console.log(roomNum)
+                        if ($('#' + id + " div").length < 6) {
+                            $('#' + id).append("<div class=\"courseItem ui-draggable ui-draggable-handle isPlan viewStyle\" style=\"position: relative;cursor:pointer;\">" + roomLocName + "  " + roomNum + "</div>");
+                            $('#' + id).addClass("checked");
+                            $('#' + id).addClass("newPlan");
+                        } else {
+                            $('#' + id + " .isPlan").html(roomLocName + "  " + roomNum)
+                        }
+                        var isPlan = $('#isPlan').html();
+                        if (isPlan == undefined || isPlan == '') {
+                            isPlan = starTime + "-" + endTime;
+                        } else if (isPlan.indexOf(starTime + "-" + endTime) == -1) {
+                            isPlan += "," + starTime + "-" + endTime;
+                        }
+                        $('#isPlan').html(isPlan);
+                    } else {
+                        layer.msg(rep.message);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    layer.msg('网络异常', {icon: 2})
+                }
+            });
+        });
+
+        // 退回排课
+        $('.returnPK').click(function () {
+            var project_id = $('#projectId').val();
+            var project_name = $('#projectName').val();
+            var grade_id = $('#grade_id').val();
+            layer.confirm('确定要退回吗?', {icon: 3}, function (index) {
+                var success = function (result) {
+                    if (result.result == 'OK') {
+                        layer.msg("退回成功");
+                        location.href = "/classManage/setClassRoomPlan";
+                    } else {
+                        layer.msg(result.message, {
+                            icon: 2
+                        });
+                    }
+                }
+
+                $.ajax({
+                    type: "post",
+                    url: '/classManage/returnPKA',
+                    data: {
+                        projectId: project_id,
+                        projectName: project_name,
+                        gradeId : grade_id,
+                        status: -1
+                    },
+                    dataType: "json",
+                    success: success,
+                    error: function () {
+                        layer.alert('未知错误', {icon: 2});
+                    }
+                })
+            });
+        });
+
+        // 复制
+        $('.copy').click(function () {
+            var ids = [];
+            var project_id = $('#projectId').val();
+            var data = $('td input');
+            $(data).each(function (i, n) {
+                console.log($(this).val())
+                ids.push($(this).val());
+            })
+            if (ids.length == 0) {
+                layer.msg("当前周没用可复制课程");
+                return false;
+            }
+
+            layer.open({
+                type: 2,
+                title: ['复制', 'font-size:18px;'],
+                shadeClose: false,
+                skin: 'demo-class',
+                area: ['600px', '430px'],
+                content: '/classRoom/planItem?endTime='+oendTime+'&startTime='+ostartTime,
+                btn: ['确定', '取消'],
+                btnAlign: 'c',
+                yes: function (index, layero) {
+                    var body = layer.getChildFrame('body', index);
+                    var form = layer.getChildFrame('form', index);
+                    var formdata = form.serialize();
+                    var roomId = $('#roomId').val();
+                    var week = $('#week').val();
+                    var year = $('#year').val();
+                    console.log($(form).find('#test1').val())
+                    var startTime = $(form).find('#test1').val();
+                    var endTime = $(form).find('#test2').val();
+                    $.post("/classManage/copyRoomPlan", {
+                        ids: ids.join(","),
+                        startTime: startTime,
+                        endTime: endTime,
+                        projectId: project_id
+                    }, function (data) {
+                        if (data.result == 'OK') {
+                            layer.close(index); //如果设定了yes回调，需进行手工关闭
+                            layer.msg("复制成功")
+                        } else {
+                            layer.msg(data.message)
+                        }
+                    })
+                }
+            });
+        })
+    });
+
+</script>
+
+</html>

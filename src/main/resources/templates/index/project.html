@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .layui-tab {
+        margin: 0;
+    }
+
+    .layui-tab-title {
+        border-color: #e9e9e9;
+        height: 63px;
+    }
+
+    .layui-tab-brief > .layui-tab-more li.layui-this:after, .layui-tab-brief > .layui-tab-title .layui-this:after {
+        border: none;
+    }
+
+    .layui-tab-title > li {
+        font-size: 16px;
+        color: #a7aaae;
+        line-height: 63px;
+    }
+
+    th {
+        display: none;
+    }
+
+    .addBtn {
+        cursor: pointer;
+    }
+
+    .layui-table-view, .layui-table-header, .layui-table-page {
+        border-width: 1px;
+        border-style: solid;
+        border-color: #fff;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-col-space10">
+                <section>
+                    <div class="layui-row layui-col-space10">
+                        <div class="layui-col-md12">
+                            <div class="joysupply-full-box">
+                                <div class="joysupply-main-left">
+                                    <img class="joysupply-main-headImg" src="/img/ceshi1.jpg"/>
+                                    <div class="joysupply-main-title-main">
+                                        <p class="joysupply-txt-title">早安,<span th:text="${name}"></span>,祝你开心每一天！</p>
+                                        <p class="joysupply-txt-normal joysupply-main-subtitle">没有最好，只有更好！每天进步一点点！</p>
+                                    </div>
+                                </div>
+                                <div class="joysupply-main-right">
+                                    <div class="joysupply-main-rightItem">
+                                        <p class="joysupply-txt-subtitle">正在进行项目数量</p>
+                                        <p class="joysupply-right-number" th:text="${notOverSize}"></p>
+                                    </div>
+                                    <div class="joysupply-main-rightItem complete_right">
+                                        <p class="joysupply-txt-subtitle">已完成项目数量</p>
+                                        <p class="joysupply-right-number" th:text="${overSize}"></p>
+                                    </div>
+                                </div>
+                                <div class="clear"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-row layui-col-space10">
+                        <div class="layui-col-md8">
+                            <div class="joysupply-bg-white joysupply-main-Second joysupply-mainLeft">
+                                <div class="layui-tab layui-tab-brief " lay-filter="docDemoTabBrief">
+                                    <ul class="layui-tab-title">
+                                        <li class="layui-this">我的消息</li>
+                                        <li>我的提交</li>
+                                    </ul>
+                                    <div class="layui-tab-content">
+                                        <div class="layui-tab-item layui-show">
+                                            <table class="layui-table" lay-skin="line" id="msgTable" lay-filter="msgContent" style="margin-top: 0px;">
+                                            </table>
+                                            <div class="clear"></div>
+                                        </div>
+                                        <div class="layui-tab-item">
+                                            <table class="layui-table" lay-skin="line" id="commitTable" lay-filter="tableContent" style="margin-top: 0px;">
+                                            </table>
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-md4">
+                            <div class="joysupply-bg-white joysupply-main-Second joysupply-main-bR">
+                                <div>
+                                    <p class="joysupply-txt-maintitle joysupply-txt-color-on">快速开始/便捷导航</p>
+                                    <ul class="main_r_meau layui-row">
+                                        <li th:each=" shortCutMenu : ${shortCutList}">
+                                            <a th:href="@{${shortCutMenu.indexUrl}+ '?defaultUrl='+ ${shortCutMenu.menuUrl}}">
+                                                <span th:text="${shortCutMenu.menuName}"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <div class="layui-row addBtn_ul">
+                                        <li></li>
+                                        <li></li>
+                                        <li class="addBtn" onclick="shortCutManage()"><span>添加</span></li>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    var hasSendMenu = [[${hasSendMenu}]];
+</script>
+<script type="text/html" id="operation">
+    {{# if(d.isReading == 0){ }}
+    <a class="joysupply-txt-color-on" lay-event="read">未读</a>
+    {{# }else{ }}
+    {{# } }}
+</script>
+<script type="text/html" id="projectNames">
+    {{# if(d.submitType == 2){ }}
+    <p class="joysupply-txt-color-on">{{d.projectName}}变更</p>
+    {{# }else{ }}
+    <p class="joysupply-txt-color-on">{{d.projectName}}</p>
+    {{# } }}
+</script>
+<script type="text/html" id="msgContent">
+    {{# if(d.type == 1){ }}
+    <p class="joysupply-txt-color-on" lay-event="projectAudit">{{d.content}}</p>
+    {{# }else if(d.type == 2){ }}
+    <p class="joysupply-txt-color-on" lay-event="kcAudit">{{d.content}}</p>
+    {{# }else if(d.type == 3){ }}
+    <p class="joysupply-txt-color-on" lay-event="kcSend">{{d.content}}</p>
+    {{# }else if(d.type == 4){ }}
+    <p class="joysupply-txt-color-on" lay-event="courseArrange">{{d.content}}</p>
+    {{# }else if(d.type == 5){ }}
+    <p class="joysupply-txt-color-on" lay-event="classroomArrange">{{d.content}}</p>
+    {{# }else if(d.type == 6){ }}
+    <p class="joysupply-txt-color-on" lay-event="classReturnPk">{{d.content}}</p>
+    {{# }else if(d.type == 7){ }}
+    <p class="joysupply-txt-color-on" lay-event="kcSended">{{d.content}}</p>
+    {{# }else{ }}
+    {{# } }}
+</script>
+<script type="text/html" id="status">
+    {{# if(d.status == 1){ }}
+    <span>未提交</span>
+    {{# }else if(d.status == 2 || d.status == 6){ }}
+    <span>待审核</span>
+    {{# }else if(d.status == 3){ }}
+    <span>已审批</span>
+    {{# }else if(d.status == 4){ }}
+    <span>已驳回</span>
+    {{# }else{ }}
+    {{# } }}
+</script>
+<script>
+    function readMessage(rowId) {
+        var map = {"rowId": rowId};
+        $.ajax({
+            type: "post",
+            url: "/message/readMessage",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+
+    function shortCutManage() {
+        openwindow("/systemUser/addShortCutMenu", "快捷菜单管理", "800", "300", false, reload);
+    }
+
+    function reload() {
+        location.href = "/index/project";
+    }
+
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        var table = layui.table;
+        var tableInsMsg = table.render({
+            id: "id",
+            elem: '#msgTable',
+            cellMinWidth: 80,
+            url: '/message/getMessageList', //数据接口
+            where: {},
+            skin: 'nob',
+            page: true, //开启分页
+            limits: [5, 10, 20],
+            cols: [
+                [
+                    {
+                        field: 'content',
+                        width: '60%',
+                        toolbar: '#msgContent'
+                    },
+                    {
+                        field: 'msgTime',
+                        align: 'center',
+                        width: '20%'
+                    },
+                    {
+                        align: 'center',
+                        toolbar: '#operation'
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        var tableInsCommit = table.render({
+            id: "commitTable",
+            elem: '#commitTable',
+            cellMinWidth: 80,
+            url: '/project/getCommitProjectList', //数据接口
+            where: {},
+            skin: 'nob',
+            page: true, //开启分页
+            limits: [5, 10, 20],
+            cols: [
+                [
+                    {
+                        field: 'projectName',
+                        width: '60%',
+                        toolbar: '#projectNames'
+                    },
+                    {
+                        field: 'submitTime',
+                        align: 'center',
+                        width: '20%'
+                    },
+                    {
+                        field: 'status',
+                        align: 'center',
+                        toolbar: '#status'
+                    },
+                ]
+            ],
+            done: function () {
+            }
+        });
+        window.reloadMsg = function () {
+            tableInsMsg.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+        window.reloadCommit = function () {
+            tableInsMsg.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        table.on('tool(msgContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var rowId = data.rowId;
+            var isReading = data.isReading;
+            var layEvent = obj.event;
+            if (layEvent === 'read') {
+                var map = {"rowId": rowId};
+                $.ajax({
+                    type: "post",
+                    url: "/message/readMessage",
+                    data: JSON.stringify(map),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        reloadMsg();
+                    },
+                    error: function (data) {
+                        tipinfo(data.message);
+                    }
+                });
+            } else if (layEvent === 'projectAudit') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/project?defaultUrl=/projectApproveOption/waitOption");
+                } else {
+                    location.href = "/page/project?defaultUrl=/projectApproveOption/waitOption";
+                }
+            } else if (layEvent === 'courseArrange') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/course?defaultUrl=/classManage/classManagePage");
+                } else {
+                    location.href = "/page/course?defaultUrl=/classManage/classManagePage";
+                }
+            } else if (layEvent === 'classroomArrange') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/course?defaultUrl=/classManage/setClassRoomPlan");
+                } else {
+                    location.href = "/page/course?defaultUrl=/classManage/setClassRoomPlan";
+                }
+            } else if (layEvent === 'kcSend') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/courseFee?defaultUrl=/kcManager/kcStatistics");
+                } else {
+                    location.href = "/page/courseFee?defaultUrl=/kcManager/kcStatistics";
+                }
+            } else if (layEvent === 'kcAudit') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/courseFee?defaultUrl=/approve/waitforApproving");
+                } else {
+                    location.href = "/page/courseFee?defaultUrl=/approve/waitforApproving"
+                }
+            } else if (layEvent === 'classReturnPk') {
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/course?defaultUrl=/classManage/classManagePage");
+                } else {
+                    location.href = "/page/course?defaultUrl=/classManage/classManagePage";
+                }
+            } else if (layEvent == 'kcSended') {
+                debugger;
+                if(hasSendMenu == 0){
+                    return;
+                }
+                if (isReading == "0") {
+                    readMsg(rowId, "/page/courseFee?defaultUrl=/unSend/sendPage");
+                } else {
+                    location.href = "/page/course?defaultUrl=/unSend/sendPage";
+                }
+            }
+        });
+        var h = document.documentElement.clientHeight || document.body.clientHeight;
+        $('.joysupply-mainLeft').css('min-height', (h - 200) + 'px');
+    })
+
+    function readMsg(rowId, url) {
+        var map = {"rowId": rowId};
+        $.ajax({
+            type: "post",
+            url: "/message/readMessage",
+            asyc: false,
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                if (data.result == 'OK') {
+                    location.href = url;
+                } else {
+                    tipinfo(data.message);
+                }
+            },
+            error: function (data) {
+                tipinfo("读取消息失败!");
+            }
+        });
+    }
+</script>
+</body>
+</html>

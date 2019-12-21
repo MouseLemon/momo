@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .clearfix:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+
+    .clearfix {
+        zoom: 1;
+    }
+
+    .tabNav {
+        margin: 2% 0 .5%;
+    }
+
+    .tabNav li {
+        font-size: 14px;
+        background: #ccc;
+        padding: 2px 5px;
+        margin-left: 1%;
+        float: left;
+        text-align: center;
+        color: #fff;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .tabNav li:after {
+        background: #ccc none repeat scroll 0 0;
+        content: "";
+        display: block;
+        height: 10px;
+        width: 10px;
+        box-shadow: -1px -1px 0px 0px rgba(255, 255, 255, 1);
+        transform: rotate(-45deg) translate(6px, 6px);
+        position: absolute;
+        top: 70%;
+        left: 30%;
+        border: 1px solid #ccc;
+        z-index: -1;
+    }
+
+    .tabNav li.tabOn {
+        background: #00c1de;
+    }
+
+    .tabNav li.tabOn:after {
+        background: #00c1de none repeat scroll 0 0;
+        border: 1px solid #00c1de;
+    }
+
+    @media screen and (max-width: 1500px) {
+        .tabNav li:after {
+            left: 26% !important;
+        }
+    }
+
+    .layui-table-cell {
+        height: auto;
+        overflow: visible;
+        text-overflow: inherit;
+        white-space: normal;
+    }
+    .layui-hide{
+        display: none;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;"
+             class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-col-space10">
+                <section>
+                    <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">上课信息查询</h2>
+                    <hr/>
+                    <div class="layui-row">
+                        <form class="layui-form layui-col-lg10 layui-col-md12" action="">
+                            <div class="layui-form-item layui-col-md12">
+                                <div class="layui-col-md6">
+                                    <div class="layui-col-md6">
+                                        <label class="layui-form-label">时间：</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="startTime" autocomplete="off"
+                                                   onchange="timejudge(this)" class="layui-input" id="test1" placeholder="请输入">
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-md6">
+                                        <label style="float: left;padding: 9px;text-align: center;">-</label>
+                                        <div class="layui-input-block" style="margin-left: 25px;margin-right: 85px;">
+                                            <input type="text" name="endTime" autocomplete="off"
+                                                   onchange="timejudge(this)" class="layui-input" id="test2" placeholder="请输入">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md3">
+                                    <label class="layui-form-label">项目名称：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="projectName" autocomplete="off" class="layui-input" placeholder="请输入">
+                                    </div>
+                                </div>
+                                <div class="layui-col-md3">
+                                    <label class="layui-form-label">部门名称：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="depName" autocomplete="off" class="layui-input" placeholder="请输入">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="layui-form-item layui-col-md12">
+                                <div class="layui-col-md3 layui-hide">
+                                    <label class="layui-form-label">教师姓名：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="teacherName" autocomplete="off" class="layui-input" placeholder="请输入">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </form>
+                        <div class="layui-form layui-col-lg2 layui-col-md12" style="margin-top: 5px;">
+                            <button class="layui-btn layui-btn-sm" id="search" style="margin-left: 20px;">搜索</button>
+                            <button class="layui-btn layui-btn-sm" id="export">导出</button>
+                        </div>
+                    </div>
+                    <div class="tabNav clearfix" style="margin-top: 0px;">
+                        <ul>
+                            <li data-val="1" class="tabOn">项目信息</li>
+                            <li data-val="0">教师信息</li>
+                        </ul>
+                    </div>
+                    <div class="table">
+                        <table class="layui-table" id="projectInfo" lay-filter="projectInfo"></table>
+                    </div>
+                    <div class="layui-hide table">
+                        <table class="layui-table" id="teacherInfo" lay-filter="teacherInfo"></table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    //JavaScript代码区域
+    layui.use(['table', 'form', 'laydate', 'element'], function () {
+        var table = layui.table;
+        var laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#test1', //指定元素
+            type: 'month'
+        })
+        
+        laydate.render({
+            elem: '#test2', //指定元素
+            type: 'month'
+        })
+        
+        //项目信息
+        var tableIns1 = table.render({
+            id: 'id',
+            elem: '#projectInfo',
+            skin: 'line',
+            totalRow: true,
+            url: '/kcManager/classInformationPorjectData', //数据接口
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '5%',
+                        align: 'center',
+                        totalRowText: '合计'
+                    },
+                    {
+                        field: 'projectCode',
+                        title: '项目编码',
+                        width: '10%',
+                    },
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        width: '10%',
+                    },
+                    {
+                        field: 'depName',
+                        title: '项目部名称',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'projectType',
+                        title: '项目类型',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'language',
+                        title: '项目语种',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'currentCount',
+                        title: '当前人数',
+                        totalRow: true,
+                        align: 'center',
+                        decimals: '0',
+                        width: '10%'
+                    },
+                    {
+                        field: 'countHour',
+                        title: '总课时',
+                        totalRow: true,
+                        align: 'center',
+                        decimals: '0',
+                        width: '10%'
+                    },
+                    {
+                        field: 'totalIncome',
+                        title: '总收益',
+                        totalRow: true,
+                        align: 'center',
+                        width: '10%'
+                    },
+                    {
+                        field: 'payHour',
+                        title: '已发课酬课时',
+                        decimals: '0',
+                        totalRow: true,
+                        align: 'center',
+                        width: '13%'
+                    },
+                    {
+                        field: 'payed',
+                        title: '已发课酬',
+                        totalRow: true,
+                        align: 'center',
+                        width: '10%'
+                    },
+                    {
+                        field: 'startTime',
+                        title: '启动时间',
+                        width: '11%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'endTime',
+                        title: '结束时间',
+                        width: '11%',
+                        align: 'center',
+                    }
+                ]
+            ],
+            done: function (res, curr, count) {
+                var depNameNumber = res.data[0].depNameNumber;
+                var ht = $(".layui-table-total").eq(0);
+                if(depNameNumber != null || depNameNumber != undefined){
+                    $(ht).find('.laytable-cell-1-0-3').html(depNameNumber);
+                }
+            }
+        });
+        
+        //教师信息
+        var tableIns2 = table.render({
+            id: 'id',
+            elem: '#teacherInfo',
+            skin: 'line',
+            totalRow: true,
+            url: '/kcManager/classInformationTeacherData', //数据接口
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '5%',
+                        align: 'center',
+                        totalRowText: '合计'
+                    },
+                    {
+                        field: 'projectCode',
+                        title: '项目编码',
+                        width: '10%',
+                    },
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        width: '10%',
+                    },
+                    {
+                        field: 'depName',
+                        title: '项目部名称',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'teacherType',
+                        title: '教师类别',
+                        width: '15%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'teacherName',
+                        title: '教师姓名',
+                        width: '15%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'sex',
+                        title: '性别',
+                        width: '15%',
+                        align: 'center',
+                        templet: function (d) {
+                            if(d.sex == 1){
+                                return "男";
+                            }else{
+                                return "女";
+                            }
+                        }
+                    },
+                    {
+                        field: 'nationality',
+                        title: '国籍',
+                        align: 'center',
+                        width: '10%'
+                    },
+                    {
+                        field: 'idCard',
+                        title: '身份证号',
+                        align: 'center',
+                        width: '15%'
+                    },
+                    {
+                        field: 'tel',
+                        title: '联系电话',
+                        align: 'center',
+                        width: '15%'
+                    }
+                ]
+            ],
+            done: function (res, curr, count) {
+                var projectNames = res.data[0].projectNames;
+                var teacherNames = res.data[0].teacherNames;
+                var ht = $(".layui-table-total").eq(1);
+                console.log($(ht).html());
+                if(projectNames != null || projectNames != undefined){
+                    $(ht).find('.laytable-cell-2-0-2').html(projectNames);
+                }
+                if(teacherNames != null || teacherNames != undefined){
+                    $(ht).find('.laytable-cell-2-0-5').html(teacherNames);
+                }
+            }
+        });
+        
+        $('#search').click(function () {
+            var flg = timejudge();
+            if(flg){
+                var param = getParam();
+                reload1(param);
+                reload2(param);
+            }
+        });
+        
+        function reload1(param){
+            tableIns1.reload({
+                where: param,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+        
+        function reload2(param){
+            tableIns2.reload({
+                where: param,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+        
+    });
+    //导出数据
+    $('#export').click(function () {
+        location.href="/kcManager/outputInformation";
+    })
+    
+    //tab切换
+    $('.tabNav li').click(function () {
+        $(this).addClass('tabOn').siblings().removeClass('tabOn');
+        var num = $(this).attr("data-val");
+        $(".table").eq(num).addClass('layui-hide').siblings().removeClass('layui-hide');
+        if(num == 1){
+            $('input[name="teacherName"]').parent().parent().addClass("layui-hide");
+        }else {
+            $('input[name="teacherName"]').parent().parent().removeClass("layui-hide");
+        }
+    })
+    //时间判断
+    function timejudge(obj) {
+        var startTime = $("input[name='startTime']").val();
+        var endTime = $("input[name='endTime']").val();
+        if (startTime != "" && endTime != "" && startTime > endTime) {
+            tipinfo("开始时间不能大于起始时间")
+            $(obj).val("");
+            return false;
+        }
+        if(startTime == "" && endTime != ""){
+            tipinfo("开始时间不能为空");
+            return false;
+        }
+        return true;
+    }
+    function getParam() {
+        var param = {};
+        $('input').each(function () {
+            var name = $(this).attr("name");
+            var val = $(this).val();
+            param[name]=val;
+        });
+        if(param.startTime != ""){
+            var startDate = param.startTime.toString().split("-");
+            param.startYear = startDate[0];
+            param.startMonth = Number(startDate[1]);
+        }
+        if(param.endTime != ""){
+            var endDate = param.endTime.toString().split("-");
+            param.endYear = endDate[0];
+            param.endMonth = Number(endDate[1]);
+        }
+        return param;
+    }
+</script>
+</body>
+</html>

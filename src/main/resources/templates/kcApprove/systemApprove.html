@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    .layui-table th {
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .layui-table td {
+        text-align: center;
+    }
+
+    body .layui-layer-title {
+        font-size: 14px;
+    }
+
+    .trBackground {
+        background-color: yellow;
+    }
+
+    #kcTable th {
+        text-align: center;
+    }
+
+    #kcTable {
+        cellpadding: 0%;
+        cellspacing: 0%
+    }
+
+    .inp input {
+        width: 100%;
+    }
+
+    .inp {
+        width: 7%;
+    }
+
+    .thCenter tr th {
+        text-align: center;
+    }
+    .layui-layer-btn1{
+        border-color: #00c1de!important;
+        background-color: #00c1de!important; 
+        color:#fff!important;
+    }
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body id="asdf">
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height: 95%"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">课酬审核</h2>
+                <hr/>
+                <div>
+                    <form class="layui-form" id="form1">
+                        <div class="layui-row">
+                            <div class="layui-col-lg3 layui-col-md12">
+                                <label class="layui-form-label">流水号：</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="serialNumber" name="serialNumber" placeholder="请输入流水号"
+                                           autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-col-lg9 layui-col-md12 mt5">
+                                <button type="button" class="layui-btn layui-btn-sm search ml20">搜索</button>
+                                <button type="button" class="layui-btn layui-btn-sm save" th:each="func:${session.funcList}" th:if="${func == 'kcsh_save'}">保存</button>
+                                <button type="button" class="layui-btn layui-btn-sm approve" th:each="func:${session.funcList}" th:if="${func == 'kcsh_audit'}">审核</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div>
+                        <table class="layui-table" lay-skin="line" id="kcApproveTable"
+                               lay-filter="kcApproveTable"></table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div id="approvePage">
+        <form class="layui-form" id="form2">
+            <div class="layui-form-item layui-inline" style="margin-top:3%;">
+                <label class="layui-form-label"><span class="required"></span>年份：</label>
+                <div class="layui-input-inline">
+                    <select name="year" id="year">
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item layui-inline">
+                <label class="layui-form-label"><span class="required"></span>月份：</label>
+                <div class="layui-input-inline">
+                    <select name="month" id="month">
+
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">备注：</label>
+                <div class="layui-input-block">
+                    <textarea style="width:75%;" placeholder="请输入内容" class="layui-textarea"></textarea>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div id="shenHe">
+        <div style="font-size:18px;text-align:center;color: #666;margin-top: 30px">是否将该月课酬发送至财务？</div>
+    </div>
+</div>
+</body>
+
+<script type="text/html" id="operation">
+    <a class="joysupply-txt-color-on" lay-event="details" th:each="func:${session.funcList}" th:if="${func == 'kcsh_detail'}">明细</a>
+</script>
+<script>
+    var table;
+    var tableIns;
+    var personCode = '[[${user.personCode}]]';
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table', 'layer'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        var layer = layui.layer;
+        tableIns = table.render({
+            id: 'id',
+            elem: '#kcApproveTable',
+            cellMinWidth: 80,
+            url: '/approve/kcSystemList', //数据接口
+            skin: 'line',
+            where: {
+                status: '1'
+            },
+            initSort: {
+                field: 'createTime', //排序字段，对应 cols 设定的各字段名
+                type: 'desc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+            },
+            totalRow: true,
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        type: 'checkbox',
+                        width: '5%',
+                        totalRowText: '合计',
+                        align: 'center',
+                        fixed: 'left',
+                    },
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '5%',
+                        align: 'center',
+                        fixed: 'left',
+                    },
+                    {
+                        field: 'serialNumber',
+                        title: '流水号',
+                        width: '10%',
+                        align: 'center',
+                        fixed: 'left',
+                    },
+                    {
+                        field: 'year',
+                        title: '年份',
+                        width: '10%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'month',
+                        title: '月份',
+                        width: '10%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'timeSolt',
+                        title: '课酬统计时间段',
+                        width: '15%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'depName',
+                        title: '项目部名称',
+                        width: '10%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'hourActual',
+                        title: '实际课时',
+                        width: '10%',
+                        align: 'center',
+                        totalRow: true,
+                        decimals: '0'
+                    },
+                    {
+                        field: 'feeCourse',
+                        title: '应付课酬',
+                        width: '10%',
+                        align: 'center',
+                        totalRow: true
+                    },
+                    {
+                        field: 'createTime',
+                        title: '创建时间',
+                        width: '15%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'status',
+                        title: '状态',
+                        width: '10%',
+                        align: 'center',
+                        templet: function (d) {
+                            if (d.status == '1' || d.status == '0' || d.status == '-4') {
+                                return '待审核';
+                            }
+                            if (d.status == '-3') {
+                                return '财务退回';
+                            }
+                            if (d.status == '-3') {
+                                return '财务退回';
+                            }
+                        }
+                    },
+                    {
+                        field: 'memo',
+                        title: '备注',
+                        width: '15%',
+                        align: 'center'
+                    },
+                    {
+                        title: '操作',
+                        width: '20%',
+                        align: 'center',
+                        toolbar: '#operation',
+                        fixed: 'right',
+                    }
+                ]
+            ]
+        });
+
+        $(".search").click(function () {
+            var params = {
+                serialNumber: $('#serialNumber').val(),
+                personCode: personCode,
+                status: '1'
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+
+        // 监听工具条
+        table.on('tool(kcApproveTable)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            if (layEvent === 'details') {//展示明细数据
+                var serialNumber = data.serialNumber;
+                location.href = '/kcManager/showDetails?serialNumber=' + serialNumber + "&status=1";
+            }
+        });
+
+        function produceOption(obj, param) {
+            var value = parseInt(obj);
+            var html = '';
+            html += '<option value="' + (value - 2) + '">' + (value - 2) + '</option>'
+            html += '<option value="' + (value - 1) + '">' + (value - 1) + '</option>'
+            html += '<option value="' + value + '" selected>' + (value) + '</option>'
+            html += '<option value="' + (value + 1) + '">' + (value + 1) + '</option>'
+            html += '<option value="' + (value + 2) + '">' + (value + 2) + '</option>'
+            html += '<option value="' + (value + 3) + '">' + (value + 3) + '</option>'
+            return html;
+        }
+        
+        function monthOption(obj, param) {
+            var value = parseInt(obj);
+            var html = '';
+            for(var i=1;i<13;i++){
+            	if(value == i){
+            		html += '<option value="'+i+'" selected>' + i + '</option>'
+            	}else{
+            		html += '<option value="'+i+'" >' + i + '</option>'
+            	}
+            }
+            return html;
+        }
+
+        $(".save").click(function () {
+
+            var checkStatus = table.checkStatus('id');
+            if (checkStatus.data.length == 0) {
+                failureMsg("请先选择需保存的数据！");
+                return false;
+            }
+            var tableYear = "";
+            var tableMonth = "";
+            var serialNumber = "";
+            var tableData = checkStatus.data;
+            for (var i = 0; i < tableData.length; i++) {
+                if (tableData[i].year != undefined && tableData[i].month != undefined) {
+                    tableYear = tableData[i].year;
+                    tableMonth = tableData[i].month;
+                }
+                serialNumber += tableData[i].serialNumber + ",";
+            }
+            //初始化年月
+            var newDate = new Date($.ajax({async: false}).getResponseHeader("Date"));
+            var year = newDate.getFullYear();
+            var month = newDate.getMonth();
+
+            if (tableYear == "") {
+                tableYear = year;
+                tableMonth = month + 1;
+            }
+
+          /*  if (tableYear != "") {
+                var teg = /^[1-9][0-9]{3}$/;
+                var tegMonth = /^[1-9][0-9]{1}$/;
+                if (!teg.test(tableYear)) {
+                    failureMsg("请输入正确的年份！");
+                    return false;
+                }
+                if (!tegMonth.test(tableMonth)) {
+                    failureMsg("请输入正确的月份！");
+                    return false;
+                }
+            }*/
+
+            var yearHtml = produceOption(tableYear);
+            var monthHtml = monthOption(tableMonth);
+            $("#year").html(yearHtml);
+            $("#month").html(monthHtml);
+
+            layer.open({
+                type: 1,
+                title: "提示：",
+                btn: ["确定", "取消"],
+                btnAlign: 'c',
+                closeBtn: 1,
+                area: ['30%', '75%'],
+                content: $("#approvePage").html(),
+                btn1: function (index, layero) {
+                    var approveOption = $(layero.find('form')[0]).find('textarea').val();
+                    var year = $(layero.find('form')[0]).find('#year').val();
+                    var month = $(layero.find('form')[0]).find('#month').val();
+                    var data = {
+                        serialNumber: serialNumber,
+                        approveOption: approveOption,
+                        year: $.trim(year),
+                        month: $.trim(month)
+                    }
+                    $.get("/approve/managerSave", data, function (resp) {
+                        if (resp.result === 'OK') {
+                            successMsg("保存成功！");
+                            layer.close(index);
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        } else {
+                            failureMsg(resp.message);
+                        }
+                    })
+                },
+                btn2: function (index, layero) {
+                    layer.close(index);
+                }
+            })
+            form.render();
+        })
+
+        $(".approve").click(function () {
+            var checkStatus = table.checkStatus('id');
+            if (checkStatus.data.length == 0) {
+                failureMsg("请先选择需要审核的数据！");
+                return false;
+            }
+           
+            var tableData = checkStatus.data;
+            var year = tableData[0].year;
+            var month = tableData[0].month;
+            var flag = true;
+            var msg = "";
+            for (var i = 0; i < tableData.length; i++) {
+                if (tableData[i].year == "" || tableData[i].month == "" || tableData[i].year == null || tableData[i].month == null
+                    || tableData[i].year == undefined || tableData[i].month == undefined) {
+                    msg = "选择的数据中有未保存日期的条目，请确认！";
+                    flag = false;
+                    break;
+                }
+               	var year1 = tableData[i].year;
+               	var month1 = tableData[i].month;
+               	if(year != year1 || month != month1){
+               		msg = "选择的数据中年份或月份有不同数据,请检查!";
+	          	 	flag = false;
+	                break;
+               	}
+            }
+            if (!flag) {
+                failureMsg(msg);
+                return false;
+            }
+            layer.open({
+                type: 1,
+                title: "确定：",
+                btn: ["确定", "退回"],
+                btnAlign: 'c',
+                closeBtn: 1,
+                area: ['420px', '189px'],
+                content: $("#shenHe").html(),
+                btn1: function (index, layero) {
+                    var saveArr = [];
+                    for (var i = 0; i < tableData.length; i++) {
+                        var data = {
+                            serialNumber: tableData[i].serialNumber,
+                            depType: tableData[i].depType,
+                            personCode: personCode,
+                            approveOrder: tableData[i].approveOrder,
+                            status: '1',
+                            approveOption: ""
+                        }
+                        saveArr.push(data);
+                    }
+                    $.get("/approve/kcPass", {
+                        data: JSON.stringify(saveArr),
+                        kcStatus: "2",
+                        pass: "1"
+                    }, function (resp) {
+                        if (resp.result === 'OK') {
+                            successMsg("审核成功！");
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                            layer.close(index);
+                        } else {
+                            failureMsg("审核失败：" + resp.message);
+                        }
+                    })
+                },
+                btn2: function (index, layero) {
+                    var saveArr = [];
+                    for (var i = 0; i < tableData.length; i++) {
+                        var data = {
+                            serialNumber: tableData[i].serialNumber,
+                            depType: tableData[i].depType,
+                            personCode: personCode,
+                            approveOrder: tableData[i].approveOrder,
+                            status: '0',
+                            approveOption: ""
+                        }
+                        saveArr.push(data);
+                    }
+                    $.get("/approve/kcPass", {
+                        data: JSON.stringify(saveArr),
+                        kcStatus: "-2",
+                        pass: "-1"
+                    }, function (resp) {
+                        if (resp.result === 'OK') {
+                            successMsg("审核成功！");
+                            layer.close(index);
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        } else {
+                            failureMsg("审核失败：" + resp.message);
+                        }
+                    })
+                }
+            })
+        })
+    });
+</script>
+</html>

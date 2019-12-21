@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.UnSendTeacherKcDao">
+	
+	<select id="getProjectName" resultType="hashMap">
+		SELECT distinct
+		cf.project_id projectId,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_id) END projectName
+		FROM course_fee cf
+	</select>
+	
+	<select id="kcTeacherList" parameterType="hashMap" resultType="hashMap">
+		SELECT  cf.serial_number serialNumber,
+		cf.mergeSerialNumber,
+		cf.start_time startTime,
+		cf.end_time endTime,
+		cf.year,
+		cf.month,
+		cf.memo,
+		cf.hour_actual hourActual,
+		cf.fee_course feeCourse,
+		cf.status,
+		cf.row_id rowId,
+		cf.create_time createTime,
+		cf.project_id projectId,
+		cf.teacher_code teacherCode,
+		dd.`name` teacherType,
+		ti.teacher_name teacherName,
+        IFNULL(dd1.`name`,'') nationality,
+        ti.id_card idCard,
+		ti.bank_code bankCode,
+		ti.card_no cardNo,
+		ti.project projectTeacher,
+		ti.account_name accountName,
+		ti.sex sex,
+		ti.birth_day birthDay,
+		ti.entry_date entryDate,
+		ti.prv_out_date prvOutDate,
+		ti.joinTime joinTime,
+		ti.tele_num teleNum,
+		ti.project,
+		pi.project_name projectName,
+		"0" deductType,
+		pi.dep_name depCode
+		FROM course_fee cf
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd ON dd.`code` = ti.teacher_type
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.nationality
+		LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+		WHERE pi.project_id in 
+		<foreach collection="projectIds" open="(" separator="," close=")" item="item">
+			#{item.projectId}
+		</foreach>
+		AND cf.status = #{status}
+		<if test="year != '' and year != null ">
+			and cf.year = #{year}
+			and cf.month = #{month}
+		</if>
+		<if test="teacherName !='' and teacherName !=null ">
+			and ti.teacher_name like CONCAT('%',#{teacherName},'%')
+		</if>
+		<if test="note !='' and note !=null ">
+			and cf.memo like CONCAT('%',#{note},'%')
+		</if>
+		
+		UNION ALL
+
+		SELECT
+		fd.serial_num serialNumber,
+		fd.mergeSerialNumber,
+		fd.start_time startTime,
+		fd.end_time endTime,
+		cf.year,
+		cf.month,
+		cf.memo,
+		"" hourActual,
+		fd.fee_count feeCourse,
+		fd.status,
+		fd.row_id rowId,
+		fd.gen_date createTime,
+		fd.project_id projectId,
+		fd.teacher_code teacherCode,
+		dd.`name` teacherType,
+		ti.teacher_name teacherName,
+		dd1.`name` nationality,
+		ti.id_card idCard,
+		ti.bank_code bankCode,
+		ti.card_no cardNo,
+		ti.project projectTeacher,
+		ti.account_name accountName,
+		ti.sex sex,
+		ti.birth_day birthDay,
+		ti.entry_date entryDate,
+		ti.prv_out_date prvOutDate,
+		ti.joinTime joinTime,
+		ti.tele_num teleNum,
+		ti.project,
+		pi.project_name projectName,
+		fd.deduct_type deductType,
+		pi.dep_name depCode
+		FROM fee_deduct fd
+		LEFT JOIN teacher_info ti ON ti.teacher_code = fd.teacher_code
+		LEFT JOIN data_dic dd ON dd.`code` = ti.teacher_type
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.nationality
+		LEFT JOIN project_info pi ON pi.project_id = fd.project_id
+		LEFT JOIN course_fee cf on cf.mergeSerialNumber = fd.mergeSerialNumber  and cf.serial_number = fd.serial_num
+		WHERE pi.project_id in
+		<foreach collection="projectIds" open="(" separator="," close=")" item="item">
+			#{item.projectId}
+		</foreach>
+		AND fd.mergeSerialNumber is not NULL
+		and fd.project_id != '0'
+		AND fd.status = #{status}
+		<if test="teacherName !='' and teacherName !=null ">
+			and ti.teacher_name like CONCAT('%',#{teacherName},'%')
+		</if>
+		<if test="year != '' and year != null ">
+			and cf.year = #{year}
+			and cf.month = #{month}
+		</if>
+		<if test="note !='' and note !=null ">
+			and cf.memo like CONCAT('%',#{note},'%')
+		</if>
+		GROUP BY fd.row_id
+	</select>
+	
+	<!-- 查询项目的所属部门 -->
+	<select id="getDepList" parameterType="String" resultType="hashMap">
+		SELECT os.organize_code depCode , os.organize_name depName
+		FROM project_info pi 
+		LEFT JOIN organize_struct os ON pi.dep_name = os.organize_code
+		<where>
+			pi.project_id in
+			<foreach collection="list" open="(" close=")" separator="," item="item">
+				#{item.projectId}
+			</foreach>
+		</where>
+		group by os.organize_code
+	</select>
+
+	<select id="getDepLists" parameterType="String" resultType="hashMap">
+		SELECT os.organize_code depCode , os.organize_name depName
+		FROM  course_fee cf
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		LEFT JOIN organize_struct os ON pi.dep_name = os.organize_code
+		WHERE  LENGTH(cf.project_id) > 5
+		AND pi.project_id in
+		<foreach collection="list" open="(" close=")" separator="," item="item">
+			#{item.projectId}
+		</foreach>
+		<if test="status != '' and status != null ">
+			AND cf.`status` = #{status}
+		</if>
+		group by os.organize_code
+	</select>
+
+</mapper>

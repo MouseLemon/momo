@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+    [v-cloak] {
+        display: none;
+    }
+
+    #layui-laydate2, #test-n1, .layui-laydate-main {
+        width: 100% !important
+    }
+
+    .layui-laydate-content {
+        width: 100%
+    }
+
+    .layui-laydate-content table {
+        width: 100%
+    }
+
+    #layui-laydate1 {
+        width: 100%
+    }
+
+    #layui-laydate1 .layui-this {
+        background-color: white !important;
+        color: #666 !important;
+        border: 1px solid #009688 !important;
+    }
+
+    td {
+        font-size: 14px;
+
+    }
+    .clickClass {
+        pointer-events: auto;
+    }
+
+    .layui-laydate-content td {
+        cursor: pointer;
+        position: static !important;
+    }
+
+    .addBtn {
+        cursor: pointer;
+    }
+    .joysupply-main-bL2 {
+        height: 411px;
+        margin-top: 26px;
+    }
+    td {
+        pointer-events: none;
+    }
+    .layui-laydate-header>i {
+        display: none;
+    }
+    .laydate-set-ym {
+        pointer-events: none;
+    }
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2;padding: 15px;">
+        <div class="layui-anim layui-anim-upbit" id="app">
+            <section class="layui-row layui-col-space10">
+                <div class="layui-col-md12">
+                    <div class="joysupply-full-box">
+                        <div class="joysupply-main-left">
+                            <img class="joysupply-main-headImg" v-cloak v-if="teacherPic == ''" src=""/>
+                            <img class="joysupply-main-headImg" v-cloak v-else v-bind:src="teacherPic"/>
+                            <div class="joysupply-main-title-main">
+                                <p v-cloak class="joysupply-txt-title">{{teacher_name}}，祝你开心每一天！</p>
+                                <p class="joysupply-txt-normal joysupply-main-subtitle" v-cloak>{{signature}}</p>
+                            </div>
+                        </div>
+                        <div class="joysupply-main-right">
+                            <div class="joysupply-main-rightItem2">
+                                <p class="joysupply-txt-subtitle">今日课时</p>
+                                <p class="joysupply-right-number" v-cloak>{{todayCount}}</p>
+                            </div>
+                            <div class="joysupply-main-rightItem2 complete_right">
+                                <p class="joysupply-txt-subtitle">今日课酬</p>
+                                <p class="joysupply-right-number" v-cloak>{{todayKc}}</p>
+                            </div>
+                            <div class="joysupply-main-rightItem2 complete_right">
+                                <p class="joysupply-txt-subtitle">明日课时</p>
+                                <p class="joysupply-right-number" v-cloak>{{tCount}}</p>
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+                </div>
+                <div class="layui-row layui-col-space10">
+                    <div class="layui-col-md8 layui-row">
+                        <div class="joysupply-bg-white joysupply-main-Second joysupply-main-bL">
+                            <div class="course_title">
+                                <p class="joysupply-txt-color-on">今日课程</p>
+                                <p onclick="toView()" style="cursor: pointer;">全部课程</p>
+                            </div>
+                            <ul v-if="list.length > 0"  class="clearfix">
+                                <li v-cloak v-for="item in list">
+                                    <div class="tip clearfix">
+                                        <img th:src="@{/img/tri.png}"> <span class="tip_num" v-bind:title="item.room_num">{{item.room_num}}</span>
+                                    </div>
+                                    <div class="li_top">
+                                        <img class="li_img" th:src="@{/img/course_img.png}">
+                                        <div class="li_top_r">
+                                            <p class="joysupply-txt-title li_top_r1">{{item.project_name}}</p>
+                                            <p class="li_top_r2">{{item.start_time}}-{{item.end_time}}</p>
+                                          <!--  <p class="joysupply-txt-color-assist">
+                                                {{item.start_time}}：{{item.end_time}}</p>-->
+                                        </div>
+                                    </div>
+                                    <p class="li_floor joysupply-txt-color-assist">{{item.name}}</p>
+                                </li>
+                            </ul>
+                            <div>
+                                <p id="msg" class="no-message">暂无课程</p>
+                            </div>
+                        </div>
+                        <div class="joysupply-bg-white joysupply-main-Second joysupply-main-bL2">
+                            <div class="course_title main_countT joysupply-txt-title">本周课酬统计</div>
+                            <div id="main2" style="width:100%; height:100%"></div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md4">
+                        <div class="joysupply-bg-white joysupply-main-Second joysupply-main-bR">
+                            <div>
+                                <p class="joysupply-txt-maintitle joysupply-txt-color-on">快速开始/便捷导航</p>
+                                <ul class="main_r_meau layui-row">
+                                    <li class="layui-col-md3" th:each=" shortCutMenu : ${shortCutList}">
+                                        <a th:href="@{${shortCutMenu.indexUrl}+ '?defaultUrl='+ ${shortCutMenu.menuUrl}}">
+                                            <span th:text="${shortCutMenu.menuName}"></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="layui-row addBtn_ul">
+                                    <li></li>
+                                    <li></li>
+                                    <li class="addBtn" onclick="shortCutManage()"><span>添加</span></li>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="joysupply-bg-white joysupply-main-Second joysupply-main-bR2">
+                            <p style="text-align: center;font-size: 18px;">课程表</p>
+                            <div class="layui-inline" id="test-n1"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+<script th:inline="javascript">
+    var user = [[${user}]];
+</script>
+<script type="text/javascript" th:src="@{/js/echarts/echarts.js}"></script>
+<script type="text/javascript">
+    //JavaScript代码区域
+    function shortCutManage() {
+        openwindow("/systemUser/addShortCutMenu", "快捷菜单管理", "800", "300", false, reload);
+    }
+
+    function toView() {
+        location.href = "/page/course?defaultUrl=/scheduleView/teacherView";
+    }
+
+    function reload() {
+        location.href = "/index/teacher";
+    }
+    layui.use(['element', 'layer', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+
+        var ins2 = laydate.render({
+            elem: '#test-n1'
+            , position: 'static'
+            //,calendar: true
+            , format: 'yyyy-MM-dd'
+            , btns: []
+            , ready: function (date) {
+                var dateTime = date.year + "-" + date.month + "-" + date.date
+                $.post('/classManage/getPlanByTeacher', {
+                    teacherCode: user.personCode,
+                    dateTime: dateTime
+                }, function (data) {
+                    var list = data.schedule;
+                    for (var i = 0; i < list.length; i++) {
+                        var item = list[i];
+                        var nowDate = new Date(item.class_date);
+                        var date = nowDate.getFullYear() + "-" + (nowDate.getMonth() + 1) + "-" + nowDate.getDate();
+                        $("td[lay-ymd='" + date + "']").append("<img src='/img/class.png'>")
+                        $("td[lay-ymd='" + date + "']").addClass("clickClass");
+                    }
+                })
+            }
+            , done: function (value, date, endDate) {
+                location.href = '/scheduleView/teacherView?classDate=' + value;
+                // var dateTime = value;
+                // var nowDate = new Date(dateTime);
+                // var date1 = nowDate.getFullYear() + "-" + (nowDate.getMonth() + 1) + "-" + nowDate.getDate();
+                // var flag = $("td[lay-ymd='" + date1 + "']").hasClass("clickClass");
+                // $.post('/classManage/getPlanByTeacher', {
+                //     teacherCode: user.personCode,
+                //     dateTime: dateTime
+                // }, function (data) {
+                //     var list = data.schedule;
+                //     for (var i = 0; i < list.length; i++) {
+                //         var item = list[i];
+                //         if (value == item.class_date) {
+                //             value = item.class_date.replace(new RegExp("-", "g"), "/");
+                //             location.href = '/scheduleView/teacherView?classDate=' + value;
+                //             return false;
+                //         }
+                //         var nowDate = new Date(item.class_date);
+                //         var date = nowDate.getFullYear() + "-" + (nowDate.getMonth() + 1) + "-" + nowDate.getDate();
+                //         $("td[lay-ymd='" + date + "']").append("<img src='/img/class.png'>")
+                //
+                //     }
+                // })
+            }
+        });
+    });
+    $(function () {
+        var vm = new Vue({
+            el: "#app",
+            data: {
+                list: [],
+                todayCount: "",
+                tCount: "",
+                teacher_name: "",
+                send: false,
+                signature: '',
+                teacherPic: '',
+                todayKc : ''
+            }, created: function () {
+                initData();
+                $.post("/kcManagerTeacher/getTodayKc",function (data) {
+                    vm.todayKc = data;
+                });
+            }
+        })
+
+        //基于准备好的dom，初始化echarts实例
+        var myChart2 = echarts.init(document.getElementById('main2'));
+        option = {
+            title: {
+                text: '',
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            toolbox: {
+                show: true
+            },
+            calculable: true,
+            xAxis: [{
+                type: 'category',
+                data: []
+            }],
+            yAxis: [{
+                type: 'value'
+            }],
+            series: [{
+                //name: '蒸发量',
+                type: 'bar',
+                barWidth: 30,
+                itemStyle: {
+                    normal: {
+                        color: '#5B9BD5'
+                    }
+                },
+                label: {
+                    normal: {
+                        show: true,
+                        color: '#333',
+                        position: 'top'
+
+                    }
+                },
+                data: []
+            }]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart2.setOption(option);
+        //使图标自适应屏幕的宽度
+        window.onresize = myChart2.resize;
+        $.get("/kcManagerTeacher/getThisWeekKc", function (rep) {
+            setOption2(rep);
+        });
+
+        function setOption2(rep) {
+            myChart2.setOption({
+                tooltip: {
+                    formatter: function (data) {
+                        return data[0].name + '<br />' + '课酬：' + data[0].value;
+                    }
+                },
+                xAxis: [{
+                    data: rep.week
+
+                }],
+                series: [{
+                    label: {
+                        normal: {
+                            show: true,
+                            color: '#333',
+                            position: 'top'/* ,
+								formatter: function(data){
+									//console.log(data)
+									return data.value+'\n('+rep.rates[data.dataIndex]+')'
+								} */
+                        }
+                    },
+                    data: rep.fee
+                }]
+            });
+        }
+
+        function initData() {
+            $.ajax({
+                url: '/teacher/getTodayClass',
+                // async:false,
+                dataType: 'json',//服务器返回json格式数据
+                type: 'post',//HTTP请求类型
+                success: function (data) {
+                    vm.list.push.apply(vm.list, data.list);
+                    vm.tCount = data.tCount;
+                    vm.todayCount = data.todayCount;
+                    vm.teacher_name = data.teacher_name;
+                    vm.signature = data.signature;
+                    vm.teacherPic = data.teacherPic;
+                    if (data.list.length <= 0) {
+                        $('#msg').show();
+
+                    } else {
+                        $('#msg').hide();
+                    }
+                }
+            });
+        }
+    })
+</script>
+
+</html>

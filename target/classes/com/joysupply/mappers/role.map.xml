@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.RoleDao">
+    <!-- 角色 -->
+    <resultMap type="OrganizePeople" id="organizePeopleMap">
+        <id property="personCode" column="person_code"/>
+        <result property="name" column="name"/>
+        <result property="organizeCode" column="organize_code"/>
+        <result property="jobType" column="job_type"/>
+        <result property="telphone" column="telphone"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    <resultMap type="Role" id="roleTypeMap">
+        <id property="roleCode" column="role_code"/>
+        <result property="roleName" column="role_name"/>
+        <result property="upRole" column="up_role"/>
+        <result property="isFixed" column="is_fixed"/>
+    </resultMap>
+    <!-- 角色菜单 -->
+    <resultMap type="RoleMenu" id="roleMenuTypeMap">
+        <id property="roleCode" column="role_code"/>
+        <result property="menuCode" column="menu_code"/>
+    </resultMap>
+    <sql id="roleField">role_code,role_name,up_role</sql>
+    <sql id="menuRoleField">role_code,menu_code</sql>
+
+    <!-- 查询角色列表 -->
+    <select id="getRoleList" resultSetType="SCROLL_INSENSITIVE" resultMap="roleTypeMap">
+        select role_code,role_name,up_role,is_fixed from role
+    </select>
+    <!-- 添加角色 -->
+    <insert id="addRole" parameterType="Role">
+		insert into role (role_code,role_name,up_role) values (#{roleCode},#{roleName},#{upRole})
+	</insert>
+
+    <select id="getRole" parameterType="Role" resultMap="roleTypeMap">
+        select role_code,role_name,up_role,is_fixed from role where role_code = #{roleCode}
+    </select>
+    <!-- 编辑角色 -->
+    <update id="updRole" parameterType="Role">
+        update role
+        <set>
+            <if test="roleName != null and roleName != ''">
+                role_name=#{roleName},
+            </if>
+            <if test="upRole != null and upRole != ''">
+                up_role=#{upRole}
+            </if>
+        </set>
+        where role_code=#{roleCode}
+    </update>
+    <delete id="delRole" parameterType="Role">
+        delete from role where role_code=#{roleCode}
+    </delete>
+    <!-- 根据roleCode查询menu_role表的list -->
+    <select id="getRoleMenus" parameterType="Role" resultType="string">
+        select m.menu_code from menu_role mr
+         left join menu m on mr.menu_code = m.menu_code
+         where role_code=#{roleCode}
+    </select>
+    <!-- 插入menu_role表 -->
+    <insert id="saveRoleMenu" parameterType="RoleMenuDto">
+        insert into menu_role (role_code,menu_code )
+        values
+        <foreach collection="roleMenuList" item="roleMenu" index="index" separator=",">
+            (#{roleMenu.roleCode},#{roleMenu.menuCode})
+        </foreach>
+    </insert>
+    <!-- 根据roleCode删除enu_role表对应记录 -->
+    <delete id="deleteRoleMenuByRoleCode" parameterType="string">
+			delete from menu_role where role_code=#{roleCode}
+	</delete>
+    <insert id="savePersonRole" parameterType="hashMap">
+        insert into person_role(person_code,role_code) values
+        <foreach collection="list" item="personRole" separator=",">
+            (#{personRole.personCode},#{personRole.roleCode})
+        </foreach>
+    </insert>
+    <delete id="delPersonRole" parameterType="string">
+        delete from person_role where person_code = #{personCode}
+    </delete>
+    <select id="getPersonRoles" parameterType="string" resultType="string">
+        select role_code roleCode from person_role where person_code = #{personCode}
+    </select>
+    <select id="getPersonByRole" parameterType="hashMap" resultMap="organizePeopleMap">
+        select person_code,name,sex,organize_code,job_type,in_service,telphone,create_time from person
+            where person_code in(select person_code from person_role where role_code = #{roleCode})
+                and person_code in(select p_code from person_data_auth where data_code = #{projectId} and auth_type = 2)
+    </select>
+    <select id="getOtherPersonHaveSameRole" parameterType="hashMap" resultType="string">
+        select person_code from person_role where role_code = #{roleCode} and person_code != #{paramCode}
+    </select>
+</mapper>

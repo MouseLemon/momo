@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProjectApproveDao">
+
+	<select id="kcSystemList" parameterType="hashMap" resultType="hashMap">
+		SELECT  cf.serial_number serialNumber,
+				cf.mergeSerialNumber,
+				cf.start_time startTime,
+				cf.end_time endTime,
+				cf.year,
+				cf.month,
+				cf.memo,
+				cf.hour_actual hourActual,
+				cf.fee_course feeCourse,
+				cf.status,
+				cf.row_id rowId,
+				cf.create_time createTime,
+				cf.project_id projectId,
+				cf.teacher_code teacherCode,
+				ti.name teacherType,
+				ti.teacher_name teacherName
+		FROM course_fee cf
+		RIGHT JOIN (select ti.teacher_code,ti.teacher_type,dd.name,ti.teacher_name from teacher_info ti,data_dic dd where ti.teacher_type=dd.code) ti on ti.teacher_code = cf.teacher_code
+		WHERE 1 = 1
+		<if test="status != 1">
+			and cf.status = #{status}
+		</if>
+		<if test="status == 1">
+			and cf.status IN('1','-3')
+		</if>
+		<if test="serialNumbers != null and serialNumbers.size()>0">
+			and cf.serial_number in
+			<foreach collection="serialNumbers" open="(" separator="," close=")" item="item">
+				#{item}
+			</foreach>
+		</if>
+		<if test="serialNumber != '' and serialNumber != null">
+			and cf.serial_number like CONCAT('%',#{serialNumber},'%')
+		</if>
+		<if test="year != '' and year != null ">
+			and cf.year = #{year}
+			and cf.month = #{month}
+		</if>
+		<if test="teacherName !='' and teacherName !=null ">
+			and ti.teacher_name like CONCAT('%',#{teacherName},'%')
+		</if>
+	</select>
+	<select id="getKcList" parameterType="hashMap" resultType="hashMap">
+		SELECT  cfa.serial_number serialNumber,
+				cfa.approve_order approveOrder,
+				cfa.dep_type depType,
+				cf.start_time startTime,
+				cf.end_time endTime,
+				cf.serial_number serialNumber,
+				cf.year,
+				cf.month,
+				cf.hour_actual hourActual,
+				cf.fee_course feeCourse,
+				cf.status,
+				cf.row_id rowId,
+				cf.create_time createTime,
+				cf.project_id projectId,
+				cf.teacher_code teacherCode,
+				ti.name teacherType,
+				ti.teacher_name teacherName
+		FROM course_fee_approve cfa
+		LEFT JOIN course_fee cf ON cf.serial_number = cfa.serial_number
+		RIGHT JOIN (select ti.teacher_code,ti.teacher_type,dd.name,ti.teacher_name from teacher_info ti,data_dic dd where ti.teacher_type=dd.code) ti on ti.teacher_code = cf.teacher_code
+		WHERE cfa.person_code = #{personCode}
+		AND cf.approveOrder = cfa.approve_order-1
+		AND cfa.status='2'
+		<if test="serialNumber != '' and serialNumber != null">
+			and cf.serial_number like CONCAT('%',#{serialNumber},'%')
+		</if>
+		<if test="year != '' and year != null ">
+			and cf.year = #{year}
+			and cf.month = #{month}
+		</if>
+		<if test="teacherName !='' and teacherName !=null ">
+			and ti.teacher_name like CONCAT('%',#{teacherName},'%') 
+		</if>
+	</select>
+	
+	<select id="queryListCheckPerson" parameterType="string" resultType="Integer">
+		SELECT COUNT(0) FROM course_fee_approve WHERE approve_order = #{listArr.approveOrder}+1 and serial_number = #{listArr.serialNumber} and status='2'
+	</select>
+	<select id="getNextPersonCode" parameterType="string" resultType="string">
+		SELECT person_code FROM course_fee_approve WHERE approve_order = #{listArr.approveOrder}+1 and serial_number = #{listArr.serialNumber} and status='2'
+	</select>
+	
+	<update id="projectApproveKc" parameterType="hashMap">
+		update course_fee set status = #{kcStatus},mergeSerialNumber = #{mergeSerialNumber}
+		where serial_number  = #{listArr.serialNumber}
+		<if test="teacherCode != '' and teacherCode != null">
+			and teacher_code = #{teacherCode}
+		</if>
+	</update>
+	<update id="feeDeductKc" parameterType="hashMap">
+		update fee_deduct set status = #{kcStatus},mergeSerialNumber = #{mergeSerialNumber}
+		where serial_num  = #{listArr.serialNumber}
+		<if test="teacherCode != '' and teacherCode != null">
+			and teacher_code = #{teacherCode}
+		</if>
+	</update>
+	<!-- 查询已发放的课酬数据 -->
+	<select id="getGrantKC" parameterType="hashMap" resultType="hashMap">
+		select start_time startTime , end_time endTime , project_id projectId
+		from course_fee
+		where mergeSerialNumber = #{mergeSerialNumber}
+		and serial_number in
+		<foreach collection="serialNumber" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and project_id in
+		<foreach collection="projectIds" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and teacher_code = #{teacherCode}
+		and length(project_id)>5
+		GROUP BY serial_number
+	</select>
+	
+	<update id="cwApproveKc" parameterType="hashMap">
+		update course_fee set status = #{kcStatus},is_send = '1'
+		where mergeSerialNumber = #{mergeSerialNumber}
+		and serial_number in
+		<foreach collection="serialNumber" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and project_id in 
+		<foreach collection="projectIds" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and teacher_code = #{teacherCode}
+		and length(project_id)>5
+	</update>
+	<update id="cwApproveKcRetu" parameterType="hashMap">
+		update course_fee set status = #{kcStatus},is_send = '0',memo = #{approveOption}
+		where mergeSerialNumber = #{mergeSerialNumber}
+	</update>
+
+	<update id="cwFeeDeductKc" parameterType="hashMap">
+		update fee_deduct set status = #{kcStatus}
+		where mergeSerialNumber = #{mergeSerialNumber}
+		and serial_num in
+		<foreach collection="serialNumber" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and project_id in
+		<foreach collection="projectIds" open="(" separator="," close=")" item="item">
+			#{item}
+		</foreach>
+		and teacher_code = #{teacherCode}
+	</update>
+	<update id="cwFeeDeductKcRetu" parameterType="hashMap">
+		update fee_deduct set status = #{kcStatus}
+		where mergeSerialNumber = #{mergeSerialNumber}
+	</update>
+	
+	<update id="updateApproveStatus" parameterType="hashMap">
+		update course_fee_approve set status='-2'
+		where serial_number = #{listArr.serialNumber}
+		<if test="personCode != '' and personCode != null ">
+			and person_code = #{personCode}
+		</if>
+	</update>
+	
+	<update id="projectApproveOrder" parameterType="hashMap">
+		update course_fee set status = '-4',approveOrder = approveOrder+1
+		where serial_number = #{listArr.serialNumber}
+		<if test="teacherCode != '' and teacherCode != null ">
+			and teacher_code = #{teacherCode}
+		</if>
+	</update>
+	
+	<update id="managerSave" parameterType="hashMap">
+		update course_fee set year=#{year},month=#{month},memo=#{approveOption}
+		where serial_number in
+		<foreach collection="serialNumber" open="(" separator="," close=")" item="item">
+			( #{item})
+		</foreach>
+	</update>
+	
+	<insert id="insertApprove" parameterType="hashMap">
+		insert into course_fee_approve (serial_number,dep_type,person_code,apprvoe_time,status,apprvoe_option,approve_order,row_id)
+		values(#{listArr.serialNumber},#{listArr.depType},#{listArr.personCode},now(),#{listArr.status},#{listArr.approveOption},#{listArr.approveOrder},#{listArr.id})
+	</insert>
+	
+	<insert id="insertApproves" parameterType="hashMap">
+		insert into course_fee_approve (serial_number,dep_type,person_code,apprvoe_time,status,apprvoe_option,approve_order,row_id)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(#{item.serialNumber},#{item.depType},#{item.personCode},now(),#{item.status},#{item.approveOption},#{item.approveOrder},#{item.id})
+		</foreach>
+	</insert>
+	
+	
+	<insert id="insertApproveDoc" parameterType="hashMap">
+		insert into course_fee_back_record (row_id,back_time,approve_id,serial_number)
+		values ( #{listArr.rowId},now(),#{listArr.id},#{listArr.serialNumber})
+	</insert>
+	<insert id="insertApproveDocs" parameterType="hashMap">
+		insert into course_fee_back_record (row_id,back_time,approve_id,serial_number)
+		values 
+		<foreach collection="list" separator="," item="item">
+			( #{item.rowId},now(),#{item.id},#{item.serialNumber})
+		</foreach>
+	</insert>
+	<!-- 系统管理员已审批数据 -->
+	<select id="systemKcReadyList" parameterType="hashMap" resultType="hashMap">
+		SELECT  cf.start_time startTime,
+				cf.end_time endTime,
+				cf.serial_number serialNumber,
+				cf.year,
+				cf.month,
+				cf.hour_actual hourActual,
+				cf.fee_course feeCourse,
+				cf.status,
+				cf.row_id rowId,
+				cfa.apprvoe_time apprvoeTime,
+				cf.project_id projectId
+		FROM course_fee cf
+		LEFT JOIN course_fee_approve cfa ON cfa.serial_number = cf.serial_number
+		WHERE 1 = 1 
+		AND cfa.status != '2' and cfa.status !='-2'
+		<if test="serialNumber != '' and serialNumber != null">
+			and cf.serial_number like CONCAT('%',#{serialNumber},'%')
+		</if>
+	</select>
+	<select id="kcReadyList" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			MAX(cfa.apprvoe_time) apprvoeTime,
+			cf.start_time startTime,
+			cf.end_time endTime,
+			cf.serial_number serialNumber,
+			cf.year,
+			cf.month,
+			SUM(cf.hour_actual) hourActual,
+			SUM(cf.fee_course) feeCourse,
+			cf.status,
+			cf.row_id rowId,
+			cf.project_id projectId
+		FROM course_fee_approve cfa
+		LEFT JOIN course_fee cf ON cfa.serial_number = cf.serial_number
+		WHERE cfa.status != 2
+		<if test="personCode != '' and personCode != null">
+			AND cfa.person_code = #{personCode}
+		</if>
+		<if test="serialNumber != '' and serialNumber != null">
+			and cfa.serial_number like CONCAT('%',#{serialNumber},'%')
+		</if>
+		GROUP BY cfa.serial_number;
+	</select>
+	<select id="getDepNameByProjectId" parameterType="string" resultType="string">
+		SELECT 
+			os.organize_name
+		FROM project_info pi
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		LEFT JOIN organize_struct os1 ON os1.organize_code = os.up_code
+			WHERE pi.project_id = #{projectId}
+	</select>
+	<select id="teaProNumByTeaCode" parameterType="String" resultType="hashMap">
+		SELECT 
+			cf.teacher_code teacherCode
+			,cf.serial_number serialNum
+			,cf.project_id projectId
+		FROM 
+			course_fee cf 
+			,project_info pi
+		WHERE 
+			cf.project_id = pi.project_id
+			and cf.teacher_code = #{teacherCode};
+	</select>
+    <select id="getProjectListKCKS" resultType="hashMap" parameterType="list">
+        SELECT
+			fc.project_id projectId,
+			SUM(fc.fee_course*100)/100 fcFeeCourse,
+			SUM(fd1.fee_count*100)/100 fdFeeCountCat,
+			SUM(fd2.fee_count*100)/100 fdFeeCountAdd,
+			SUM(fc.hour_actual) fcHourActual,
+			SUM(fd1.k_s) fdHourActualCat,
+			SUM(fd2.k_s) fdHourActualAdd
+        FROM course_fee fc
+        LEFT JOIN fee_deduct fd1 on fc.project_id = fd1.project_id and fd1.teacher_code = fc.teacher_code and fd1.deduct_type in (1901) AND fd1.status = 3
+		LEFT JOIN fee_deduct fd2 on fc.project_id = fd2.project_id and fd2.teacher_code = fc.teacher_code and fd2.deduct_type in (1902,1903) and fd2.status = 3
+        WHERE
+			fc.status = 3
+			and fc.project_id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        GROUP BY fc.project_id
+    </select>
+	<!--查询课酬-->
+	<select id="getProjectKC" resultType="hashMap" parameterType="String">
+		SELECT
+			SUM(IFNULL(fc.fee_course,'0')*100)/100 fcFeeCourse,
+			SUM(IFNULL(fc.hour_actual,'0')) fcHourActual,
+			fc.project_id projectId
+		FROM course_fee fc
+		WHERE fc.status = 3
+			and fc.project_id = #{projectId}
+		GROUP BY fc.project_id
+	</select>
+	<!--工作量扣除-->
+	<select id="getProjectFC" resultType="hashMap" parameterType="String">
+		SELECT
+			SUM(IFNULL(fd.fee_count,'0')*100)/100 fdFeeCountCat,
+			SUM(IFNULL(fd.k_s,'0')) fdHourActualCat,
+			fd.project_id projectId
+		FROM fee_deduct fd
+		WHERE fd.status = 3
+			and fd.project_id = #{projectId}
+			and deduct_type = '1901'
+		GROUP BY fd.project_id
+	</select>
+	<!--通过合并流水号查询是否已有教师法课酬-->
+	<select id="objByMergeSerialNumber" parameterType="hashMap" resultType="hashMap">
+		SELECT teacher_code,project_id 
+		FROM course_fee
+		WHERE status = 3 and mergeSerialNumber = #{mergeSerialNumber};
+	</select>
+</mapper>

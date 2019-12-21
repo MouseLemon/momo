@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height:95%;" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">数据字典管理</h2>
+                <hr/>
+                <div class="layui-form layui-row" action="">
+                    <div class="layui-col-md12">
+                        <div class="layui-col-lg3 layui-col-md12">
+                            <div class="layui-col-md12">
+                                <label class="layui-form-label">字典名称</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="name" placeholder="请输入" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-lg3 layui-col-md12" style="margin-top: 5px;">
+                            <button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit="" lay-filter="LAY-app-contlist-search" id="search" style="margin-left: 40px;">
+                                搜索
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <table class="layui-table" lay-skin="line" id="dataDic" lay-filter="tableContent" style="margin-top: 0px;">
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="operation">
+    <!--<a class="joysupply-txt-color-on joysupply-txt-color-error" lay-event="deletes">删除</a>-->
+    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'sjzd_edit'}">编辑</a>
+    <a class="joysupply-txt-color-on" lay-event="editItems" th:each="func:${session.funcList}" th:if="${func == 'sjzd_editItem'}">编辑字典项</a>
+</script>
+<script type="text/javascript">
+    var table;
+    var tableId = 'dataDic';
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $("#add").click(function () {
+            openwindow("/api/dic/addDataDicPage", "新建数据字典", "700", "250", false, reload);
+        })
+
+        window.reload = function () {
+            tableIns.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        var tableIns = table.render({
+            id: "id",
+            elem: '#dataDic',
+            cellMinWidth: 80,
+            url: '/api/dic/getDicList', //数据接口
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        field: 'name',
+                        title: '名称'
+                    },
+                    {
+                        field: 'note',
+                        title: '备注',
+                        align: 'center',
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        toolbar: '#operation'
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        $('#search').click(function () {
+            var params = {
+                name: $('#name').val()
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var code = data.code;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/api/dic/editDataDicPage?code=" + code, "修改字典", "700", "250", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.confirm("您确定要删除吗？", {
+                        icon: 3,
+                        title: "删除确认"
+                    },
+                    function (index) {
+                        var map = {"dicCode": code};
+                        $.ajax({
+                            type: "post",
+                            url: '/api/dic/delete',
+                            data: JSON.stringify(map),
+                            contentType: "application/json",
+                            success: function (data) {
+                                tipinfo("删除成功!");
+                                tableIns.reload({
+                                    page: {
+                                        curr: 1
+                                    }
+                                });
+                            },
+                            error: function () {
+                                tipinfo(data.message);
+                            }
+                        })
+                        layer.close(index);
+                    },
+                    function (index) {
+                        layer.close(index);
+                    }
+                );
+            } else if (layEvent === 'editItems') {
+                openwindow("/api/dic/editDataDicItemPage?parentCode=" + code, "修改数据字典子项", "1000", "600", false, reload);
+            }
+        });
+    });
+</script>
+</body>
+</html>

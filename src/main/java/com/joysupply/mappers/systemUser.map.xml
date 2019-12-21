@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.SystemUserDao">
+    <!-- 角色 -->
+    <resultMap type="SystemUser" id="systemUserMap">
+        <id property="personCode" column="person_code"/>
+        <result property="password" column="password"/>
+        <result property="userName" column="user_name"/>
+        <result property="isEnable" column="is_enable"/>
+        <result property="userType" column="user_type"/>
+    </resultMap>
+    <delete id="delSystemUser" parameterType="string">
+        delete from system_user where person_code = #{personCode}
+    </delete>
+    <update id="updSystemUser" parameterType="SystemUser">
+        update system_user
+        <set>
+            <if test="password != null and password !=''">
+                password = #{password},
+            </if>
+            <if test="userName != null and userName !=''">
+                user_name = #{userName},
+            </if>
+            <if test="isEnable != null and isEnable !=''">
+                is_enable = #{isEnable},
+            </if>
+        </set>
+        where person_code = #{personCode}
+    </update>
+    <insert id="addSystemUser" parameterType="SystemUser">
+        insert into system_user(person_code,password,user_name,is_enable,user_type) values(
+            #{personCode},#{password},#{userName},#{isEnable},#{userType}
+        )
+    </insert>
+    <select id="getSystemUser" parameterType="string" resultMap="systemUserMap">
+        select person_code,password,user_name,is_enable,user_type from system_user where person_code = #{personCode}
+    </select>
+    <select id="getUserByUserName" parameterType="String" resultMap="systemUserMap">
+        SELECT person_code,password,user_name,is_enable,user_type FROM system_user WHERE user_name =#{userName}
+    </select>
+</mapper>

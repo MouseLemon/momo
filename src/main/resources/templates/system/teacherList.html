@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style>
+    .layui-table, .layui-table-view {
+        margin :0 0 !important;
+    }
+    .layui-form-switch {
+        height: 16px!important;
+        line-height: 16px!important;
+        min-width: 20px;
+    }
+
+    .layui-form-switch i {
+        width: 12px;
+        height: 12px;
+        top: 2px;
+    }
+
+    .layui-form-onswitch em {
+        margin-right: 16px;
+    }
+
+    .layui-form-onswitch i {
+        margin-left: -16px;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <div class="layui-row layui-col-space10">
+                    <div class="layui-anim layui-anim-upbit">
+                        <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle" th:if="${researchOffice == null || researchOffice == ''}">信息</h2>
+                        <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle" th:if="${researchOffice != null && researchOffice != ''}" th:text="${officeName}+教师列表"></h2>
+                        <hr/>
+                        <div class="layui-row">
+                            <div class="layui-col-lg8 layui-col-md12">
+                                <form class="layui-form layui-col-md12" id="form1" >
+                                    <div class="layui-form-item">
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">教师姓名：</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="teacherName" id="teacherName"
+                                                       placeholder="请输入教师名称" autocomplete="off" class="layui-input">
+                                                <input type="hidden" name="researchOffice" id="researchOffice" th:value="${researchOffice}">
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">教师类别：</label>
+                                            <div class="layui-input-block">
+                                                <select name="teacherType" id="teacherType" lay-search class="layui-input">
+                                                    <option value=""></option>
+                                                    <option th:each="item:${teacherType}" th:value="${item.code}"
+                                                            th:text="${item.name}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">身份证号：</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="idCard" id="idCard" placeholder="请输入身份证号"
+                                                       autocomplete="off" class="layui-input">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <form class="layui-form layui-col-md12" id="form2">
+                                    <div class="layui-form-item">
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">联系电话：</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="teleNum" id="teleNum" placeholder="请输入电话"
+                                                       autocomplete="off" class="layui-input">
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">状态：</label>
+                                            <div class="layui-input-block">
+                                                <select name="status" id="status" class="layui-input">
+                                                    <option value=""></option>
+                                                    <option value="1">正常</option>
+                                                    <option value="2">已停用</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-md4">
+                                            <label class="layui-form-label">国籍：</label>
+                                            <div class="layui-input-block">
+                                                <select name="nationality" id="nationality" lay-search
+                                                        class="layui-input">
+                                                    <option value=""></option>
+                                                    <option th:each="item:${nationality}" th:value="${item.code}"
+                                                            th:text="${item.name}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="state">
+                                </form>
+                            </div>
+                            <div class="layui-col-lg4 layui-col-md12 " >
+                                <button class="layui-btn layui-btn-sm search" style="margin-left: 40px">搜索</button>
+                                <button class="layui-btn layui-btn-sm build" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_add'}">新建</button>
+                                <button class="layui-btn layui-btn-sm templateDown" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_download'}">模板下载</button>
+                                <button class="layui-btn layui-btn-sm teacherExport" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_export'}">导出</button>
+                                <button id="addAll" class="layui-btn layui-btn-sm addAll" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_import'}">导入</button>
+                            </div>
+                        </div>
+                        <div class="layui-form">
+                            <table class="layui-table" lay-skin="line"
+                                   lay-filter="equipment" id="teacherInfo">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="barDemo">
+    <a class="joysupply-txt-color-on" lay-event="resume" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_resume'}">个人简历</a>
+    <a class="joysupply-txt-color-on" lay-event="pic" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_photo'}">照片</a>
+    {{# if(d.status == '1'){ }}
+    <a class="joysupply-txt-color-on joysupply-txt-color-error" lay-event="end" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_disable'}">停用</a>
+    {{# }else { }}
+    <a class="joysupply-txt-color-on" lay-event="start" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_enable'}">启用</a>
+    {{# } }}
+    <a class="joysupply-txt-color-on" lay-event="edit" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_edit'}">编辑</a>
+    <a class="joysupply-txt-color-on joysupply-txt-color-error" lay-event="del" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_del'}">删除</a>
+    {{# if(d.userName != null && d.userName != ""){ }}
+    <a class="joysupply-txt-color-on" lay-event="update" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_updAccount'}">账号信息</a>
+    <input type="checkbox" value="{{d.teacherCode}}" lay-text="" lay-skin="switch" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_enableAccount'}"
+           lay-filter="isEnable" {{ d.isEnable== 1 ? 'checked' : '' }}/>
+    {{# }else{ }}
+    <a class="joysupply-txt-color-on" lay-event="create" th:each="func:${session.funcList}" th:if="${func == 'jsxx1_addAccount'}">创建账号</a>
+    {{# } }}
+    <!--<a class="joysupply-txt-color-on" lay-event="locAuth">楼群权限</a>-->
+    <!--<a class="joysupply-txt-color-on" lay-event="projectAuth">项目权限</a>-->
+</script>
+</body>
+<script th:src="@{/js/system/teacher.js}"></script>
+</html>
+
+

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.AuthorityManageDao">
+
+    <!-- 查询用户对应项目权限 -->
+    <select id="getPersonProjectAuth" parameterType="String" resultType="hashMap">
+        select project_id projectId ,project_name projectName from project_info
+        <where>
+            <if test="_parameter != null and _parameter !=''">
+                and project_id in (select data_code from person_data_auth where p_code = #{_parameter} and auth_type = 2)
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="getClassManageProject" parameterType="String" resultType="hashMap">
+        select project_id projectId ,project_name projectName from project_info
+        order by create_time desc
+    </select>
+
+    <select id="getFeePersonProjectAuth" parameterType="String" resultType="String">
+        select data_code projectId from person_data_auth
+        <where>
+            auth_type = 2 and p_code in
+            <foreach collection="list" open="(" close=")" separator="," item="item">
+                #{item}
+            </foreach>
+        </where>
+        order by create_time desc
+    </select>
+
+    <!-- 查询用户对应的楼的权限 -->
+    <select id="getPersonBuildingAuth" parameterType="String" resultType="hashMap">
+        select code dataCode,name buildingName from data_dic
+        <where>
+            parent_code = 21
+            <if test="_parameter != null and _parameter !=''">
+                and code in (select data_code from person_data_auth where p_code = #{_parameter} and auth_type = 1)
+            </if>
+        </where>
+        order by convert(name using gb2312)
+    </select>
+
+    <!-- 查询用户对应的教师的权限 -->
+    <select id="getPersonTeacherAuth" parameterType="String" resultType="hashMap">
+        select teacher_code dataCode,teacher_name teacherName,id_card idCard from teacher_info
+        <where>
+            status = 1
+            <if test="_parameter != null and _parameter !=''">
+                and teacher_code in (select data_code from person_data_auth where p_code = #{_parameter} and auth_type = 3)
+            </if>
+        </where>
+        order by convert(teacher_name using gb2312)
+    </select>
+
+    <select id="getPersonTeacherAuthA" parameterType="String" resultType="hashMap">
+        select teacher_code dataCode,teacher_name teacherName,id_card idCard from teacher_info
+        <where>
+            status = 1
+            <if test="_parameter != null and _parameter !=''">
+                and teacher_code in (
+                    select data_code from person_data_auth
+                    where p_code in (
+                        SELECT person_code FROM person
+                        where organize_code in (
+                            SELECT organize_code FROM person
+                            where person_code = #{_parameter}
+                        )
+                    )
+                    and auth_type = 3
+                )
+            </if>
+        </where>
+        order by convert(teacher_name using gb2312)
+    </select>
+
+    <!-- 删除权限 -->
+    <delete id="deleteData" parameterType="HashMap">
+		DELETE FROM person_data_auth WHERE p_code = #{dataId} AND auth_type = #{dataCode}
+	</delete>
+
+    <!-- 插入权限 -->
+    <insert id="insertData" parameterType="hashMap">
+        INSERT INTO person_data_auth (p_code,data_code,auth_type,create_time) VALUES
+        <foreach collection="dataIds" item="item" index="index" separator=",">
+            (#{personCode},#{item},#{dataCode},NOW())
+        </foreach>
+    </insert>
+    <insert id="insertAuthDataInBatch" parameterType="hashMap">
+        insert into person_data_auth (p_code,data_code,auth_type,create_time) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.pCode},#{item.dataCode},#{item.authType},#{item.createTime})
+        </foreach>
+    </insert>
+    <delete id="delPersonAuth" parameterType="string">
+        delete from person_data_auth where p_code = #{_parameter}
+    </delete>
+
+    <select id="getTeacherByAuth" resultType="map">
+		SELECT
+			pda.data_code teacher_code ,
+			pda.data_code dataCode ,
+			pda.auth_type authType ,
+			ti.teacher_name teacher_name ,
+			ti.id_card id_card
+		FROM person_data_auth pda ,teacher_info ti where pda.data_code = ti.teacher_code
+		and pda.p_code = #{_parameter} AND pda.auth_type = 3 and ti.status = 1
+	</select>
+
+    <!-- 教师视图下拉选 -->
+    <select id="getTeachersAuth" parameterType="String" resultType="hashMap">
+        select teacher_code, teacher_name, id_card from teacher_info
+        <where>
+            status = 1
+            <if test="_parameter != null and _parameter !=''">
+                and teacher_code in (select data_code from person_data_auth where p_code = #{_parameter} and auth_type = 3)
+            </if>
+        </where>
+        order by convert(teacher_name using gb2312)
+    </select>
+
+    <select id="getTeachersAuthA" parameterType="String" resultType="hashMap">
+        select teacher_code, teacher_name, id_card from teacher_info
+        <where>
+            status = 1
+            <if test="_parameter != null and _parameter !=''">
+                and teacher_code in (
+                    select data_code from person_data_auth
+                    where p_code in (
+                        select person_code from byoa.person
+                        where organize_code like #{organizeCode}"%"
+                    )
+                    and auth_type = 3
+                )
+            </if>
+        </where>
+        order by convert(teacher_name using gb2312)
+    </select>
+
+    <select id="getOrganizeCode" parameterType="String" resultType="hashMap">
+        SELECT organize_code FROM byoa.person
+        where person_code = #{personCode}
+    </select>
+
+    <delete id="delPersonprojectAuth" parameterType="String">
+        delete from person_data_auth where data_code = #{_parameter} and auth_type = 2
+    </delete>
+    <delete id="delPersonTeacherAuth" parameterType="String">
+        delete from person_data_auth where p_code = #{_parameter} and auth_type = 3
+    </delete>
+
+    <select id="listTeacherAuthPageData" resultType="com.joysupply.entity.Teacher">
+        select data_code as teacherCode, t.teacher_name as teacherName ,id_card as idCard from
+          teacher_info t left join person_data_auth on data_code = t.teacher_code and p_code = #{personCode} and auth_type = 3
+            <where>
+
+                <if test="teacherName != null and teacherName != ''">
+                    and t.teacher_name like "%"#{teacherName}"%"
+                </if>
+                <if test="teacherType != null and teacherType != ''">
+                    and teacher_type = #{teacherType}
+                </if>
+                <if test="status != null and status == 1">
+                    and data_code is not null
+                </if>
+                <if test="status != null and status == 2">
+                    and data_code is null
+                </if>
+            </where>
+    </select>
+
+    <select id="getTeachersAuthPersons" parameterType="string" resultType="hashMap">
+        select distinct pda.p_code personCode,p.name from person_data_auth pda
+        left join person p on pda.p_code = p.person_code
+        where p_code != #{_parameter} and auth_type = '3'
+    </select>
+</mapper>

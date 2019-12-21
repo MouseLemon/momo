@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-row">
+        <div class="layui-form">
+            <div class="layui-col-xs5 layui-col-md8">
+                <label class="layui-form-label">所属位置：</label>
+                <div class="layui-input-block">
+                    <select name="roomLoc" id="roomLoc" class="layui-input" lay-search lay-filter="getRoomLoc">
+                        <option value=""></option>
+                        <option th:each="item:${roomLoc}" th:value="${item.dataCode}"
+                                th:text="${item.buildingName}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-xs5 layui-col-md8">
+                <label class="layui-form-label">教室号：</label>
+                <div class="layui-input-block">
+                    <select name="roomNum" id="roomNum" class="layui-input" lay-search>
+                        <option value=""></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-col-xs2 layui-col-md8">
+                <div class="layui-input-inline" style="margin-left: 40px">
+                    <button class="layui-btn layui-btn-sm search">搜索</button>
+                </div>
+            </div>
+        </div>
+
+        <table class="layui-table" lay-skin="line" lay-filter="equipment" id="classRoom">
+        </table>
+    </div>
+</div>
+
+</body>
+<script th:inline="javascript">
+    var classDate = [[${classDate}]];
+    var seating = [[${seating}]];
+    var roomType = [[${roomType}]];
+</script>
+<script type="text/javascript">
+
+
+    var table;
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload'], function () {
+        table = layui.table;
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#classRoom',
+            url: '/classManage/idleRoomListData',
+            where: {classDate: classDate, seating: seating, roomType: roomType},
+            skin: 'line',
+            page: true, //开启分页
+            limit: 5,
+            limits: [5, 10, 20, 30, 40, 50],
+            cols: [
+                [ //表头
+                {
+                    type: 'numbers',
+                    filed: 'roomId',
+                    align: 'center',
+                }, {
+                    field: 'roomLoc',
+                    title: '所属位置',
+                    align: 'center'
+                },
+                {
+                    field: 'roomNum',
+                    title: '教室号',
+                    align: 'center'
+                },
+
+                {
+                    field: 'roomType',
+                    title: '教室类型',
+                    align: 'center'
+                },
+                {
+                    field: 'createTime',
+                    title: '空闲时间',
+                    align: 'center'
+                }
+            ]
+            ]
+            , done: function (res, curr, count) {
+                //如果是异步请求数据方式，res即为你接口返回的信息。
+                //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                console.log(table);
+                //得到当前页码
+                console.log(curr);
+                //得到数据总量
+                console.log(count);
+                $('.layui-laypage-limits').hide()
+            }
+        });
+
+        // 点击查询空闲教室
+        form.on('select(getRoomLoc)', function (data) {
+            var roomLoc = data.value;
+            if (roomLoc == '') {
+                $('#roomNum').html('');
+                form.render('select');
+                return false;
+            }
+            var success = function (response) {
+                if (response.success == true) {
+                    var idleRoom = response.idleRoom;
+                    var html = "<option value=''>请选择</option>";
+                    for (var i = 0; i < idleRoom.length; i++) {
+                        html += "<option value='" + idleRoom[i].roomId + "'>" + idleRoom[i].roomNum + "</option>"
+
+                    }
+                    $('#roomNum').html(html);
+                    form.render('select');
+
+                } else {
+                    $("select[name='roomLoc']").val("");
+                    $("select[name='roomNum']").val("");
+                    form.render('select');
+                    layer.alert(response.msg, {icon: 2}, function () {
+                        layer.closeAll();
+                    })
+                }
+            }
+
+            $.ajax({
+                url: "/classRoom/getIdleRoom",
+                type: "post",
+                data: {roomLoc: roomLoc, class_room_type: roomType, class_date: classDate, person_count: seating},
+                dataType: "json",
+                success: success,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    layer.msg('网络异常', {icon: 2})
+                }
+
+            });
+        });
+
+        // 搜索，重置表格
+        $('.search').click(function () {
+            tableIns.reload({
+                where: {
+                    roomLoc: $('select[name="roomLoc"]').val(),
+                    roomNum: $('select[name="roomNum"]').val(),
+                    classDate: classDate,
+                    seating: seating,
+                    roomType: roomType,
+                    r: Math.random()
+                },page: {
+                    curr: 1
+                }
+            });
+        });
+
+    });
+
+
+</script>
+
+</html>

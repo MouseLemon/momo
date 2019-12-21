@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.TeacherDao">
+	<resultMap type="Teacher" id="teacherMap" >
+		<id property="teacherCode" column="teacher_code"  />  
+        <result property="teacherName" column="teacher_name" />   
+        <result property="teleNum" column="tele_num" />   
+        <result property="teacherType" column="teacher_type" />  
+        <result property="degree" column="degree" />  
+        <result property="edu" column="edu" />  
+        <result property="email" column="email" />  
+        <result property="language" column="language" />  
+        <result property="birthDay" column="birth_day" />  
+        <result property="entryDate" column="entry_date" />  
+        <result property="researchOffice" column="research_office" />  
+        <result property="accountName" column="account_name" />  
+        <result property="bankCode" column="bank_code" />  
+        <result property="idCard" column="id_card" />  
+        <result property="pic" column="pic" />  
+        <result property="resume" column="resume" />  
+        <result property="status" column="status" />  
+        <result property="nationality" column="nationality" />  
+        <result property="createTime" column="create_time" />  
+        <result property="sex" column="sex" />  
+        <result property="cardNo" column="card_no" />  
+        <result property="project" column="project" />  
+        <result property="resumeName" column="resume_name" />  
+        <result property="picName" column="picName" />
+        <result property="joinTime" column="joinTime" />
+        <result property="updateTime" column="updateTime" />
+        <result property="prvOutDate" column="prv_out_date" />
+	</resultMap>
+
+
+	<sql id="updateSql" >
+		<set>
+			<if test="teacherName != null and teacherName != ''">teacher_name = #{teacherName},</if>
+			<if test="teleNum != null and teleNum != ''"> tele_num = #{teleNum},</if>
+			<if test="teacherType != null and teacherType != ''">teacher_type = #{teacherType}, </if>
+			<if test="degree != null and degree != ''"> degree = #{degree},</if>
+			<if test="edu != null and edu != ''">edu = #{edu}, </if>
+			<if test="email != null and email != ''">email = #{email}, </if>
+			<if test="language != null and language != ''">language = #{language}, </if>
+			<if test="birthDay != null and birthDay != ''">birth_day = #{birthDay}, </if>
+			<if test="entryDate != null and entryDate != ''"> entry_date = #{entryDate},</if>
+			<if test="researchOffice != null and researchOffice != ''">research_office = #{researchOffice}, </if>
+			<if test="accountName != null and accountName != ''">account_name = #{accountName}, </if>
+			<if test="bankCode != null and bankCode != ''">bank_code = #{bankCode}, </if>
+			<if test="idCard != null and idCard != ''">id_card = #{idCard}, </if>
+			<if test="cardNo != null and cardNo != ''">card_no = #{cardNo},</if>
+			<if test="pic != null and pic != ''">pic = #{pic}, </if>
+			<if test="resume != null and resume != ''">resume = #{resume}, </if>
+			<if test="status != null and status != 0">status = #{status}, </if>
+			<if test="job != null and job != ''">job = #{job}, </if>
+			<if test="sex != null and sex != 0">sex = #{sex}, </if>
+			<if test="nationality != null and nationality != ''">nationality = #{nationality}, </if>
+			<if test="createTime != null and createTime != ''">create_time = #{createTime}, </if>
+			<if test="resumeName != null and resumeName != ''">resume_name = #{resumeName}, </if>
+			<if test="project != null and project != ''">project = #{project},</if>
+			<if test="picName != null and picName != ''">picName = #{picName},</if>
+			<if test="joinTime != null and joinTime != ''">joinTime = #{joinTime},</if>
+			<if test="updateTime != null and updateTime != ''">updateTime = #{updateTime},</if>
+			<if test="updateTime != null and updateTime != ''">prv_out_date = #{prvOutDate},</if>
+		</set>
+	</sql>
+
+	<insert id="importTeacher"  >
+		INSERT INTO teacher_info (
+		teacher_code,teacher_name,tele_num,sex,teacher_type,degree,language,job,birth_day,entry_date,account_name,
+		bank_code,card_no,nationality,create_time,project,id_card,joinTime,research_office
+		) VALUES
+
+		<foreach collection="list" item="item" separator=",">
+			(
+			#{item.teacherCode},#{item.teacherName},#{item.teleNum},#{item.sex},#{item.teacherType},
+			#{item.degree},#{item.language},#{item.job},#{item.birthDay},#{item.entryDate},
+			#{item.accountName},#{item.bankCode},#{item.cardNo},#{item.nationality},
+			#{item.createTime}, #{item.project},#{item.idCard},#{item.joinTime},#{item.researchOffice}
+			)
+		</foreach>
+
+
+	</insert>
+
+	<insert id="importUserByTeacher"  >
+		INSERT INTO system_user (
+		person_code,password,user_name,is_enable,user_type
+		) VALUES
+
+		<foreach collection="list" item="item" separator=",">
+			<if test="item.teleNum != null and item.teleNum != ''">
+				(
+				#{item.teacherCode},"a123123",#{item.teleNum},#{item.isEnable},#{item.userType}
+				)
+			</if>
+
+		</foreach>
+
+
+	</insert>
+
+	<sql id="searchSql">
+		<where>
+			<if test="cardNo != null and cardNo != ''">and card_no = #{cardNo}</if>
+			<if test="idCard != null and idCard != ''">and id_card like "%"#{idCard}"%"</if>
+			<if test="status != null and status != 0">and status = #{status}</if>
+			<if test="teleNum != null and teleNum != ''">and tele_num like "%"#{teleNum}"%"</if>
+			<if test="teacherName != null and teacherName != ''">and teacher_name like "%"#{teacherName}"%"</if>
+			<if test="teacherType != null and teacherType != ''">and teacher_type = #{teacherType}</if>
+			<if test="nationality != null and nationality != ''">and nationality = #{nationality}</if>
+			<if test="researchOffice != null and researchOffice != ''">and research_office = #{researchOffice}</if>
+			<if test="personCode != null and personCode != ''">
+				and teacher_code in (select data_code from person_data_auth where p_code = #{personCode} and auth_type = 3)
+			</if>
+			<if test="listTeacherAuth != null and listTeacherAuth.size > 0">
+				and teacher_code in
+				<foreach collection="listTeacherAuth" open="(" separator="," close=")" item="id">
+					#{id}
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<insert id="addTeacher" parameterType="Teacher" >
+		INSERT INTO teacher_info (
+			teacher_code,
+			teacher_name,
+			tele_num,
+			sex,
+			teacher_type,
+			degree,
+			edu,
+			email,
+			language,
+			job,
+			birth_day,
+			entry_date,
+			research_office,
+			account_name,
+			bank_code,
+			card_no,
+			pic,
+			resume,
+			nationality,
+			create_time,
+			resume_name,
+			project,
+			id_card,
+			picName,
+			joinTime,
+			updateTime,
+			prv_out_date
+		) VALUES(
+			#{teacherCode},#{teacherName},#{teleNum},#{sex},#{teacherType},#{degree},#{edu},#{email},#{language},#{job},#{birthDay},#{entryDate},
+			#{researchOffice},#{accountName},#{bankCode},#{cardNo},#{pic},#{resume},#{nationality},#{createTime}, #{resumeName},#{project},#{idCard}
+			,#{picName},#{joinTime},#{updateTime},#{prvOutDate}
+		)
+
+	</insert>
+
+	
+	<update id="updateTeacher" parameterType="Teacher">
+		update  teacher_info
+		<include refid="updateSql"></include>
+		where teacher_code = #{teacherCode}
+	</update>
+	
+	
+	<delete id="deleteTeacher" >
+	
+		delete from teacher_info where teacher_code = #{_paramter}
+	</delete>
+	
+	<select id="listData" resultType="Teacher">
+		SELECT DISTINCT
+			teacher_code teacherCode,
+			teacher_name teacherName,
+			sex,
+			id_card idCard,
+			tele_num teleNum,
+			bank_code bankCode,
+			STATUS,
+			create_time createTime,
+			d1. NAME AS nationality,
+			d2. NAME AS teacherType,
+			d3. NAME AS job,
+			resume_name resumeName,
+			r.office_name AS researchOffice,
+			resume,
+			s.user_name userName,
+			s.is_enable isEnable,
+			joinTime,
+			updateTime,
+			account_name accountName,
+			project,
+			birth_day birthDay,
+			d4.`name` `language`,
+			entry_date entryDate,
+			card_no cardNo,
+			d5.`name` degree
+		FROM
+			teacher_info
+			LEFT JOIN data_dic d1 ON nationality = d1.`code`
+			LEFT JOIN data_dic d2 ON teacher_type = d2.`code`
+			LEFT JOIN data_dic d3 ON job = d3.`code`
+			LEFT JOIN data_dic d4 ON LANGUAGE = d4.`code`
+			LEFT JOIN data_dic d5 ON degree = d5.`code`
+			LEFT JOIN research_office r ON research_office = r.office_code
+			LEFT JOIN system_user s ON teacher_code = s.person_code
+			<include refid="searchSql"></include>
+		ORDER BY
+			create_time DESC,
+			`status`
+	</select>
+	<select id="listDataNoPage" resultType="map">
+		SELECT DISTINCT
+			teacher_code teacherCode,
+			teacher_name teacherName,
+			sex,
+			id_card idCard,
+			tele_num teleNum,
+			bank_code bankCode,
+			STATUS,
+			create_time createTime,
+			d1. NAME AS nationality,
+			d2. NAME AS teacherType,
+			d3. NAME AS job,
+			resume_name resumeName,
+			r.office_name AS researchOffice,
+			resume,
+			s.user_name userName,
+			s.is_enable isEnable,
+			joinTime,
+			updateTime,
+			account_name accountName,
+			project,
+			birth_day birthDay,
+			d4.`name` `language`,
+			entry_date entryDate,
+			card_no cardNo,
+			d5.`name` degree
+		FROM
+			teacher_info
+			LEFT JOIN data_dic d1 ON nationality = d1.`code`
+			LEFT JOIN data_dic d2 ON teacher_type = d2.`code`
+			LEFT JOIN data_dic d3 ON job = d3.`code`
+			LEFT JOIN data_dic d4 ON LANGUAGE = d4.`code`
+			LEFT JOIN data_dic d5 ON degree = d5.`code`
+			LEFT JOIN research_office r ON research_office = r.office_code
+			LEFT JOIN system_user s ON teacher_code = s.person_code
+			<include refid="searchSql"></include>
+		ORDER BY
+			create_time DESC,
+			`status`
+	</select>
+
+	<select id="getTeacherByCode" resultMap="teacherMap">
+		SELECT DISTINCT
+			teacher_code,
+			teacher_name,
+			sex,
+			id_card,
+			tele_num,
+			bank_code,
+			STATUS AS status,
+			create_time,
+			nationality,
+			teacher_type,
+			job,
+			degree,
+			edu,
+			language,
+			research_office,
+			email,
+			birth_day,
+			entry_date,
+			account_name,
+			pic,
+			resume,
+			card_no,
+			project,
+			resume_name,
+			picName,
+			joinTime,
+			prv_out_date
+		FROM
+			teacher_info
+		
+		WHERE
+			teacher_code = #{_paramter}
+	
+	</select>
+	
+	<select id="getTeacherInfoByCode" resultMap="teacherMap">
+		SELECT DISTINCT
+			teacher_code,
+			teacher_name,
+			sex,
+		 id_card,
+		 tele_num,
+		 bank_code,
+		 STATUS AS status,
+		 create_time,
+		 d6.name as degree,
+		 d4. NAME AS edu,
+		 d5.`name` AS language,
+		 r.office_name AS research_office,
+		 email,
+		 birth_day,
+		 entry_date,
+		 account_name,
+		 pic,
+		 resume,
+		 card_no,
+		 project,
+		 resume_name,
+		 d1. NAME AS nationality,
+		 d2. NAME AS teacher_type,
+		 d3. NAME AS job
+		FROM
+			teacher_info
+		LEFT JOIN data_dic d1 ON nationality = d1.`code`
+		LEFT JOIN data_dic d2 ON teacher_type = d2.`code`
+		LEFT JOIN data_dic d3 ON job = d3.`code`
+		LEFT JOIN data_dic d4 ON edu = d4.`code`
+		LEFT JOIN data_dic d5 ON `language` = d5.`code`
+		LEFT JOIN data_dic d6 ON `degree` = d6.`code`
+		LEFT JOIN research_office r ON research_office = r.office_code
+		WHERE
+			teacher_code = #{_paramter}
+	
+	</select>
+	
+	<select id="existTeacher" resultType="java.lang.String">
+		select teacher_code from teacher_info where id_card = #{_paramter}
+	</select>
+
+	<select id="getTeacherListNoPage" resultType="hashMap">
+		select
+			teacher_name,
+			teacher_code,
+			id_card
+		from teacher_info
+		order by teacher_name desc
+	</select>
+
+	<!-- 根据教师查询所有课程 -->
+	<select id="getSavedCourseByTeacherName" resultType="hashMap" parameterType="string">
+		SELECT
+			a.teacher_name,
+			a.project_id,
+			a.class_name,
+			a.class_date,
+			a.start_time,
+			a.end_time,
+			a.week_day,
+			a.project_name,
+			a.room_num,
+			b.class_building
+		from
+			(SELECT
+				ti.teacher_name,
+				ti.teacher_code,
+				psp.project_id,
+				d2.name as class_name,
+				psp.class_date,
+				psp.start_time,
+				psp.end_time,
+				psp.week_day,
+				pi.project_name,
+				cr.room_num,
+				cr.room_loc
+			FROM project_schedule_plan psp
+			LEFT JOIN teacher_info ti ON psp.teacher_code = ti.teacher_code
+			left join project_info pi on psp.project_id = pi.project_id
+			left join class_room cr on psp.class_room_id = cr.room_id
+			left join data_dic d2 on psp.course_name = d2.code
+		<where>
+			<if test="teacher_name != null and teacher_name != ''">
+				and teacher_name = #{teacher_name}
+			</if>
+			<if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+				and class_date between #{xyStart} and #{xyEnd}
+			</if>
+		</where>
+			) a
+		left join
+			(select
+				cr.room_loc,
+				dd.name as class_building
+			from class_room cr
+			left join data_dic dd on cr.room_loc = dd.code) b
+		on b.room_loc = a.room_loc
+	</select>
+
+	<select id="getTeacherInCode" resultType="hashMap" parameterType="hashMap">
+		select
+			teacher_name,
+			teacher_code,
+			id_card
+		from teacher_info
+		where teacher_name = #{teacher_name}
+	</select>
+
+
+	<select id="getTodayClass" resultType="map">
+		SELECT
+			p.project_name,
+			c.room_num,
+			d.`name`,
+			psp.start_time,
+			psp.end_time,
+			t.teacher_name
+			
+		FROM
+			project_schedule_plan psp,
+			teacher_info t,
+			class_room c,
+			project_info p,
+			data_dic d
+		WHERE
+			psp.teacher_code = t.teacher_code
+		AND psp.class_room_id = c.room_id
+		AND psp.project_id = p.project_id
+		AND c.room_loc = d.`code`
+		AND psp.class_date = #{classDate}
+		AND psp.teacher_code = #{teacherCode}
+		ORDER BY psp.start_time limit 0 ,3
+	</select>
+	
+	<select id="getTodayClassCount" resultType="int">
+		SELECT
+			count(0)
+		FROM
+			project_schedule_plan psp,
+			teacher_info t,
+			class_room c,
+			project_info p,
+			data_dic d
+		WHERE
+			psp.teacher_code = t.teacher_code
+		AND psp.class_room_id = c.room_id
+		AND psp.project_id = p.project_id
+		AND c.room_loc = d.`code`
+		AND psp.class_date = #{classDate}
+		AND psp.teacher_code = #{teacherCode}
+		ORDER BY psp.start_time limit 0 ,6
+	</select>
+
+	<select id="getCurrentTeacher" resultType="hashMap">
+		select
+			ti.teacher_name,
+			ti.teacher_code,
+			ti.id_card
+		from teacher_info ti
+		left join system_user su on ti.teacher_code = su.person_code
+		WHERE ti.teacher_code = #{person_code}
+	</select>
+
+	<select id="getTeacherListByProjectId" parameterType="string" resultType="hashMap">
+		select
+			teacher_name,
+			teacher_code,
+			id_card
+		from teacher_info
+		where project like "%"#{project_id}"%"
+		order by teacher_name desc
+	</select>
+
+	<select id="existTeachers" resultMap="teacherMap">
+		select
+			teacher_name,
+			id_card
+		from teacher_info
+		where
+		id_card in
+		<foreach collection="list" open="(" separator="," close=")" item="item">
+			#{item.idCard}
+		</foreach>
+	</select>
+
+	<select id="existUser" resultType="com.joysupply.entity.SystemUser">
+		select
+			user_name as userName
+		from system_user
+		where
+		user_name in
+		<foreach collection="list" open="(" separator="," close=")" item="item">
+			#{item.systemUserName}
+		</foreach>
+		and user_type = 13
+
+	</select>
+
+	<select id="getSignaTrue" resultType="map">
+		select person_code, signature,head_image headImage from person_defined where person_code = #{_paramter}
+	</select>
+
+	<update id="updateSigna">
+		update person_defined set signature = #{signature} where person_code = #{personCode}
+	</update>
+	<insert id="addSigna">
+		insert into person_defined(person_code,signature) values (#{personCode},#{signature})
+	</insert>
+	<delete id="deleteUser">
+		delete from system_user where person_code = #{_parameter}
+	</delete>
+
+	<select id="getTeachers" resultType="hashMap" parameterType="string">
+		select
+			ti.teacher_name,
+			ti.teacher_code,
+			ti.id_card
+		from teacher_info ti
+		left join system_user su on ti.teacher_code = su.person_code
+		WHERE ti.teacher_code = #{person_code}
+	</select>
+</mapper>

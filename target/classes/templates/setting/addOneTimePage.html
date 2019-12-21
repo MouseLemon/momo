@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .tt +div dl{
+        max-height: 110px;
+    }
+</style>
+<div>
+    <form>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs11">
+                    <label class="layui-form-label">节名称：</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="section" name="section" autocomplete="off" placeholder="请输入" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs12">
+                    <label class="layui-form-label">开始时间：</label>
+                    <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                        <select name="start_time_hour" id="start_time_hour" class="layui-input tt ">
+                            <option>05</option>
+                            <option>06</option>
+                            <option>07</option>
+                            <option>08</option>
+                            <option>09</option>
+                            <option>10</option>
+                            <option>11</option>
+                            <option>12</option>
+                            <option>13</option>
+                            <option>14</option>
+                            <option>15</option>
+                            <option>16</option>
+                            <option>17</option>
+                            <option>18</option>
+                            <option>19</option>
+                            <option>20</option>
+                            <option>21</option>
+                            <option>22</option>
+                        </select>
+                    </div>
+                    <span>:</span>
+                    <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                        <select name="start_time_minute" id="start_time_minute" class="layui-input tt">
+                            <option>00</option>
+                            <option>05</option>
+                            <option>10</option>
+                            <option>15</option>
+                            <option>20</option>
+                            <option>25</option>
+                            <option>30</option>
+                            <option>35</option>
+                            <option>40</option>
+                            <option>45</option>
+                            <option>50</option>
+                            <option>55</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs12">
+                    <label class="layui-form-label">结束时间：</label>
+                    <div style="width: 100px;display: inline-block;margin-bottom: 0" class="layui-inline">
+                        <select name="end_time_hour" id="end_time_hour" class="layui-input tt">
+                            <option>05</option>
+                            <option>06</option>
+                            <option>07</option>
+                            <option>08</option>
+                            <option>09</option>
+                            <option>10</option>
+                            <option>11</option>
+                            <option>12</option>
+                            <option>13</option>
+                            <option>14</option>
+                            <option>15</option>
+                            <option>16</option>
+                            <option>17</option>
+                            <option>18</option>
+                            <option>19</option>
+                            <option>20</option>
+                            <option>21</option>
+                            <option>22</option>
+                        </select>
+                    </div>
+                    <span>:</span>
+                    <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                        <select name="end_time_minute" id="end_time_minute" class="layui-input tt">
+                            <option>00</option>
+                            <option>05</option>
+                            <option>10</option>
+                            <option>15</option>
+                            <option>20</option>
+                            <option>25</option>
+                            <option>30</option>
+                            <option>35</option>
+                            <option>40</option>
+                            <option>45</option>
+                            <option>50</option>
+                            <option>55</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="margin-top: 10px;text-align: center">
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#start_time'
+            ,type: 'time'
+            ,format: 'HH:mm'
+        });
+        laydate.render({
+            elem: '#end_time'
+            ,type: 'time'
+            ,format: 'HH:mm'
+        });
+    });
+
+    function save() {
+        var section = $("#section").val();
+        var start_time = $("#start_time_hour").val() + ":" + $("#start_time_minute").val();
+        var end_time = $("#end_time_hour").val() + ":" + $("#end_time_minute").val();
+        if (section == null || section == "") {
+            tipinfo("节名称不能为空！");
+            return;
+        }
+
+        var st = $("#start_time_hour").val() + $("#start_time_minute").val();
+        var et = $("#end_time_hour").val() + $("#end_time_minute").val();
+
+        var startTime = Number(st);
+        var endTime = Number(et);
+
+        if (startTime >= endTime) {
+            tipinfo("开始时间超过结束时间！");
+            return false;
+        }
+
+        var map = {
+            'section': section,
+            'start_time': start_time,
+            'end_time': end_time
+        };
+        $.ajax({
+            type: "post",
+            url: "/setting/addTime", // 验证下个时间的开始时间
+            data: map,
+            dataType: 'json',
+            success: function (data) {
+                parent.location.reload();
+            },
+            error: function (data) {
+                tipinfo("请仔细核查时间范围！");
+                return false;
+            }
+        });
+    }
+</script>
+
+</html>

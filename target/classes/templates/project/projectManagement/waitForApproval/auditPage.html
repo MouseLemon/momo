@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <input id="projectIdList" type="hidden" th:value="${projectIdList}">
+        <input id="changeIdList" type="hidden" th:value="${changeIdList}">
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class="required">审批意见:</span></label>
+            <div class="layui-input-block">
+                <textarea id="approveOption" placeholder="请输入" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="commitAudit(1)">同意</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="commitAudit(-1)">不同意</button>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    var projectIdList = $("#projectIdList").val();
+    var changeIdList = $("#changeIdList").val();
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+
+    function commitAudit(approveResult) {
+        var approveOption = $("#approveOption").val();
+        if (approveOption == null || approveOption == "") {
+            tipinfo("请输入审核意见");
+            return;
+        }
+        var map = {
+            "approveResult": approveResult,
+            "projectIdList": projectIdList,
+            "changeIdList": changeIdList,
+            "approveOption": approveOption
+        };
+        $.ajax({
+            type: "post",
+            url: "/projectApproveOption/auditProject",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                tipinfo(data.message);
+                closewindow(1);
+            },
+            error: function (data) {
+                tipinfo(data.msg);
+            }
+        });
+    }
+</script>
+
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+.layui-table td {
+	text-align: center;
+}
+
+body .layui-layer-title {
+	background-color: #01AAED;
+	color: #fff;
+	font-size: 14px;
+}
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body id="asdf">
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+		<div class="layui-body" style="background-color: #f2f2f2">
+				<div class="layui-row layui-col-space10">
+					<div style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height:95%;" class="layui-anim layui-anim-upbit">
+						<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">消息设置</h2>
+						<hr />
+						<div id="app">
+						
+							<div v-for="list in messageList" class="layui-form-item layui-row">
+								<div class="layui-col-md4">
+								    <label style="width: 125px;" class="layui-form-label">{{list.name}}</label>
+									<div class="layui-input-block" style="margin-left:155px">
+										<input type="text" name="title" v-bind:id="list.row_id" required :value="list.content" lay-verify="required" placeholder="请输入自定义消息内容" autocomplete="off" class="layui-input">
+									</div>
+								</div>
+								<div class="layui-col-md4">
+									<button type="button" v-on:click="save(list.row_id,list.type)" class="layui-btn layui-btn-sm" style="margin:5px 0 0 20px;" th:each="func:${session.funcList}" th:if="${func == 'sjsz_add'}">保存</button>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+		</div>
+	</div>
+</body>
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/system/message.js}"></script>
+<script>
+</script>
+</html>

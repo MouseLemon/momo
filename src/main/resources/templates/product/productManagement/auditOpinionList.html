@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div class="layui-layout layui-layout-admin" style="width:95%;margin: 0 auto">
+    <div class="layui-form">
+        <div>
+            <input type="hidden" id="projectId" th:value="${projectId}">
+            <input type="hidden" id="changeId" th:value="${changeId}">
+        </div>
+    </div>
+    <table class="layui-table" lay-skin="line" id="auditTable" lay-filter="tableContent" style="margin-top:0px">
+    </table>
+    <script type="text/html" id="operation">
+        <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes">删除</a>
+        <a class="joysupply-txt-color-on" lay-event="edits">编辑</a>
+    </script>
+    <script type="text/html" id="approveResult">
+        {{# if(d.approveResult == -1){ }}
+        <span>不同意</span>
+        {{# }else if(d.approveResult == 1){ }}
+        <span>同意</span>
+        {{# }else{ }}
+        {{# } }}
+    </script>
+</div>
+<script type="text/javascript">
+    var projectId = $("#projectId").val();
+    var changeId = $("#changeId").val();
+    var type;
+    var id;
+    var table;
+    if (projectId == null || projectId == "") {
+        type = 2;
+        id = changeId;
+    } else {
+        type = 1;
+        id = projectId;
+    }
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+
+        function reload() {
+            tableIns.reload({
+                page: {
+                    curr: 1
+                }
+            });
+        }
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#auditTable',
+            cellMinWidth: 80,
+            url: '/project/getAuditOpionList/?type=' + type + '&id=' + id,
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        width:"15%",
+                    },
+                    {
+                        field: 'approveOption',
+                        title: '审批意见',
+                        align: 'center',
+                    },
+                    {
+                        field: 'name',
+                        title: '审批人',
+                        align: 'center',
+                        width:"15%",
+                    },
+                    {
+                        field: 'approveDateTime',
+                        title: '审批时间',
+                        align: 'center',
+                        width:"20%",
+                    },
+                    {
+                        field: 'approveResult',
+                        title: '审批结果',
+                        align: 'center',
+                        width:"10%",
+                        templet: '#approveResult',
+                        fixed :'right',
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        $('#search').click(function () {
+            var params = {
+                projectName: $('#name').val(),
+                projectType: $('#projectType option:selected').val()
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var code = data.code;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/api/dic/editDataDicPage?code=" + code, "修改字典", "700", "250", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.alert('', {icon: 3, title: '删除确认', content: '您确定要删除吗？', closeBtn: 1}, function (index) {
+                    var map = {"dicCode": code};
+                    $.ajax({
+                        type: "post",
+                        url: '/api/dic/delete',
+                        data: JSON.stringify(map),
+                        contentType: "application/json",
+                        success: function (data) {
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        },
+                        error: function () {
+                            tipinfo(data.message);
+                        }
+                    })
+                    layer.close(index);
+                });
+            } else if (layEvent === 'editItems') {
+                openwindow("/api/dic/editDataDicItemPage?parentCode=" + code, "修改数据字典子项", "1000", "600", false, reload);
+            }
+        });
+    });
+</script>
+</body>
+</html>

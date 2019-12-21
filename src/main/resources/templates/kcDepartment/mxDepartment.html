@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+#kcTable th {
+	text-align: center;
+}
+#kcTable td {
+	text-align: center;
+}
+body .layui-layer-title {
+	background-color: #01AAED;
+	color: #fff;
+	font-size: 14px;
+}
+.trBackground {
+    background-color: #fdf5e5;
+}
+.totalBackground {
+    background-color: #f7e7c8;
+}
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+	<div class="layui-layout layui-layout-admin">
+		<div th:replace="fragments/layout :: header">Header</div>
+		<div th:replace="fragments/layout :: sidebar">sidebar</div>
+		<div class="layui-body" style="background-color: #f2f2f2">
+			<section>
+				<div class="layui-row layui-col-space10" id="app">
+					<div
+						style="padding: 15px; background-color: #FFFFFF; margin: 15px;"
+						class="layui-anim layui-anim-upbit">
+						<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">部门维度课酬&gt;明细 <span>
+						<button type="button" class="layui-btn layui-btn-sm" 
+							style="float:right;" onclick="javascript:history.back(-1);" >返回</button></span></h2>
+						<hr />
+						<div>
+							<div class="layui-form">
+								<table class="layui-table" lay-skin="line" id="kcTable"> 
+									<thead>
+										<tr>
+											<th>序号</th>
+											<th>时段</th>
+											<th>项目名称</th>
+											<th>教师姓名</th>
+											<th>教师类别</th>
+											<th>课程名称</th>
+											<th>基础课酬</th>
+											<th>实际课时</th>
+											<th>人数系数</th>
+											<th>课程系数</th>
+											<th>课酬(元)</th>
+										</tr> 
+									</thead> 
+									<tbody  class="layui-table" v-for="kc in kcInfo">  
+										<tr v-for="kcList in kc" :class="kcList.px=='小计'?'trBackground':kcList.px=='合计' ?'totalBackground':'' ">
+											<td>{{ kcList.px }}</td>
+											<td>{{ kcList.timeSolt }}</td>
+											<td>{{ kcList.projectName }}</td>
+											<td>{{ kcList.teacherName }}</td>
+											<td>{{ kcList.teacherType }}</td>
+											<td>{{ kcList.courseName }}</td>
+											<td>{{ kcList.baseFee }}</td>
+											<td>{{ kcList.hourActual }}</td>
+											<td>{{ kcList.personFactor }}</td>
+											<td>{{ kcList.courseFactor }}</td>
+											<td>{{ kcList.feeCourse }}</td>
+										</tr>
+									</tbody>
+								</table>
+								<div style="float: right;" id="jqPager"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</div>
+</body>
+
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/kcWdDepart/mxDepart.js}"></script>
+<script th:inline="javascript">
+	var organizeCode = [[${organizeCode}]];
+	if(organizeCode != '' && organizeCode != 'undefind' && organizeCode != null){
+		vm.organizeCode= organizeCode;
+	}
+    var type = [[${type}]];
+    if(type != '' && type != 'undefind' && type != null){
+        vm.type= type;
+    }
+    var startTime = [[${startTime}]];
+    if(startTime != '' && startTime != 'undefind' && startTime != null){
+        vm.startTime= startTime;
+    }
+    var endTime = [[${endTime}]];
+    if(endTime != '' && endTime != 'undefind' && endTime != null){
+        vm.endTime= endTime;
+    }
+</script>
+</html>

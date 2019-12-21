@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div>
+    <form>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-form-item">
+                <input id="upCode" type="hidden" th:value="${upCode}">
+                <label class="layui-form-label">
+                    <span class="required">教研室名称</span>
+                </label>
+                <div class="layui-input-block">
+                    <input type="text" id="officeName" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input">
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+
+    function save() {
+        var officeName = $("#officeName").val();
+        if (officeName == null || officeName == "") {
+            tipinfo("教研室名称不能为空");
+            return;
+        }
+        var upCode = $("#upCode").val();
+        var map = {
+            "officeName": officeName,
+        };
+        $.ajax({
+            type: "post",
+            url: "/api/teachResearchRoom/addResearchOffice",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                if (data.result == 'OK'){
+                    closewindow(1);
+                } else {
+                    tipinfo(data.message);
+                }
+            },
+            error: function (data) {
+                tipinfo("添加教研室失败,请联系管理员");
+                return false;
+            }
+        });
+    }
+</script>
+
+</html>

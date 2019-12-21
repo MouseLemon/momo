@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ScheduleViewDao">
+    <select id="getWeekSchedule" resultType="map" >
+    	SELECT
+			psp.schedule_id,
+			ti.teacher_name,
+			ti.teacher_code,
+			psp.project_id,
+			d2.name as class_name,
+			psp.class_date,
+			psp.start_time,
+			psp.end_time,
+			psp.week_day,
+			pi.project_name,
+			cr.room_num,
+			dd.name as room_loc
+		FROM project_schedule_plan psp
+		LEFT JOIN teacher_info ti ON psp.teacher_code = ti.teacher_code
+		left join project_info pi on psp.project_id = pi.project_id
+		left join class_room cr on psp.class_room_id = cr.room_id
+		left join data_dic d2 on psp.course_name = d2.code
+		left join data_dic dd on cr.room_loc = dd.code
+		<where>
+			<if test="teacher_code != null and teacher_code != ''">
+				ti.teacher_code = #{teacher_code}
+			</if>
+			<if test="xyStart != null and xyStart != '' and xyEnd != null and xyEnd != ''">
+				and psp.class_date between #{xyStart} and #{xyEnd}
+			</if>
+			<if test="myClass != null and myClass != ''">
+				and psp.class_room_id is not null
+			</if>
+		</where>
+		<if test="myClass1 != null and myClass1 != ''">
+			group  by psp.class_date
+		</if>
+		order by psp.start_time, psp.end_time
+    </select>
+
+	<select id="getMyName" resultType="string" parameterType="string">
+		select teacher_name from teacher_info
+		where teacher_code = #{teacher_code}
+	</select>
+</mapper>

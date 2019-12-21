@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<div>
+    <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <input id="personCode" type="hidden" th:value="${personCode}">
+                <label class="layui-form-label"><span class="required">姓名</span></label>
+                <div class="layui-input-block">
+                    <input type="text" id="name" lay-verify="required" autocomplete="off" th:value="${name}" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><span class="required">手机号</span></label>
+                <div class="layui-input-block">
+                    <input type="text" id="telphone" lay-verify="required" autocomplete="off" th:value="${telphone}" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item layui-show">
+                <label class="layui-form-label">岗位</label>
+                <div class="layui-input-block">
+                    <input type="hidden" th:value="${jobTypeList}">
+                    <select id="jobType" lay-verify="required">
+                        <option value=""></option>
+                        <option th:value="${jobTypeItem.jobCode}" th:each="jobTypeItem : ${jobTypeList}" th:text="${jobTypeItem.jobName}"
+                                th:selected="${jobTypeItem.jobCode eq jobType}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item layui-show" id="formSelect">
+                <label class="layui-form-label">角色</label>
+                <div class="layui-input-block">
+                    <select id="roleCodeList" xm-select="roleSelect" xm-select-skin="primary">
+                        <option value=""></option>
+                        <option th:value="${role.roleCode}" th:each="role : ${roleList}" th:text="${role.roleName}" th:selected="${#lists.contains(personRoles,role.roleCode)}" ></option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-form-item" style="text-align: center">
+        <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+        <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+    </div>
+</div>
+</body>
+<script>
+    var formSelects;
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate','formSelects'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        formSelects = layui.formSelects;
+        formSelects.value('roleSelect');
+    });
+    function save() {
+        var name = $("#name").val();
+        var personCode = $("#personCode").val();
+        var telphone = $("#telphone").val();
+        var jobType = $("#jobType option:selected").val();
+        var roleList = formSelects.value('roleSelect', 'valStr');
+        if (name == null || name == "") {
+            tipinfo("人员名称不能为空");
+            return;
+        }
+        var map = {
+            "name": name,
+            "telphone": telphone,
+            "jobType": jobType,
+            "personCode": personCode,
+            "roleList":roleList
+        };
+        $.ajax({
+            type: "post",
+            url: "/api/organizePeople/updOrganizePeople",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                if(data.result=="FAILURE"){
+                    tipinfo(data.message);
+                }else{
+                    closewindow(1);
+                }
+                
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+
+</html>

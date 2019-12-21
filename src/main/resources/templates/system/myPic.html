@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<form action="" class="layui-anim layui-anim-upbit" style="text-align: center">
+
+    <button type="button" class="layui-btn" id="test1" style="margin-right: 291px;    margin-top: 10px;">
+        <i class="layui-icon">&#xe67c;</i>上传照片
+    </button>
+    <img alt="" th:src="@{${pic}}" style="margin-top: 10px" id="imgShow" width="80%" height="200px">
+    <input type="hidden" name="pic" id="pic" th:value="${pic}">
+
+    <input type="hidden" name="teacherCode" th:value="${teacherCode}">
+    <div class="layui-form-item" style="text-align: center;margin-top: 20px">
+        <button class="layui-btn layui-btn-sm" lay-submit lay-filter="formDemo">保存</button>
+    </div>
+</form>
+
+</body>
+
+<script type="text/javascript">
+    var table;
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload'], function () {
+        table = layui.table;
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+
+        form.on('submit(formDemo)', function (data) {
+            var success = function (response) {
+                if (response.result == 'OK') {
+                    layer.alert('操作成功', {icon: 1}, function () {
+                        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        parent.layer.close(index); //再执行关闭
+                    })
+
+                } else {
+                    layer.alert(response.message, {icon: 2}, function () {
+                        layer.closeAll();
+                    })
+                }
+            }
+            var postData = $(data.form).serialize();
+
+            $.ajax({
+                url: "/teacher/addTeacher",
+                type: "post",
+                data: postData,
+                dataType: "json",
+                success: success,
+                error: function (jqXHR, textStatus, errorThrown) {
+
+                }
+
+            });
+            return false;
+        });
+
+        var uploadInst = upload.render({
+            elem: '#test1' //绑定元素
+            , url: '/common/uploadFile' //上传接口
+            , accept: 'images'
+            , acceptMime: 'image/*'
+            , done: function (res) {
+                //上传完毕回调
+                $('#pic').val(res.data.url)
+                $('#picName').html(res.data.url)
+                $("#imgShow").attr("src", res.data.url);
+            }
+            , error: function () {
+                //请求异常回调
+            }
+        });
+    });
+
+
+</script>
+
+</html>

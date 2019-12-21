@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.HintInfoDao">
+	<insert id="saveHintInfo">
+		insert into hint_info(person_code,hint_type,create_time) values(#{personCode},#{hintType},#{createTime})
+	</insert>
+	
+	<select id="getHintInfoByPerson" resultType="int">
+		select count(0) from hint_info where hint_type = #{hintType} and person_code = #{personCode}
+		
+	</select>
+
+</mapper>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <div class="layui-form-item layui-show" style="margin-top: 40px" id="formSelect">
+            <input id="projectId" type="hidden" th:value="${projectId}">
+            <label class="layui-form-label">成绩模板:</label>
+            <div class="layui-input-block" >
+                <select id="tempCode" xm-select-radio  xm-select="roleSelect" xm-select-skin="primary">
+                    <option value=""></option>
+                    <option th:value="${template.fivePointCode}" th:each="template : ${templateList}" th:text="${template.pointName}" th:selected="${template.fivePointCode eq tempCode}"></option>
+                </select>
+            </div>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    //JavaScript代码区域
+    var formSelects;
+    layui.use(['element', 'layer', 'form', 'laydate', 'formSelects'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        formSelects = layui.formSelects;
+    });
+
+    function save() {
+        var tempCode = formSelects.value('roleSelect', 'valStr');
+        var map = {
+            "projectId":$("#projectId").val(),
+            "tempCode":tempCode
+        };
+        $.ajax({
+            type: "post",
+            url: "/project/updateTempCode",
+            data: map,
+            success: function (data) {
+                if (data.result == "OK") {
+                    closewindow(1);
+                } else {
+                    tipinfo(data.message);
+                }
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>

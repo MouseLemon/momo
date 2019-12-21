@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.KcManagerTeacherDao">
+
+	<!-- 教师课酬数据 -->
+	<select id="getKCData" parameterType="map" resultType="map">
+
+		<!-- SELECT
+		 	cf.project_id projectId, 
+		 	cf.`year`,
+			cf.`month`,
+		pi.dep_name depName,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+			ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName, 
+			dd.`name` AS teacherType,
+			ti.teacher_name AS name,
+			ti.id_card AS idCard,
+			ti.bank_code AS bankCode,
+			dc.`name` AS guoji,
+			cast(sum(cf.fee_course) as DECIMAL(10,2)) fee_course 
+		FROM course_fee cf 
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.`code`
+		LEFT JOIN data_dic dc ON dc.`code` = ti.nationality
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		 where cf.teacher_code = #{personCode}
+		 AND cf.`year` <![CDATA[>=]]> #{startTime} AND cf.`year` <![CDATA[<=]]> #{endTime}
+		 and cf.is_send = '1' AND cf.status = '3'
+		 GROUP BY cf.project_id
+UNION ALL -->
+	<!--SELECT DISTINCT
+		fd.deduct_type projectId,
+		dd.`year`,
+		dd.`month`,
+		CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902'
+		THEN '讲座' ELSE '补发工资' END projectName,
+		dd.teacherType,
+		dd.`name`,
+		dd.idCard,
+		dd.bankCode,
+		dd.guoji,
+		fd.fee_count fee_course 
+	FROM fee_deduct fd
+	LEFT JOIN (
+		SELECT
+		cf.`year`,
+		cf.`month`,
+		cf.project_id,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM
+		project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+		dd1.`name` AS teacherType,
+		ti.teacher_name AS name,
+		ti.id_card AS idCard,
+		ti.bank_code AS bankCode,
+		dd2.`name` AS 'guoji',
+		cf.mergeSerialNumber,
+		cf.serial_number serialNumber,
+		cf.teacher_code teacherCode
+		FROM course_fee cf
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+		LEFT JOIN data_dic dd2 ON dd2.`code` = ti.nationality
+		WHERE cf.is_send = 1 AND cf.`year` <![CDATA[>=]]> #{startTime} AND cf.`year` <![CDATA[<=]]> #{endTime}
+	) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code
+	WHERE fd.`status` = '3' AND fd.teacher_code = #{personCode} AND fd.project_id = dd.project_id -->
+
+		SELECT
+		cf.project_id projectId,
+		cf.`year`,
+		cf.`month`,
+		pi.dep_name depName,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN
+		(SELECT project_name FROM project_info
+		WHERE project_id = cf.project_id) ELSE
+		(SELECT NAME FROM data_dic WHERE CODE = cf.project_Id)
+		END projectName,
+		dd.`name` AS teacherType,
+		ti.teacher_name AS name,
+		ti.id_card AS idCard,
+		ti.bank_code AS bankCode,
+		dc.`name` AS guoji,
+		cast(sum(cf.fee_course) as DECIMAL(10,2)) fee_course
+		FROM course_fee cf
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.`code`
+		LEFT JOIN data_dic dc ON dc.`code` = ti.nationality
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		where cf.teacher_code = #{personCode} AND cf.`year` >= '2019'
+		AND cf.`year` <![CDATA[>=]]> #{startTime} AND cf.`year` <![CDATA[<=]]> #{endTime} and cf.is_send = '1' AND cf.status = '3' GROUP BY cf.project_id
+		UNION ALL
+
+		SELECT DISTINCT
+		fd.deduct_type projectId,
+		dd.year,
+		dd.month,
+		dd.depName,
+		CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902' THEN '讲座' ELSE '补发工资' END project_name,
+		dd.teacherType,
+		dd.teacher_name name,
+		dd.id_card idCard,
+		dd.bank_code bankCode,
+		dd.guoji,
+		fd.fee_count feeCourse
+		FROM fee_deduct fd
+		LEFT JOIN
+		( SELECT cf.project_id, cf.`year`, cf.`month`, os.organize_name depName,
+		cf.mergeSerialNumber, cf.serial_number serialNumber, cf.teacher_code teacherCode,dd.name teacherType, ti.teacher_name,ti.id_card,ti.bank_code,dd1.name guoji
+		FROM course_fee cf
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		LEFT JOIN data_dic dd ON dd.code = ti.teacher_type
+		LEFT JOIN data_dic dd1 ON dd1.code = ti.nationality
+		WHERE cf.is_send = 1 AND cf.`year` <![CDATA[>=]]> #{startTime} AND cf.`year` <![CDATA[<=]]> #{endTime}  ) dd
+		ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num
+		AND dd.teacherCode = fd.teacher_code AND fd.project_id = dd.project_id
+		WHERE fd.`status` = '3' AND fd.teacher_code = #{personCode}
+	</select>
+	
+	<!-- 教师参与项目名称 -->
+	<select id="getProductName" parameterType="string" resultType="map">
+		<!-- SELECT distinct
+		cf.project_id projectId,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_id) END projectName
+		FROM course_fee cf
+		WHERE cf.teacher_code = #{personCode} and cf.is_send = '1' -->
+	SELECT DISTINCT
+		<!-- cf.project_id projectId,-->
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM
+		project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_id) END projectName
+	FROM course_fee cf
+	WHERE cf.teacher_code = #{personCode} and cf.is_send = '1' AND cf.`status` = '3'
+	
+	UNION ALL
+
+	SELECT DISTINCT
+		<!-- fd.project_id projectId,-->
+		CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902'
+		THEN '讲座' ELSE '补发工资' END projectName
+	FROM fee_deduct fd
+	LEFT JOIN (
+		SELECT
+	cf.project_id,
+    CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM
+    project_info WHERE project_id = cf.project_id)
+    ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END
+    projectName,
+    cf.mergeSerialNumber,
+    cf.serial_number serialNumber,
+    cf.teacher_code teacherCode
+    FROM course_fee cf
+    WHERE cf.is_send = 1
+) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code AND fd.project_id = dd.project_id
+WHERE fd.`status` = '3' AND fd.teacher_code = #{personCode}
+</select>
+<!-- 获取教师信息 -->
+	<select id="getTeacherInfo" parameterType="string" resultType="map">
+		SELECT ti.teacher_name,dd.`name` AS teacher_type,id_card,bank_code,birth_day,tele_num,entry_date,d.`name` AS nationality FROM teacher_info ti
+			LEFT JOIN data_dic dd ON dd.`code` = ti.teacher_type
+			LEFT JOIN data_dic d ON d.`code` = ti.nationality		
+			WHERE ti.teacher_code = #{personCode};
+	</select>
+	<!-- 获取课酬详情 -->
+	<select id="getKCInfo" resultType="map" parameterType="map">
+		SELECT
+		cf.`year`,
+		cf.`month`,
+		cf.project_id projectId,
+		os.organize_name depName,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END project_name,
+		dd.name courseName,
+		cf.base_fee,
+		cf.hour_actual,
+		cf.person_factor,
+		cf.course_factor,
+		cf.fee_course
+		FROM course_fee cf
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN data_dic dd ON cf.course_id = dd.`code`
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		WHERE cf.`year`= #{year} AND cf.`month` = #{month} AND cf.teacher_code = #{personCode} AND cf.is_send = 1
+		<if test="projectName != null and projectName != ''">AND pi.project_name LIKE CONCAT('%',#{projectName},'%')</if>
+		UNION ALL
+
+		SELECT DISTINCT
+		dd.year,
+		dd.month,
+		dd.project_id projectId,
+		dd.depName,
+		CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902'
+		THEN '讲座' ELSE '补发工资' END project_name,
+		"" courseName,
+		fd.base_course_fee base_fee,
+		fd.k_s hour_actual,
+		fd.person_coef person_factor,
+		fd.course_coef course_factor,
+		fd.fee_count
+		FROM fee_deduct fd
+		LEFT JOIN (
+		SELECT
+		cf.project_id,
+		cf.`year`,
+		cf.`month`,
+		os.organize_name depName,
+		cf.mergeSerialNumber,
+		cf.serial_number serialNumber,
+		cf.teacher_code teacherCode,
+		ti.teacher_name
+		FROM course_fee cf
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		WHERE cf.is_send = 1 AND cf.`year`= #{year} AND cf.`month` = #{month}
+		<if test="projectName != null and projectName != ''">AND pi.project_name LIKE CONCAT('%',#{projectName},'%')</if>
+		) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code AND fd.project_id = dd.project_id
+		WHERE fd.`status` = '3' AND fd.teacher_code = #{personCode}
+
+	</select>
+	<!-- 获取本周教师课酬 -->
+	<select id="getThisWeekKc" parameterType="map" resultType="map">
+		SELECT class_date classDate,Round(SUM(fee_total),2) feeTotal FROM project_schedule_plan WHERE teacher_code = #{personCode} AND class_date <![CDATA[>=]]> #{monday} AND class_date <![CDATA[<=]]> #{sunday}  GROUP BY class_date
+	</select>
+	<!-- 今日课酬 -->
+	<select id="getTodayKc" parameterType="map" resultType="string">
+		SELECT Round(SUM(fee_total),2) feeTotal FROM project_schedule_plan WHERE teacher_code = #{personCode} AND class_date = #{todayDate}
+	</select>
+</mapper>

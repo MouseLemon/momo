@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProductDao">
+
+    <!-- 获取爆款列表 -->
+    <select id="getPopularList" parameterType="hashMap" resultType="hashMap">
+        select
+          pp.popular_id popularId,
+          pp.popular_type popularType,
+          dc.name ppType,
+          pp.popular_title popularTitle,
+          pp.popular_description popularDescription,
+          pp.popular_img popularImg,
+          pp.date,
+          pp.status,
+          pp.creater,
+          pp.popular_easy popularEasy
+        from product_popular pp
+        left join data_dic dc on pp.popular_type = dc.code
+        <where>
+            <if test="popularTitle != null and popularTitle !=''">
+                and pp.popular_title like "%${popularTitle}%"
+            </if>
+            <if test="popularType != null and popularType !=''">
+                and pp.popular_type = #{popularType}
+            </if>
+            <if test="status != null and status !=''">
+                and pp.status = #{status}
+            </if>
+            <if test="startTime != null and startTime !=''">
+                and pp.date >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime !=''">
+                and #{endTime} >= pp.date
+            </if>
+        </where>
+    </select>
+
+    <!-- 核查爆款编码 -->
+    <select id="checkPopularCode" parameterType="hashmap" resultType="int">
+        select count(*) from product_popular
+        where popular_code = #{popularCode}
+    </select>
+
+    <!-- 保存爆款 -->
+    <insert id="addPopular" parameterType="hashMap">
+        insert into product_popular (
+            popular_id,
+            popular_type,
+            popular_title,
+            popular_description,
+            popular_img,
+            date,
+            status,
+            popular_easy,
+            popular_code,
+            creater,
+            person_code
+        )
+        values(
+            #{popularId},
+            #{popularType},
+            #{popularTitle},
+            #{popularDesc},
+            #{fileUrl},
+            #{startTime},
+            #{status},
+            #{popularEasy},
+            #{popularCode},
+            #{creater},
+            #{personCode}
+        )
+    </insert>
+
+    <!-- 保存爆款图片 -->
+    <insert id="addPopularImg" parameterType="hashMap">
+        insert into product_popular_img values (
+          #{popularId},
+          #{imgId},
+          #{fileName},
+          #{fileUrl},
+          #{uploader},
+          #{uploadTime}
+        )
+    </insert>
+
+    <!-- 获取爆款信息 -->
+    <select id="getPopular" parameterType="string" resultType="hashmap">
+        select
+          popular_id popularId,
+          popular_type popularType,
+          popular_title popularTitle,
+          popular_description popularDesc,
+          popular_img popularImg,
+          date,
+          status,
+          popular_easy popularEasy,
+          popular_code popularCode,
+          creater,
+          person_code personCode
+        from product_popular
+        where popular_id = #{popularId}
+    </select>
+
+    <!-- 编辑爆款 -->
+    <update id="editPopular" parameterType="hashMap">
+        update product_popular
+        <set>
+            <if test="popularType != null and popularType != ''">popular_type = #{popularType},</if>
+            <if test="popularTitle != null and popularTitle != ''">popular_title = #{popularTitle},</if>
+            <if test="popularDesc != null and popularDesc != ''">popular_description = #{popularDesc},</if>
+            <if test="fileUrl != null and fileUrl != ''">popular_img = #{fileUrl},</if>
+            <if test="startTime != null and startTime != ''">date = #{startTime},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="popularEasy != null and popularEasy != ''">popular_easy = #{popularEasy},</if>
+            <if test="popularCode != null and popularCode != ''">popular_code = #{popularCode},</if>
+            <if test="modifier != null and modifier != ''">modifier = #{modifier}</if>
+        </set>
+        where popular_id = #{popularId}
+    </update>
+
+    <!-- 编辑爆款图片 -->
+    <update id="editPopularImg" parameterType="hashMap">
+        update popular_add_img
+        <set>
+            <if test="fileName != null and fileName != ''">img_name = #{fileName},</if>
+            <if test="uploader != null and uploader != ''">uploader = #{uploader},</if>
+            <if test="uploadTime != null and uploadTime != ''">upload_time = #{uploadTime},</if>
+            <if test="fileUrl != null and fileUrl != ''">img_url = #{fileUrl}</if>
+        </set>
+        where popular_id = #{popularId}
+    </update>
+
+    <!-- 删除爆款 -->
+    <delete id="delPopular" parameterType="hashmap">
+	  delete from product_popular
+	  where popular_id = #{popularId}
+	</delete>
+
+    <!-- 获取样板间分页数据 -->
+    <select id="getSuitList" parameterType="hashMap" resultType="hashMap">
+        select
+            ps.suit_id suitId,
+            ps.suit_name suitName,
+            ps.suit_type suitType,
+            dc.name psType,
+            ps.suit_code suitCode,
+            ps.suit_description suitDescription,
+            ps.date,
+            ps.status,
+            ps.creater,
+            ps.suit_designer suitDesigner,
+            ps.suit_easy suitEasy
+        from product_suit ps
+        left join data_dic dc on ps.suit_type = dc.code
+        <where>
+            <if test="suitName != null and suitName !=''">
+                and ps.suit_name like "%${suitName}%"
+            </if>
+            <if test="suitType != null and suitType !=''">
+                and ps.suit_type = #{suitType}
+            </if>
+            <if test="suitCode != null and suitCode !=''">
+                and ps.suit_code = #{suitCode}
+            </if>
+            <if test="startTime != null and startTime !=''">
+                and ps.date >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime !=''">
+                and #{endTime} >= ps.date
+            </if>
+            <if test="suitDesigner != null and suitDesigner !=''">
+                and ps.suit_designer = #{suitDesigner}
+            </if>
+        </where>
+    </select>
+
+    <!--核查样板间编码-->
+    <select id="checkSuitCode" parameterType="hashmap" resultType="int">
+        select count(*) from product_suit
+        where suit_code = #{suitCode}
+    </select>
+
+    <!--添加样板间-->
+    <insert id="addSuit" parameterType="hashMap">
+        insert into product_suit (
+            suit_id,
+            suit_name,
+            suit_code,
+            suit_type,
+            suit_easy,
+            suit_description,
+            suit_designer,
+            suit_location,
+            date,
+            creater,
+            person_code
+        ) values (
+            #{suitId},
+            #{suitName},
+            #{suitCode},
+            #{suitType},
+            #{suitEasy},
+            #{suitDesc},
+            #{suitDesigner},
+            #{suitLocation},
+            #{startTime},
+            #{creater},
+            #{personCode}
+        )
+    </insert>
+
+    <!--添加样板间图片-->
+    <insert id="addSuitImg" parameterType="hashMap">
+        insert into product_suit_img values (
+          #{suitId},
+          #{imgId},
+          #{fileName},
+          #{fileUrl},
+          #{uploader},
+          #{uploadTime},
+          #{fileXy}
+        )
+    </insert>
+
+    <!--编辑样板间-->
+    <update id="editSuit" parameterType="hashMap">
+        update product_suit
+        <set>
+            <if test="suitName != null and suitName != ''">suit_name = #{suitName},</if>
+            <if test="suitCode != null and suitCode != ''">suit_code = #{suitCode},</if>
+            <if test="suitLocation != null and suitLocation != ''">suit_location = #{suitLocation},</if>
+            <if test="startTime != null and startTime != ''">date = #{startTime},</if>
+            <if test="suitType != null and suitType != ''">suit_type = #{suitType},</if>
+            <if test="suitDesigner != null and suitDesigner != ''">suit_designer = #{suitDesigner},</if>
+            <if test="suitEasy != null and suitEasy != ''">suit_easy = #{suitEasy},</if>
+            <if test="suitDesc != null and suitDesc != ''">suit_description = #{suitDesc},</if>
+            <if test="modifier != null and modifier != ''">modifier = #{modifier}</if>
+        </set>
+        where suit_id = #{suitId}
+    </update>
+
+    <!--获取样板间信息-->
+    <select id="getSuit" parameterType="string" resultType="hashmap">
+        select
+          suit_id suitId,
+          suit_name suitName,
+          suit_code suitCode,
+          suit_type suitType,
+          suit_easy suitEasy,
+          suit_description suitDesc,
+          suit_designer suitDesigner,
+          suit_location suitLocation,
+          date,
+          status,
+          modifier,
+          creater
+        from product_suit
+        where suit_id = #{suitId}
+    </select>
+
+    <!--获取样板间图片列表-->
+    <select id="getSuitImgList" parameterType="string" resultType="hashmap">
+        select
+          img_id imgId,
+          img_name imgName,
+          img_url imgUrl,
+          img_xy imgXy
+        from product_suit_img
+        where suit_id = #{suitId}
+        order by img_xy
+    </select>
+
+    <!--在编辑时，删除样板间图片-->
+    <delete id="deleteSuitImg" parameterType="hashmap">
+	  delete from product_suit_img
+	  where suit_id = #{suitId}
+	  and img_xy = #{fileXy}
+	</delete>
+
+    <delete id="delSuit" parameterType="hashmap">
+	  delete from product_suit
+	  where suit_id = #{suitId}
+	</delete>
+
+    <delete id="deleteSuitImgs" parameterType="hashmap">
+	  delete from product_suit_img
+	  where suit_id = #{suitId}
+	</delete>
+
+    <select id="getDiaryList" parameterType="hashMap" resultType="hashMap">
+        select
+            pd.diary_id diaryId,
+            pd.diary_title diaryTitle,
+            pd.diary_type diaryType,
+            dc.name pdType,
+            pd.diary_easy diaryEasy,
+            pd.diary_content diaryContent,
+            pd.date date,
+            pd.diary_author diaryAuthor,
+            pd.creater creater,
+            pd.diary_begin diaryBegin,
+            pd.diary_location diaryLocation
+        from product_diary pd
+        left join data_dic dc on pd.diary_type = dc.code
+        <where>
+            <if test="diaryTitle != null and diaryTitle !=''">
+                and pd.diary_title like "%${diaryTitle}%"
+            </if>
+            <if test="diaryType != null and diaryType !=''">
+                and pd.diary_type = #{diaryType}
+            </if>
+            <if test="diaryAuthor != null and diaryAuthor !=''">
+                and pd.diary_author = #{diaryAuthor}
+            </if>
+            <if test="startTime != null and startTime !=''">
+                and ps.date >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime !=''">
+                and #{endTime} >= ps.date
+            </if>
+        </where>
+    </select>
+
+    <insert id="addDiary" parameterType="hashMap">
+        insert into product_diary (
+            diary_id,
+            diary_title,
+            diary_type,
+            diary_begin,
+            diary_content,
+            diary_easy,
+            diary_author,
+            diary_location,
+            creater,
+            modifier,
+            date,
+            person_code
+        ) values (
+            #{diaryId},
+            #{diaryTitle},
+            #{diaryType},
+            #{diaryBegin},
+            #{diaryContent},
+            #{diaryEasy},
+            #{diaryAuthor},
+            #{diaryLocation},
+            #{creater},
+            #{modifier},
+            #{startTime},
+            #{personCode}
+        )
+    </insert>
+
+    <insert id="addDiaryImg" parameterType="hashmap">
+        insert into product_diary_img values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.diaryId},#{item.imgId},#{item.imgName},#{item.imgUrl},#{item.uploader},#{item.uploadTime})
+        </foreach>
+    </insert>
+
+    <select id="getDiary" parameterType="string" resultType="hashmap">
+        select
+            diary_id diaryId,
+            diary_title diaryTitle,
+            diary_type diaryType,
+            diary_begin diaryBegin,
+            diary_content diaryContent,
+            diary_easy diaryEasy,
+            diary_author diaryAuthor,
+            diary_location diaryLocation,
+            creater,
+            modifier,
+            date,
+            person_code personCode
+        from product_diary
+        where diary_id = #{diaryId}
+    </select>
+
+    <select id="getDiaryImgList" parameterType="hashMap" resultType="hashMap">
+        select
+            pdi.diary_id diaryId,
+            pdi.img_id imgId,
+            pdi.img_name imgName,
+            pdi.img_url imgUrl,
+            pdi.uploader,
+            pdi.upload_time uploadTime
+        from product_diary_img pdi
+        where diary_id = #{diaryId}
+    </select>
+
+    <update id="editDiary" parameterType="hashMap">
+        update product_diary
+        <set>
+            <if test="diaryTitle != null and diaryTitle != ''">diary_title = #{diaryTitle},</if>
+            <if test="diaryType != null and diaryType != ''">diary_type = #{diaryType},</if>
+            <if test="diaryBegin != null and diaryBegin != ''">diary_begin = #{diaryBegin},</if>
+            <if test="diaryContent != null and diaryContent != ''">diary_content = #{diaryContent},</if>
+            <if test="diaryEasy != null and diaryEasy != ''">diary_easy = #{diaryEasy},</if>
+            <if test="diaryAuthor != null and diaryAuthor != ''">diary_author = #{diaryAuthor},</if>
+            <if test="diaryLocation != null and diaryLocation != ''">diary_location = #{diaryLocation},</if>
+            <if test="creater != null and creater != ''">creater = #{creater},</if>
+            <if test="modifier != null and modifier != ''">modifier = #{modifier},</if>
+            <if test="startTime != null and startTime != ''">date = #{startTime},</if>
+            <if test="personCode != null and personCode != ''">person_code = #{personCode}</if>
+        </set>
+        where diary_id = #{diaryId}
+    </update>
+
+
+</mapper>

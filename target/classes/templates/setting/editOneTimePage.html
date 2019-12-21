@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .tt +div dl{
+        max-height: 110px;
+    }
+</style>
+<div>
+    <form>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+                <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs11">
+                        <label class="layui-form-label">节名称：</label>
+                        <div class="layui-input-block">
+                            <input type="text" id="section" name="section" autocomplete="off" placeholder="请输入" readonly="readonly" class="layui-input" th:value="${section}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs12">
+                        <label class="layui-form-label">开始时间：</label>
+                        <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                            <select name="start_time_hour" id="start_time_hour" class="layui-input tt">
+                                <option th:selected="${start_hour == '05'}">05</option>
+                                <option th:selected="${start_hour == '06'}">06</option>
+                                <option th:selected="${start_hour == '07'}">07</option>
+                                <option th:selected="${start_hour == '08'}">08</option>
+                                <option th:selected="${start_hour == '09'}">09</option>
+                                <option th:selected="${start_hour == '10'}">10</option>
+                                <option th:selected="${start_hour == '11'}">11</option>
+                                <option th:selected="${start_hour == '12'}">12</option>
+                                <option th:selected="${start_hour == '13'}">13</option>
+                                <option th:selected="${start_hour == '14'}">14</option>
+                                <option th:selected="${start_hour == '15'}">15</option>
+                                <option th:selected="${start_hour == '16'}">16</option>
+                                <option th:selected="${start_hour == '17'}">17</option>
+                                <option th:selected="${start_hour == '18'}">18</option>
+                                <option th:selected="${start_hour == '19'}">19</option>
+                                <option th:selected="${start_hour == '20'}">20</option>
+                                <option th:selected="${start_hour == '21'}">21</option>
+                                <option th:selected="${start_hour == '22'}">22</option>
+                            </select>
+                        </div>
+                        <span>:</span>
+                        <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                            <select name="start_time_minute" id="start_time_minute" class="layui-input tt">
+                                <option th:selected="${start_minute == '00'}">00</option>
+                                <option th:selected="${start_minute == '05'}">05</option>
+                                <option th:selected="${start_minute == '10'}">10</option>
+                                <option th:selected="${start_minute == '15'}">15</option>
+                                <option th:selected="${start_minute == '20'}">20</option>
+                                <option th:selected="${start_minute == '25'}">25</option>
+                                <option th:selected="${start_minute == '30'}">30</option>
+                                <option th:selected="${start_minute == '35'}">35</option>
+                                <option th:selected="${start_minute == '40'}">40</option>
+                                <option th:selected="${start_minute == '45'}">45</option>
+                                <option th:selected="${start_minute == '50'}">50</option>
+                                <option th:selected="${start_minute == '55'}">55</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs12">
+                        <label class="layui-form-label">结束时间：</label>
+                        <div style="width: 100px;display: inline-block;margin-bottom: 0" class="layui-inline">
+                            <select name="end_time_hour" id="end_time_hour" class="layui-input tt">
+                                <option th:selected="${end_hour == '05'}">05</option>
+                                <option th:selected="${end_hour == '06'}">06</option>
+                                <option th:selected="${end_hour == '07'}">07</option>
+                                <option th:selected="${end_hour == '08'}">08</option>
+                                <option th:selected="${end_hour == '09'}">09</option>
+                                <option th:selected="${end_hour == '10'}">10</option>
+                                <option th:selected="${end_hour == '11'}">11</option>
+                                <option th:selected="${end_hour == '12'}">12</option>
+                                <option th:selected="${end_hour == '13'}">13</option>
+                                <option th:selected="${end_hour == '14'}">14</option>
+                                <option th:selected="${end_hour == '15'}">15</option>
+                                <option th:selected="${end_hour == '16'}">16</option>
+                                <option th:selected="${end_hour == '17'}">17</option>
+                                <option th:selected="${end_hour == '18'}">18</option>
+                                <option th:selected="${end_hour == '19'}">19</option>
+                                <option th:selected="${end_hour == '20'}">20</option>
+                                <option th:selected="${end_hour == '21'}">21</option>
+                                <option th:selected="${end_hour == '22'}">22</option>
+                            </select>
+                        </div>
+                        <span>:</span>
+                        <div style="width: 100px;display: inline-block;;margin-bottom: 0" class="layui-inline">
+                            <select name="end_time_minute" id="end_time_minute" class="layui-input tt">
+                                <option th:selected="${end_minute == '00'}">00</option>
+                                <option th:selected="${end_minute == '05'}">05</option>
+                                <option th:selected="${end_minute == '10'}">10</option>
+                                <option th:selected="${end_minute == '15'}">15</option>
+                                <option th:selected="${end_minute == '20'}">20</option>
+                                <option th:selected="${end_minute == '25'}">25</option>
+                                <option th:selected="${end_minute == '30'}">30</option>
+                                <option th:selected="${end_minute == '35'}">35</option>
+                                <option th:selected="${end_minute == '40'}">40</option>
+                                <option th:selected="${end_minute == '45'}">45</option>
+                                <option th:selected="${end_minute == '50'}">50</option>
+                                <option th:selected="${end_minute == '55'}">55</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="margin-top: 10px;text-align: center">
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#start_time'
+            ,type: 'time'
+            ,format: 'HH:mm'
+        });
+        laydate.render({
+            elem: '#end_time'
+            ,type: 'time'
+            ,format: 'HH:mm'
+          });
+    });
+
+    var beginStartTime;
+    var beginEndTime;
+    var sectionName;
+    $(function () {
+        beginStartTime = $('#start_time_hour').val() + ":" + $("#start_time_minute").val();
+        beginEndTime = $("#end_time_hour").val() + ":" + $("#end_time_minute").val();
+        sectionName = $("#section").val();
+    })
+
+    function save() {
+        var section = $('#section').val();
+        var start_time = $('#start_time_hour').val() + ":" + $("#start_time_minute").val();
+        var end_time = $("#end_time_hour").val() + ":" + $("#end_time_minute").val();
+
+        if (section == null || section == "") {
+            tipinfo("节名称不能为空！");
+            return;
+        }
+
+        var st = $("#start_time_hour").val() + $("#start_time_minute").val();
+        var et = $("#end_time_hour").val() + $("#end_time_minute").val();
+
+        var startTime = Number(st);
+        var endTime = Number(et);
+
+        if (startTime >= endTime) {
+            tipinfo("开始时间超过结束时间！");
+            return false;
+        }
+
+        var map = {
+            'beginStartTime' : beginStartTime,
+            'beginEndTime' : beginEndTime,
+            'sectionName' : sectionName,
+            'section': section,
+            'start_time': start_time,
+            'end_time': end_time
+        };
+        $.ajax({
+            type: "post",
+            url: "/setting/editTime",
+            data: map,
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data) {
+                if (data.result == 'OK'){
+                    parent.location.reload();
+                } else {
+                    tipinfo("时间段选取有问题，请重新选择！");
+                    return false;
+                }
+            },
+            error: function (data) {
+                tipinfo("时间段选取有问题，请重新选择！");
+                return false;
+            }
+        });
+    }
+
+
+</script>
+
+</html>

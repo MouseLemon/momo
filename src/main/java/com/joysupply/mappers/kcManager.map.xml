@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.KcManagerDao">
+    <select id="queryKcInfo" parameterType="hashMap" resultType="hashMap" flushCache="true">
+		SELECT 
+			   psp.project_id projectCode, 
+			   psp.project_id projectId,
+		       pin.project_name projectName,
+		       dd.name language,
+		       psp.course_name courseId,
+		       dd1.name courseName,
+		       ti.teacherName,
+		       ti.idCard,
+		       psp.teacher_code teacherCode,
+		       ti.teacherType,
+		       psp.class_date classDate,
+		       psp.base_fee baseFee,
+		       psp.person_factor personFactor,
+		       psp.course_factor courseFactor,
+		       "1" hourActual,
+		       "" feeCourse,
+		       "" serialNumber,
+		       "课表提取" feeType,
+		       os.up_code upCode
+		FROM project_schedule_plan psp,
+		     (SELECT tin.teacher_name teacherName,
+				dd.name teacherType,
+				tin.teacher_code teacherCode,tin.id_card idCard
+			FROM teacher_info tin,
+			     data_dic dd
+			WHERE tin.teacher_type = dd.code
+			) ti,
+			project_info pin,
+			data_dic dd,
+			data_dic dd1,
+			organize_struct os
+		WHERE psp.teacher_code = ti.teacherCode
+		AND os.organize_code = pin.dep_name
+		AND pin.language = dd.code
+		AND psp.project_id = pin.project_id
+		AND psp.course_name = dd1.code
+		AND psp.class_date BETWEEN #{startTime} AND #{endTime}
+		AND psp.status = '1'
+        and pin.creater = #{personCode}
+		union all
+		SELECT  
+			fd.project_id projectCode,
+			fd.deduct_type projectId,
+			dd.name projectName,
+			"" language,
+			"" courseId,
+			"" courseName,
+			ti.teacher_name teacherName,
+			ti.id_card idCard,
+			fd.teacher_code teacherCode,
+			dd2.name teacherType,
+			"" classDate,
+			fd.base_course_fee baseFee,
+			fd.person_coef personFactor,
+			fd.course_coef courseFactor,
+			fd.k_s hourActual,
+			fd.fee_count feeCourse,
+			fd.serial_num serialNumber,
+			fd.fee_type feeType,
+			os. up_code upCode
+		FROM fee_deduct fd,data_dic dd,teacher_info ti,data_dic dd2 , project_info pin,organize_struct os
+		WHERE fd.deduct_type = dd.code
+		AND fd.project_id = pin.project_id
+		and fd.teacher_code = ti.teacher_code
+		and ti.teacher_type = dd2.code
+		AND os.organize_code = pin.dep_name
+		AND fd.start_time = #{startTime}
+		AND fd.end_time = #{endTime}
+        AND pin.creater = #{personCode}
+	</select>
+
+    <insert id="saveKcList" parameterType="list">
+        INSERT INTO course_fee(row_id,start_time,end_time,
+        project_id,teacher_code,course_id,
+        language,base_fee,hour_actual,
+        person_factor,course_factor,fee_course,fee_type,
+        serial_number,status,create_time
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.rowId},#{item.startTime},#{item.endTime},
+            #{item.projectId},#{item.teacherCode},#{item.courseId},
+            #{item.language},#{item.baseFee},#{item.ksCount},
+            #{item.personFactor},#{item.courseFactor},#{item.kcCount},#{item.feeType},
+            #{item.serialNumber},'4',now()
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryLastProject" parameterType="hashMap" resultType="hashMap">
+		select  cf.deduct_type projectId,
+				dd.name projectName,
+				cf.base_course_fee baseFee,
+				cf.k_s hourActual,
+				cf.person_coef personFactor,
+				cf.course_coef courseFactor,
+				cf.fee_count feeCourse,
+				cf.serial_num serialNumber
+		from fee_deduct cf,data_dic dd
+		where cf.deduct_type = dd.code
+		  and cf.teacher_code = #{teacherCode}
+		  and cf.project_id = 0
+		  and cf.valid='1'
+		  and cf.deduct_type = '1901'
+		  ORDER BY cf.gen_date DESC
+  		  LIMIT 0,1
+	</select>
+
+    <select id="checkTimeSolt" parameterType="hashMap" resultType="hashMap">
+		SELECT  
+			cf.start_time startTime 
+			, cf.end_time endTime
+		FROM 
+			project_info pi ,course_fee cf
+		WHERE 
+			pi.creater = #{personCode}
+			and pi.project_id = cf.project_id
+		 	<![CDATA[ and ((cf.start_time >= #{startTime} AND cf.start_time <= #{endTime})]]>
+		 	<![CDATA[ OR (cf.start_time <= #{startTime} AND cf.end_time >= #{endTime})]]>
+		 	<![CDATA[ OR (cf.end_time >= #{startTime} AND cf.end_time <= #{endTime}))
+        ]]>
+    </select>
+
+    <select id="queryExamineData" parameterType="hashMap" resultType="string">
+		SELECT
+			IFNULL(MAX(cf.serial_number),0) serialNumber
+		FROM course_fee cf , project_info pi
+		WHERE 
+		cf.start_time = #{startTime}
+		and cf.end_time = #{endTime}
+		and pi.project_id = cf.project_id
+		and pi.creater = #{personCode}
+		limit 1 
+	</select>
+
+    <select id="querySerialNum" parameterType="hashMap" resultType="String">
+		SELECT 
+			cf.serial_number serialNumber
+		FROM 
+			course_fee cf , project_info pi
+		WHERE 
+			pi.project_id = cf.project_id
+			AND cf.start_time = #{startTime}
+			AND cf.end_time = #{endTime}
+			and pi.creater = #{personCode}
+		LIMIT 1
+	</select>
+
+    <insert id="saveExamineData" parameterType="list">
+        insert into course_fee_approve( serial_number,dep_type,person_code,approve_order,row_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.serialNumber},#{item.depType},#{item.personCode},#{item.approveOrder},#{item.rowId})
+        </foreach>
+    </insert>
+
+    <insert id="saveDeList" parameterType="list">
+        INSERT INTO fee_deduct(row_id,start_time,end_time,
+        deduct_type,teacher_code,base_course_fee,k_s,
+        person_coef,course_coef,fee_count,
+        serial_num,gen_date,project_id
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.rowId},#{item.startTime},#{item.endTime},
+            #{item.projectId},#{item.teacherCode},#{item.baseFee},#{item.ksCount},
+            #{item.personFactor},#{item.courseFactor},#{item.kcCount},
+            #{item.serialNumber},now(),0
+            )
+        </foreach>
+    </insert>
+
+    <insert id="saveFeeDeduct" parameterType="list">
+        INSERT INTO fee_deduct(row_id,start_time,end_time,
+        deduct_type,teacher_code,base_course_fee,k_s,
+        person_coef,course_coef,fee_count,
+        serial_num,gen_date,project_id,status,fee_type
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.rowId},#{item.startTime},#{item.endTime},
+            #{item.projectId},#{item.teacherCode},#{item.baseFee},#{item.ksCount},
+            #{item.personFactor},#{item.courseFactor},#{item.kcCount},
+            #{item.serialNumber},now(),#{item.projectCode},#{item.status},#{item.feeType}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteLastSave" parameterType="hashMap">
+		delete from course_fee where serial_number = #{serialNumber};
+		delete from fee_deduct where serial_num = #{serialNumber};
+		delete from course_fee_approve where serial_number = #{serialNumber};
+		delete from fee_deduct where serial_num = #{serialNumber} and project_id != 0;
+	</delete>
+
+    <update id="updatefeeStatus" parameterType="string">
+		update course_fee set status='0',approveOrder='0' where serial_number = #{serialNumber}
+	</update>
+
+    <select id="queryKcDetatils" parameterType="hashMap" resultType="hashMap">
+        SELECT cf.row_id rowId,
+        cf.start_time startTime,
+        cf.end_time endTime,
+        cf.project_id projectId,
+        CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+        ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+        (SELECT os.organize_name FROM project_info pi,organize_struct os WHERE project_id = cf.project_id AND
+        os.organize_code = pi.dep_name) depName,
+        cf.teacher_code teacherCode,
+        ti.teacher_name teacherName,
+        ti.id_card idCard,
+        dd.name teacherType,
+        cf.course_id courseId,
+        dd1.name courseName,
+        cf.base_fee baseFee,
+        cf.hour_actual hourActual,
+        cf.person_factor personFactor,
+        cf.course_factor courseFactor,
+        cf.serial_number serialNumber,
+        cf.fee_course feeCourse,
+        cf.fee_type feeType
+        <!-- FROM course_fee cf,teacher_info ti,data_dic dd,data_dic dd1
+        WHERE cf.teacher_code = ti.teacher_code
+        and ti.teacher_type = dd.code
+        and cf.course_id = dd1.code -->
+        FROM course_fee cf LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+        LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+        LEFT JOIN data_dic dd1 ON cf.course_id = dd1.code
+        WHERE 1 = 1
+        <if test="serialNumber != '' and serialNumber != null">
+            and cf.serial_number = #{serialNumber}
+        </if>
+        <!-- <if test="status != '' and status != null">
+            AND cf.status = #{status}
+        </if> -->
+    </select>
+
+    <select id="projectKcQuery" parameterType="hashMap" resultType="hashMap">
+        select cf.row_id rowId,
+        cf.start_time startTime,
+        cf.end_time endTime,
+        cf.project_id projectId,
+        cf.fee_course feeCourse,
+        cf.serial_number serialNumber,
+        cf.year,
+        cf.month,
+        cf.status,
+        cf.memo,
+        cf.create_time createTime,
+        cf.hour_actual hourActual
+        from course_fee cf WHERE 1=1
+        <if test="serialNumbers != null and serialNumbers.size()>0">
+            and cf.serial_number in
+            <foreach collection="serialNumbers" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="1>serialNumbers.size()">
+            and cf.serial_number in (11111)
+        </if>
+        <if test="serialNumber != null and serialNumber != ''">AND cf.serial_number like
+            CONCAT('%',#{serialNumber},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">AND cf.create_time <![CDATA[>=]]> #{startTime}</if>
+        <if test="endTime != null and endTime != ''">AND cf.create_time  <![CDATA[<=]]> #{endTime}</if>
+    </select>
+
+    <select id="getSerialNumbers" resultType="java.lang.String">
+        select serial_number as serialNumber from course_fee where
+        project_id in
+        <foreach collection="myAuth" open="(" close=")" separator="," item="item">
+            #{item.projectId}
+        </foreach>
+        group by serial_number
+    </select>
+
+    <select id="getKCDetail" parameterType="map" resultType="map">
+        SELECT
+        cf.row_id rowId,
+        cf.start_time startTime,
+        cf.end_time endTime,
+        cf.project_id projectId,
+        cf.teacher_code teacherCode,
+        ti.teacher_name teacherName,
+        dd.name teacherType,
+        cf.course_id courseId,
+        dd1.name courseName,
+        cf.base_fee baseFee,
+        cf.hour_actual hourActual,
+        cf.person_factor personFactor,
+        cf.course_factor courseFactor,
+        cf.serial_number serialNumber,
+        cf.fee_course feeCourse,
+        cf.`year`,
+        cf.`month`,
+        os.organize_name depName,
+        pi.project_name projectName,
+        "0" deductType
+        FROM course_fee cf LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+        LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+        LEFT JOIN data_dic dd1 ON cf.course_id = dd1.code
+        LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+        LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+        WHERE cf.teacher_code = #{teacherCode}
+        AND cf.serial_number in
+        <foreach collection="serialNumbers" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        and cf.mergeSerialNumber = #{mergeSerialNumber}
+        and cf.project_id in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        <if test="projectName != null and projectName != ''">AND pi.project_name LIKE CONCAT('%',#{projectName},'%')
+        </if>
+
+        UNION ALL
+
+        SELECT
+        fd.row_id rowId,
+        fd.start_time startTime,
+        fd.end_time endTime,
+        fd.project_id projectId,
+        fd.teacher_code teacherCode,
+        ti.teacher_name teacherName,
+        dd.name teacherType,
+        "" courseId,
+        "" courseName,
+        fd.base_course_fee baseFee,
+        fd.k_s hourActual,
+        fd.person_coef personFactor,
+        fd.course_coef courseFactor,
+        fd.serial_num serialNumber,
+        fd.fee_count feeCourse,
+        "" year,
+        "" month,
+        os.organize_name depName,
+        CASE WHEN fd.deduct_type = '1901' THEN '工作量扣除' WHEN fd.deduct_type ='1902' THEN '讲座' WHEN fd.deduct_type ='1903'
+        THEN '补发课酬' END AS projectName,
+        fd.deduct_type deductType
+        FROM fee_deduct fd
+        LEFT JOIN teacher_info ti ON fd.teacher_code = ti.teacher_code
+        LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+        LEFT JOIN project_info pi ON pi.project_id = fd.project_id
+        LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+        WHERE fd.teacher_code = #{teacherCode}
+        AND fd.serial_num in
+        <foreach collection="serialNumbers" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        and fd.mergeSerialNumber = #{mergeSerialNumber}
+        and fd.project_id in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        <if test="projectName != null and projectName != ''">AND pi.project_name LIKE CONCAT('%',#{projectName},'%')
+        </if>
+    </select>
+
+    <!-- 根据流水号删除三表数据 -->
+    <delete id="deleteCourseFeeBySerialNum" parameterType="map">
+		DELETE FROM course_fee WHERE serial_number = #{serialNumber}
+	</delete>
+    <delete id="deleteCourseFeeApproveBySerialNum" parameterType="map">
+		DELETE FROM course_fee_approve WHERE serial_number = #{serialNumber}
+	</delete>
+    <delete id="deleteCourseFeeBackBySerialNum" parameterType="map">
+		DELETE FROM course_fee_back_record WHERE serial_number = #{serialNumber}
+	</delete>
+    <delete id="deleteFeeDeduct" parameterType="map">
+		DELETE FROM fee_deduct WHERE serial_num = #{serialNumber}
+	</delete>
+    <!-- 获取最大流水号 -->
+    <select id="getMaxSerialNum" parameterType="map" resultType="String">
+		SELECT MAX(serial_number) AS MaxSerialNum FROM course_fee WHERE serial_number LIKE #{yearMonth}"%"
+	</select>
+
+    <select id="existFee" resultType="map">
+        SELECT
+        distinct
+        p.project_name as projectName
+        FROM
+        `course_fee` c,
+        project_info p
+        WHERE
+        c.project_id = p.project_id
+        and c.project_id in
+        <foreach collection="ids" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getQueryKCDetail" parameterType="map" resultType="map">
+		SELECT
+			class_date classDate,
+			pi.project_name projectName,
+			dd.`name` courseName,
+			'1' hourCount,
+			psp.base_fee baseFee,
+			psp.person_factor personFactor,
+			psp.course_factor courseFactor,
+			psp.fee_total
+		FROM project_schedule_plan psp
+		LEFT JOIN project_info pi ON pi.project_id = psp.project_id
+		LEFT JOIN data_dic dd ON dd.`code` = psp.course_name
+		WHERE psp.class_date &gt;= #{startTime}
+		AND psp.status = 1
+		AND psp.class_date &lt;= #{endTime}
+		AND teacher_code = #{teacherCode}
+		AND psp.course_name = #{courseId}
+		AND psp.project_id = #{projectId}
+	</select>
+    <select id="classInformationPorjectData" parameterType="hashMap" resultType="hashMap">
+        select
+        pi.project_id projectId,pi.project_code projectCode,pi.project_name projectName,d.name language,os.organize_name
+        depName,os.organize_code,os.up_code upCode,pi.start_time
+        startTime,pi.end_time endTime,
+        pi.count_hour countHour,pi.current_count currentCount,pi.total_income totalIncome,pi.pay_hour payHour,pi.payed
+        payed,pi.status status,dc.name projectType,
+        pi.creater creater,pi.create_time createTime,pi.tempCode
+        from (
+            select cf.project_id projectId
+            from course_fee cf
+            <where>
+                LENGTH(cf.project_id)>4
+            </where>
+            ) pro
+        LEFT JOIN project_info pi on pro.projectId = pi.project_id
+        left join organize_struct os on pi.dep_name = os.organize_code
+        left join data_dic d on pi.language = d.code
+        left join data_dic dc on pi.project_type = dc.code
+        WHERE pi.project_id is not NULL
+        <if test="projectName != null and projectName != ''">
+            and pi.project_name LIKE "%"#{projectName}"%"
+        </if>
+        <if test="depName != null and depName != ''">
+            and os.organize_name LIKE "%"#{depName}"%"
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and pi.start_time > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and #{endTime} > pi.end_time
+        </if>
+        GROUP BY pi.project_id
+    </select>
+    <select id="classInformationTeacherData" parameterType="hashMap" resultType="hashMap">
+        select
+            tea.teacherCode,
+            ti.teacher_name teacherName,
+            ti.tele_num tel,
+            ti.id_card idCard,
+            ti.sex sex,
+            pi.project_name projectName,
+            pi.project_code projectCode,
+            os.organize_name depName,
+            d2.name teacherType,
+            d1.name nationality
+		from (
+                select cf.teacher_code teacherCode,cf.project_id projectId
+                from course_fee cf
+                where LENGTH(cf.project_id)>4
+                ) tea
+		LEFT JOIN teacher_info ti on ti.teacher_code = tea.teacherCode
+		LEFT JOIN project_info pi on pi.project_id = tea.projectId
+		LEFT JOIN organize_struct os on pi.dep_name = os.organize_code
+		LEFT JOIN data_dic d1 ON ti.nationality = d1.code
+		LEFT JOIN data_dic d2 ON teacher_type = d2.code
+		WHERE pi.project_id is not NULL and ti.teacher_code is not NULL
+        <if test="projectName != null and projectName != ''">
+            and pi.project_name LIKE "%"#{projectName}"%"
+        </if>
+        <if test="depName != null and depName != ''">
+            and os.organize_name LIKE "%"#{depName}"%"
+        </if>
+        <if test="teacherName != null and teacherName != ''">
+            and ti.teacher_name LIKE "%"#{teacherName}"%"
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and pi.start_time > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and #{endTime} > pi.end_time
+        </if>
+		GROUP BY tea.teacherCode,tea.projectId
+    </select>
+
+    <select id="getResearchKc" parameterType="map" resultType="map">
+
+        <if test="onlyDeduct == null or onlyDeduct == ''">
+            SELECT
+                cf.`year`,
+                cf.`month`,
+                cf.project_id,
+                cf.start_time startTime,
+                cf.end_time endTime,
+                CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+                    ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+                ti.teacher_name teacherName,
+                dd1.`name` teacherType,
+                dd.`name` courseName,
+                cf.base_fee baseFee,
+                cf.hour_actual hourActual,
+                cf.person_factor personFactor,
+                cf.course_factor courseFactor,
+                cf.fee_course feeCourse,
+                cf.mergeSerialNumber,
+                cf.serial_number serialNumber,
+                cf.teacher_code teacherCode,
+                "0" deductType,
+                dd2.`name` `language`,
+                os.organize_name osName,
+                os1.organize_name osName1
+            FROM  course_fee cf
+            LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+            LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+            LEFT JOIN data_dic dd ON dd.`code` = cf.course_id
+            LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+            LEFT JOIN data_dic dd2 ON dd2.`code` = pi.`language`
+            LEFT JOIN organize_struct os ON os.organize_code = PI.dep_name
+            LEFT JOIN organize_struct os1 ON os1.organize_code = os.up_code
+            WHERE ti.teacher_code in
+            <foreach collection="teacherList" open="(" separator="," close=")" item="item">
+                #{item.dataCode}
+            </foreach>
+            AND cf.is_send = '1'
+            <if test="teacherName != null and teacherName != ''">and ti.teacher_name like "%"#{teacherName}"%"</if>
+            <if test="projectName != null and projectName != ''">and pi.project_name like "%"#{projectName}"%"</if>
+            <if test="teacherType != null and teacherType != ''">and ti.teacher_type = #{teacherType}</if>
+            <if test="depName != null and depName != ''">and os.organize_name like "%"#{depName}"%"</if>
+            <if test="startYear != null and startYear != ''">
+                AND case when (cf.`year` = #{startYear}) then cf.month <![CDATA[>=]]> #{startMonth}
+                when (cf.year <![CDATA[>]]> #{startYear}) then cf.year <![CDATA[>]]> #{startYear}
+                when (cf.year <![CDATA[<]]> #{startYear} ) then cf.year <![CDATA[<]]> #{startYear} end
+            </if>
+            <if test="endYear != null and endYear != ''">
+                AND case when (cf.`year` = #{endYear}) then cf.month <![CDATA[<=]]> #{endMonth}
+                when (cf.year <![CDATA[>]]> #{endYear}) then cf.year <![CDATA[>]]> #{endYear}
+                when (cf.year <![CDATA[<]]> #{endYear} ) then cf.year <![CDATA[<]]> #{endYear} end
+            </if>
+        </if>
+        <if test="deduct == null and onlyDeduct == null">
+                UNION ALL
+        </if>
+        <if test="deduct == null or deduct == ''">
+            SELECT distinct
+                dd.`year`,
+                dd.`month`,
+                fd.project_id projectId,
+                fd.start_time startTime,
+                fd.end_time endTime,
+                CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902' THEN '讲座' ELSE '补发工资' END projectName,
+                dd.teacherName,
+                dd.teacherType,
+                "" courseName,
+                fd.base_course_fee baseFee,
+                fd.k_s hourActual,
+                fd.person_coef personFactor,
+                fd.course_coef courseFactor,
+                fd.fee_count feeCourse,
+                fd.mergeSerialNumber,
+                fd.serial_num serialNumber,
+                fd.teacher_code teacherCode,
+                fd.deduct_type deductType,
+            dd2.`name` `language`,
+            os.organize_name osName,
+            os1.organize_name osName1
+            FROM fee_deduct fd
+            LEFT JOIN (
+                SELECT
+                cf.`year`,
+                cf.`month`,
+                cf.project_id,
+                cf.start_time startTime,
+                cf.end_time endTime,
+                CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+                    ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+                ti.teacher_name teacherName,
+                dd1.`name` teacherType,
+                dd.`name` courseName,
+
+                cf.base_fee baseFee,
+                cf.hour_actual hourActual,
+                cf.person_factor personFactor,
+                cf.course_factor courseFactor,
+                cf.fee_course feeCourse,
+                cf.mergeSerialNumber,
+                cf.serial_number serialNumber,
+                cf.teacher_code teacherCode
+            FROM  course_fee cf
+            LEFT JOIN project_info PI ON cf.project_id = pi.project_id
+            LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+            LEFT JOIN data_dic dd ON dd.`code` = cf.course_id
+            LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+
+            LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+            LEFT JOIN organize_struct os1 ON os1.organize_code = os.up_code
+            WHERE ti.teacher_code in
+            <foreach collection="teacherList" open="(" separator="," close=")" item="item">
+                #{item.dataCode}
+            </foreach>
+            <if test="teacherName != null and teacherName != ''">and ti.teacher_name like "%"#{teacherName}"%"</if>
+            <if test="teacherType != null and teacherType != ''">and ti.teacher_type = #{teacherType}</if>
+            <if test="startYear != null and startYear != ''">
+                AND case when (cf.`year` = #{startYear}) then cf.month <![CDATA[>=]]> #{startMonth}
+                when (cf.year <![CDATA[>]]> #{startYear}) then cf.year <![CDATA[>]]> #{startYear}
+                when (cf.year <![CDATA[<]]> #{startYear} ) then cf.year <![CDATA[<]]> #{startYear} end
+            </if>
+            <if test="endYear != null and endYear != ''">
+                AND case when (cf.`year` = #{endYear}) then cf.month <![CDATA[<=]]> #{endMonth}
+                when (cf.year <![CDATA[>]]> #{endYear}) then cf.year <![CDATA[>]]> #{endYear}
+                when (cf.year <![CDATA[<]]> #{endYear} ) then cf.year <![CDATA[<]]> #{endYear} end
+            </if>
+            ) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code
+            LEFT JOIN project_info pi ON pi.project_id = fd.project_id
+            LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+            LEFT JOIN organize_struct os1 ON os1.organize_code = os.up_code
+            LEFT JOIN data_dic dd2 ON dd2.`code` = pi.`language`
+            WHERE fd.status='3'
+            <if test="depName != null and depName != ''">and os.organize_name like "%"#{depName}"%"</if>
+            <if test="projectName != null and projectName != ''">and pi.project_name like "%"#{projectName}"%"</if>
+            and fd.deduct_type='1901'
+            AND dd.startTime = fd.start_time
+            AND dd.endTime = fd.end_time
+    </if>
+    </select>
+</mapper>

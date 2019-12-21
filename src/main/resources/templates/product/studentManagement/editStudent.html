@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>北外OA</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+    <link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+    <link rel="stylesheet" th:href="@{/iconfont/iconfont.css}">
+    <script th:src="@{/layui/layui.js}"></script>
+    <script th:src="@{/js/jquery.js}"></script>
+    <script th:src="@{/js/master/master.js}"></script>
+</head>
+<style>
+    /* 谷歌 */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+    /* 火狐 */
+    input{
+        -moz-appearance:textfield;
+    }
+</style>
+<body>
+<form class="layui-form" id="student" style="width:70%;margin: 20px auto;">
+    <input type="hidden" name="studentCode" th:value="${data.studentCode}">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">学员姓名</span></label>
+        <div class="layui-input-block">
+            <input type="text" name="name" placeholder="请输入学员姓名" th:value="${data.name}" autocomplete="off"
+                   class="layui-input"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">英文名字</label>
+        <div class="layui-input-block">
+            <input type="text" name="englishName" placeholder="请输入学员姓名" th:value="${data.englishName}" class="layui-input"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">学号</span></label>
+        <div class="layui-input-block">
+            <input type="text" disabled placeholder="请输入学号" th:value="${data.serial}" autocomplete="off"
+                   class="layui-input"/>
+            <input type="hidden" name="serial"  th:value="${data.serial}"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">性别</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="1" title="男" th:checked="${data['sex']== '1'}" />
+            <input type="radio" name="sex" value="0" title="女" th:checked="${data['sex']== '0'}" />
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">身份证号</label>
+        <div class="layui-input-block">
+            <input type="text" name="idcard" placeholder="请输入身份证号" th:value="${data.idcard}" autocomplete="off"
+                   class="layui-input"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">联系电话</label>
+        <div class="layui-input-block">
+            <input type="text" name="telephone" placeholder="请输入电话" th:value="${data.telephone}" autocomplete="off"
+                   class="layui-input"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">项目名称</label>
+        <div class="layui-input-block">
+            <select name="projectIds" xm-select="selects2" xm-select-search="" xm-select-skin="primary">
+                <option  th:each="pro,project:${projects}" th:value="${pro.projectId}" th:selected="${proStr.indexOf(pro.projectId)} > 0" th:text="@{${pro.projectName}+'|'+${pro.projectCode}}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">状态</label>
+        <div class="layui-input-block">
+            <input type="radio" name="status" value="1" title="启用" th:checked="${data['status']== '1'}"/>
+            <input type="radio" name="status" value="0" title="禁用" th:checked="${data['status']== '0'}"/>
+        </div>
+    </div>
+    <input type="hidden" name="pic" th:value="${data['pic']}"/>
+</form>
+<div class="layui-form-item" style="width:70%;margin: 0 auto;">
+    <label class="layui-form-label">照片</label>
+    <div class="layui-input-block" th:if="${data['pic'] != ''} ">
+        <button type="button" class="layui-btn" id="studentPic"><i class="layui-icon"></i>上传图片</button>
+        <span id="upPicName"></span>
+        <img th:src="${data['pic']}" style="width: 50px;height: 50px" id="imgPic">
+    </div>
+    <div class="layui-input-block" th:if="${data['pic'] == ''} ">
+        <button type="button" class="layui-btn" id="studentPic"><i class="layui-icon"></i>上传图片</button>
+        <span id="upPicName"></span>
+        <label th:text="${data['pic']}"></label>
+    </div>
+</div>
+<div class="layui-form-item" style="margin-top: 35px;text-align: center">
+    <button class="layui-btn layui-btn-sm" id="add_editStudent">确定</button>
+    <button class="layui-btn layui-btn-primary layui-btn-sm" id="add_closeWindow">取消</button>
+</div>
+<script th:src="@{/js/project/addStudent.js}"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProjectApproveOptionDao">
+    <resultMap type="ProjectApproveOption" id="projectApproveOptionMap">
+        <id property="rowId" column="row_id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="personCode" column="person_code"/>
+        <result property="approveDateTime" column="approve_date_time"/>
+        <result property="approveResult" column="approve_result"/>
+        <result property="approveOption" column="approve_option"/>
+        <result property="approveOrder" column="approve_order"/>
+        <result property="submitType" column="submit_type"/>
+    </resultMap>
+    <sql id="queryBeenApprovedLiePro">
+		pi.project_id id,pi.create_time,1 auditType
+		,pi.project_name projectName,os.organize_name depName,pi.project_code projectCode,pi.count_hour countHour,
+		dd1.name projectType,dd1.code projectTypeCode,dd2.name language,dd2.code languageTypeCode,pi.total_income totalIncome,pi.payed payed,pi.pay_hour payHour,
+		pi.start_time startTime,pi.end_time endTime,p.name personName,pi.approvaler,pi.status status
+	</sql>
+    <sql id="queryBeenApprovedLieProHis">
+		pi.change_id id,pi.create_time,2 auditType,pi.project_name projectName,os.organize_name depName,pi.project_code projectCode,pi.count_hour countHour,
+		dd1.name projectType,dd1.code projectTypeCode,dd2.name language,dd2.code languageTypeCode,pi.total_income totalIncome,pi.payed payed,pi.pay_hour payHour,
+		pi.start_time startTime,pi.end_time endTime,p.name personName,pi.approvaler,pi.status status
+	</sql>
+    <select id="preApproved" parameterType="hashMap" resultType="hashMap">
+        select t.* from(
+        SELECT
+        <include refid="queryBeenApprovedLiePro"></include>
+        FROM
+        project_info pi
+        LEFT JOIN organize_struct os
+        ON os.organize_code = pi.dep_name
+        LEFT JOIN person p
+        ON pi.approvaler = p.person_code
+        LEFT JOIN data_dic dd1
+        ON pi.project_type = dd1.code
+        LEFT JOIN data_dic dd2
+        ON pi.language = dd2.code
+        <where>
+            (pi.status = 2 or pi.status = 6)
+            <if test="personCode != null and personCode != ''">
+                AND pi.approvaler = #{personCode}
+            </if>
+            <if test="projectName != null and projectName != ''">
+                AND pi.project_name LIKE "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                AND dd1.code = #{projectType}
+            </if>
+            <if test="languageType != null and languageType != ''">
+                AND dd2.code = #{languageType}
+            </if>
+        </where>
+        UNION
+        SELECT
+        <include refid="queryBeenApprovedLieProHis"></include>
+        FROM
+        project_info_hist pi
+        LEFT JOIN organize_struct os
+        ON os.organize_code = pi.dep_name
+        LEFT JOIN person p
+        ON pi.approvaler = p.person_code
+        LEFT JOIN data_dic dd1
+        ON pi.project_type = dd1.code
+        LEFT JOIN data_dic dd2
+        ON pi.language = dd2.code
+        <where>
+            (pi.status = 2 or pi.status = 6)
+            <if test="personCode != null and personCode != ''">
+                AND pi.approvaler = #{personCode}
+            </if>
+            <if test="projectName != null and projectName != ''">
+                AND pi.project_name LIKE "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                AND dd1.code = #{projectType}
+            </if>
+            <if test="languageType != null and languageType != ''">
+                AND dd2.code = #{languageType}
+            </if>
+        </where>
+        ) t
+    </select>
+    <select id="afterApproved" parameterType="hashMap" resultType="hashMap">
+        select t.* from(
+        select pao.row_id rowId,pao.approve_date_time,pi.project_id id,1 auditType,pi.project_name projectName,os.organize_name depName,dd1.name projectType,dd2.name
+        language,pi.count_hour countHour,pi.total_income totalIncome, pi.pay_hour payHour,pi.payed payed,pi.start_time startTime,pi.end_time endTime,p.name,
+        pao.approve_result approveResult,pi.project_code projectCode
+        from project_approve_option pao
+        left join project_info pi on pao.project_id = pi.project_id
+        left join organize_struct os
+        on os.organize_code = pi.dep_name
+        left join person p
+        on pao.person_code = p.person_code
+        left join data_dic dd1
+        on pi.project_type = dd1.code
+        left join data_dic dd2
+        on pi.language = dd2.code
+        <where>
+            pao.approve_result in (1,-1) and pi.project_id is not null and pi.project_id !=''
+            <if test="personCode != null and personCode != ''">
+                and pao.person_code = #{personCode}
+            </if>
+            <if test="projectName != null and projectName != ''">
+                and pi.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                and dd1.code = #{projectType}
+            </if>
+            <if test="languageType != null and languageType != ''">
+                and dd2.code = #{languageType}
+            </if>
+        </where>
+        union
+        select pao.row_id,pao.approve_date_time,pih.change_id id,2 auditType,pih.project_name projectName,os.organize_name depName,dd1.name projectType,dd2.name
+        language,pih.count_hour countHour,pih.total_income totalIncome,pih.pay_hour payHour,pih.payed payed,pih.start_time startTime,pih.end_time endTime,p.name,
+        pao.approve_result approveResult,pih.project_code projectCode
+        from project_approve_option pao
+        left join project_info_hist pih
+        on pao.change_id = pih.change_id
+        left join organize_struct os
+        on os.organize_code = pih.dep_name
+        left join person p
+        on pih.approvaler = p.person_code
+        left join data_dic dd1
+        on pih.project_type = dd1.code
+        left join data_dic dd2
+        on pih.language = dd2.code
+        <where>
+            pao.approve_result in (1,-1) and pih.change_id is not null and pih.change_id !=''
+            <if test="personCode != null and personCode != ''">
+                and pao.person_code = #{personCode}
+            </if>
+            <if test="projectName != null and projectName != ''">
+                and pih.project_name like "%${projectName}%"
+            </if>
+            <if test="projectType != null and projectType != ''">
+                and dd1.code = #{projectType}
+            </if>
+            <if test="languageType != null and languageType != ''">
+                and dd2.code = #{languageType}
+            </if>
+        </where>
+        ) t
+    </select>
+    <select id="queryOpioninList" parameterType="hashMap" resultType="hashMap">
+        select pi.project_name projectName,pt.name depName,pao.approve_option approveOption,p.name,pao.approve_result approveResult,pao.approve_date_time dataTime
+        from project_approve_option pao
+        left join project_info pi on pao.project_id = pi.project_id
+        left join data_dic pt on pi.project_type = pt.code
+        left join person p on pao.person_code = p.person_code
+        where
+        pao.row_id = #{rowId} and pi.project_id is not null
+        union
+        select pih.project_name projectName,pt.name depName,pao.approve_option approveOption,p.name,pao.approve_result approveResult,pao.approve_date_time dataTime
+        from project_approve_option pao
+        left join project_info_hist pih on pao.change_id = pih.change_id
+        left join data_dic pt on pih.project_type = pt.code
+        left join person p on pao.person_code = p.person_code
+        where
+        pao.row_id = #{rowId} and pih.change_id is not null
+    </select>
+    <select id="getCurrentProjectApproveOption" parameterType="ProjectApproveOption" resultMap="projectApproveOptionMap">
+        select row_id,project_id,change_id,person_code,approve_date_time,approve_result,approve_option,approve_order,submit_type
+        from project_approve_option
+        <where>
+            <if test="projectId != null and projectId != ''">
+               and project_id =#{projectId}
+            </if>
+            <if test="changeId != null and changeId != ''">
+               and change_id =#{changeId}
+            </if>
+            <if test="personCode != null and personCode != ''">
+                and person_code =#{personCode}
+            </if>
+            and approve_result = '0' and submit_type = #{submitType}
+        </where>
+        order by approve_order limit 1
+    </select>
+    <select id="getNextProjectApproveOption" parameterType="ProjectApproveOption" resultMap="projectApproveOptionMap">
+        select row_id,project_id,change_id,person_code,approve_date_time,approve_result,approve_option,approve_order,submit_type
+        from project_approve_option
+        <where>
+            <if test="projectId != null and projectId != ''">
+                project_id =#{projectId}
+            </if>
+            <if test="changeId != null and changeId != ''">
+                change_id =#{changeId}
+            </if>
+            and approve_result = '0' and submit_type = #{submitType} and approve_order = #{approveOrder}
+        </where>
+    </select>
+    <update id="auditProject" parameterType="ProjectApproveOption">
+        update project_approve_option
+        set approve_date_time = #{approveDateTime},approve_result = #{approveResult},approve_option = #{approveOption}
+        <where>
+            row_id = #{rowId}
+        </where>
+    </update>
+    <delete id="delNextProjectApproveOption" parameterType="ProjectApproveOption">
+        delete from project_approve_option
+        <where>
+            <if test="projectId != null and projectId != ''">
+                project_id =#{projectId}
+            </if>
+            <if test="changeId != null and changeId != ''">
+                and change_id =#{changeId}
+            </if>
+            and submit_type =#{submitType} and approve_result = '0' and approve_order > #{approveOrder}
+        </where>
+    </delete>
+
+    <update id="updateProjectApprovaler" parameterType="Project">
+        update project_info
+        <set>
+            approvaler = #{approvaler}
+            <if test="status == 6">
+                ,status = #{status}
+            </if>
+        </set>
+        where project_id = #{projectId}
+    </update>
+
+    <update id="updateProjectStatus" parameterType="Project">
+        update project_info set status = #{status} where project_id = #{projectId}
+    </update>
+
+    <update id="updateChangeStatus" parameterType="Project">
+        update project_info_hist set status = #{status} where change_id = #{changeId}
+    </update>
+
+    <update id="updateChangeApprovaler" parameterType="Project">
+        update project_info_hist
+        <set>
+            approvaler = #{approvaler}
+            <if test="status == 6">
+                ,status = #{status}
+            </if>
+        </set>
+        where change_id = #{changeId}
+    </update>
+</mapper>

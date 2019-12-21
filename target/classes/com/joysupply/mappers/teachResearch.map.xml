@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.TeachResearchRoomDao">
+    <resultMap type="TeachResearchRoom" id="teachResearchRoomMap">
+        <id property="officeCode" column="office_code"/>
+        <result property="officeName" column="office_name"/>
+        <result property="creater" column="creater"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+    <select id="getResearchOfficeList" parameterType="hashMap" resultType="hashMap">
+        select ro.office_code officeCode,ro.office_name officeName,ro.creater ,ro.create_date createDate,count(t.teacher_code) teacherCount from research_office ro
+        left join teacher_info t on ro.office_code = t.research_office
+        <where>
+            <if test="officeName != null and officeName != ''">
+                office_name like "%${officeName}%"
+            </if>
+        </where>
+        group by ro.office_code
+        ORDER BY ro.create_date DESC,ro.office_code DESC 
+    </select>
+
+    <select id="getResearchOfficeListNoPage" resultMap="teachResearchRoomMap">
+        select office_code,office_name,creater,create_date from research_office
+    </select>
+
+    <select id="getResearchOffice" parameterType="string" resultMap="teachResearchRoomMap">
+        select office_code,office_name,creater,create_date from research_office where office_code = #{offficeCode}
+    </select>
+
+    <select id="getResearchOfficeCodeList" resultType="string">
+        select office_code from research_office
+    </select>
+
+    <insert id="addResearchOffice" parameterType="TeachResearchRoom">
+        insert into research_office values(
+          #{officeCode},#{officeName},#{creater},#{createDate}
+        )
+    </insert>
+
+    <update id="updResearchOffice" parameterType="TeachResearchRoom">
+        update research_office
+        <set>
+            <if test="officeName != null and officeName != ''">
+                office_name = #{officeName}
+            </if>
+        </set>
+        where office_code = #{officeCode}
+    </update>
+
+    <delete id="delResearchOffice" parameterType="TeachResearchRoom">
+        delete from research_office where office_code = #{officeCode}
+    </delete>
+
+    <select id="selectChecking" parameterType="java.lang.String" resultType="hashMap">
+        select * from research_office where office_name = #{office_name}
+    </select>
+</mapper>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+
+<body>
+	<div>
+		<table class="layui-table" lay-skin="line" id="kcApproveTable" lay-filter="kcApproveTable"></table>
+	</div>
+</body>
+<script type="text/javascript">
+	var startTime = '[[${startTime}]]';
+	var endTime = '[[${endTime}]]';
+	var teacherCode = '[[${teacherCode}]]';
+	var courseId = '[[${courseId}]]';
+	var projectId = '[[${projectId}]]';
+	var table;
+	layui.use(['element', 'form', 'table', 'layer'], function () {
+	    var element = layui.element;
+	    var form = layui.form;
+	    table = layui.table;
+	    var layer = layui.layer;
+	    tableIns = table.render({
+        id: 'kcApproveTable',
+        elem: '#kcApproveTable',
+        cellMinWidth: 80,
+        url: '/kcManager/getQueryKCDetail', //数据接口
+        skin: 'line',
+        where: {
+        	startTime : startTime,
+        	endTime : endTime,
+        	teacherCode : teacherCode,
+        	courseId : courseId,
+        	projectId : projectId
+        },
+        initSort: {
+            field: 'classDate' //排序字段，对应 cols 设定的各字段名
+            ,type: 'desc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+        },
+        totalRow: true,
+        cols: [
+             [  
+             	{
+                    title: '序号',
+                    type: 'numbers',
+                    width: '10%',
+                    totalRowText: '合计',
+                    align: 'center',
+                    fixed: 'left',
+                },
+                {
+                    field: 'classDate',
+                    title: '上课日期',
+                    width: '10%',
+                    align: 'center'
+                },
+                {
+                    field: 'projectName',
+                    title: '项目名称',
+                    width: '20%',
+                    align: 'center'
+                },
+                {
+                    field: 'courseName',
+                    title: '课程名称',
+                    width: '20%',
+                    align: 'center'
+                },
+                {
+                    field: 'hourCount',
+                    title: '课时',
+                    width: '8%',
+                    align: 'center',
+                    totalRow: true,
+                    decimals: '0'
+                },
+                {
+                    field: 'baseFee',
+                    title: '基础课酬',
+                    width: '8%',
+                    align: 'center'
+                },
+                {
+                    field: 'personFactor',
+                    title: '人数系数',
+                    width: '8%',
+                    align: 'center'
+                },
+                {
+                    field: 'courseFactor',
+                    title: '课程系数',
+                    width: '8%',
+                    align: 'center'
+                },
+                { 
+                	field: 'fee_total',
+                    title: '课酬',
+                    width: '8%',
+                    align: 'center',
+                    totalRow: true,
+                    templet: function (d) {
+						return new Number(d.fee_total).toFixed(2);
+                    }
+                }
+            ]
+        ]
+    });
+	});
+</script>
+</html>

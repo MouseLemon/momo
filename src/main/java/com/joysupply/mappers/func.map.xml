@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.FuncDao">
+    <!-- 功能 -->
+    <resultMap type="Func" id="funcTypeMap">
+        <id property="menuCode" column="menu_code"/>
+        <id property="funcCode" column="func_code"/>
+        <result property="funcName" column="func_name"/>
+        <result property="funcUrl" column="func_url"/>
+        <result property="funcIcon" column="func_icon"/>
+    </resultMap>
+    <sql id="funcField">func_code,func_name,func_url,func_icon</sql>
+    <!-- 查询功能列表 -->
+    <select id="getFuncList" resultSetType="SCROLL_INSENSITIVE" resultMap="funcTypeMap">
+        select
+        <include refid="funcField"/>
+        from
+        func
+    </select>
+    <!-- 根据菜单编码menu_code查询对应的功能列表数据 -->
+    <select id="getMenuFuncListByMenuCode" resultSetType="SCROLL_INSENSITIVE" resultMap="funcTypeMap">
+		SELECT
+			f.func_code,f.func_name,f.func_url,f.func_icon
+		FROM
+			menu_func mf
+		JOIN func f ON mf.func_code = f.func_code
+		WHERE
+			mf.is_enable = 1
+		AND mf.menu_code = #{menuCode}
+	</select>
+
+    <select id="getFuncListByUser" parameterType="SystemUser" resultType="string">
+        select distinct func_code from role_func where role_code in(
+            select role_code from person_role where person_code = #{personCode}
+        )
+	</select>
+    <select id="getFuncListByRole" parameterType="SystemUser" resultType="string">
+        select func_code from role_func where role_code =#{roleCode}
+	</select>
+    <select id="getAllFuncList" resultMap="funcTypeMap">
+        select m.menu_code,f.func_code,f.func_name,f.func_url,f.func_icon from func f
+        left join menu_func m on f.func_code = m.func_code
+    </select>
+    <select id="getFuncListByMenu" parameterType="Menu" resultMap="funcTypeMap">
+        select m.menu_code,f.func_code,f.func_name,f.func_url,f.func_icon from menu_func m
+        left join func f on f.func_code = m.func_code where m.menu_code = #{menuCode}
+    </select>
+    <delete id="delFuncByRoleCode" parameterType="string">
+        delete from role_func where role_code = #{roleCode}
+    </delete>
+    <insert id="saveRoleFunc" parameterType="Func">
+        insert into role_func (role_code,func_code )
+        values
+        <foreach collection="list" item="func" index="index" separator=",">
+            (#{func.roleCode},#{func.funcCode})
+        </foreach>
+    </insert>
+</mapper>

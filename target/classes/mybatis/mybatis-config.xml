@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <settings>
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+    <typeAliases>
+        <!-- 数据字典 -->
+        <typeAlias alias="DataDictionary" type="com.joysupply.entity.DataDictionary"/>
+        <!-- 组织结构相关 -->
+        <typeAlias alias="JobType" type="com.joysupply.entity.JobType"/>
+        <typeAlias alias="OrganizeType" type="com.joysupply.entity.OrganizeType"/>
+        <typeAlias alias="OrganizeStruct" type="com.joysupply.entity.OrganizeStruct"/>
+        <typeAlias alias="OrganizePeople" type="com.joysupply.entity.OrganizePeople"/>
+        <typeAlias alias="Role" type="com.joysupply.entity.Role"/>
+        <typeAlias alias="RoleMenu" type="com.joysupply.entity.RoleMenu"/>
+        <typeAlias alias="Menu" type="com.joysupply.entity.Menu"/>
+        <typeAlias alias="Func" type="com.joysupply.entity.Func"/>
+        <typeAlias alias="MenuFunc" type="com.joysupply.entity.MenuFunc"/>
+        <!-- 项目相关 -->
+        <typeAlias alias="Project" type="com.joysupply.entity.Project"/>
+        <typeAlias alias="ProjectAndFile" type="com.joysupply.entity.ProjectAndFile"/>
+        <typeAlias alias="ProjectAddFile" type="com.joysupply.entity.ProjectAddFile"/>
+        <typeAlias alias="ProjectApproveOption" type="com.joysupply.entity.ProjectApproveOption"/>
+        <!-- 项目排课计划 -->
+        <typeAlias alias="ProjectSchedulePlan" type="com.joysupply.entity.ProjectSchedulePlan"/>
+        <!-- 教室不可用时段 -->
+        <typeAlias alias="RoomUnuseTimeFrame" type="com.joysupply.entity.RoomUnuseTimeFrame"/>
+        <!-- 教研室 -->
+        <typeAlias alias="TeachResearchRoom" type="com.joysupply.entity.TeachResearchRoom"/>
+        <!-- 学生相关 -->
+        <typeAlias alias="Student" type="com.joysupply.entity.Student"/>
+        <typeAlias alias="CourseScore" type="com.joysupply.entity.CourseScore"/>
+        <typeAlias alias="ClassScore" type="com.joysupply.entity.ClassScore"/>
+        <!--登录用户-->
+        <typeAlias alias="SystemUser" type="com.joysupply.entity.SystemUser"/>
+        <typeAlias alias="Teacher" type="com.joysupply.entity.Teacher"/>
+        <typeAlias alias="ClassRoom" type="com.joysupply.entity.ClassRoom"/>
+        <typeAlias alias="TimeSheet" type="com.joysupply.entity.TimeSheet"/>
+        <typeAlias alias="ProjectInfo" type="com.joysupply.entity.ProjectInfo"/>
+    </typeAliases>
+</configuration>

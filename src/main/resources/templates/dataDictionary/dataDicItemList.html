@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <button id="add" class="layui-btn layui-btn-sm" th:if="${isfixed eq 0}">新建</button>
+    <input id="parentCode" type="hidden" th:value="${parentCode}">
+    <table class="layui-table" lay-skin="line" id="dataDic" lay-filter="tableContent" style="margin-top: 0px;">
+    </table>
+    <script type="text/html" id="operation">
+        {{# if(d.isfixed == 0){ }}
+        <a class="joysupply-txt-color-on" lay-event="edits">编辑</a>
+        <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes">删除</a>
+        {{# }else{ }}
+        {{# } }}
+    </script>
+</div>
+<script type="text/javascript">
+    var parentCode = $("#parentCode").val();
+    var table;
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $("#add").click(function () {
+            openwindow("/api/dic/addDataDicPage?parentCode=" + parentCode, "新建数据字典", "700", "250", false, reload);
+        })
+
+        window.reload = function () {
+            tableIns.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#dataDic',
+            cellMinWidth: 80,
+            url: '/api/dic/getDicItemList?parentCode=' + parentCode,
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        field: 'name',
+                        title: '名称'
+                    },
+                    {
+                        field: 'note',
+                        title: '备注',
+                        align: 'center',
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        toolbar: '#operation'
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        $('#search').click(function () {
+            var params = {
+                name: $('#name').val()
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var code = data.code;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/api/dic/editDataDicPage?code=" + code, "修改字典", "700", "250", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.confirm("您确定要删除吗？", {
+                        icon: 3,
+                        title: "删除确认"
+                    },
+                    function (index) {
+                        var map = {"dicCode": code};
+                        $.ajax({
+                            type: "post",
+                            url: '/api/dic/delete',
+                            data: JSON.stringify(map),
+                            contentType: "application/json",
+                            success: function (data) {
+                                tipinfo("删除成功!");
+                                tableIns.reload({
+                                    page: {
+                                        curr: 1
+                                    }
+                                });
+                            },
+                            error: function () {
+                                tipinfo(data.message);
+                            }
+                        })
+                        layer.close(index);
+                    },
+                    function (index) {
+                        layer.close(index);
+                    }
+                );
+            }
+        });
+    });
+</script>
+</body>
+</html>

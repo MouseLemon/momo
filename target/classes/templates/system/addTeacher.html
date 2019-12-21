@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    #resumeName,#picName {
+        border: none;
+    }
+    .layui-form-label2 {
+        width: 102px;
+    }
+
+    .layui-input-block2 {
+        margin-left: 132px;
+    }
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" id="formDemo">
+        <div style="width: 32.333%; float: left;">
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2"><font style="color: red">*
+                </font>教师姓名：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" id="teacherName" name="teacherName"
+                           onblur="updateAccountName()" autocomplete="off"
+                           placeholder="请输入" class="layui-input" th:value="${teacher?.teacherName}">
+
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">所得项目：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" id="project" name="project"
+                           autocomplete="off" placeholder="请输入" class="layui-input" th:value="${teacher?.project}">
+
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">性别：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="sex" id="sex" class="layui-input">
+                        <option th:selected="${teacher?.sex == 1}" value="1">男</option>
+                        <option th:selected="${teacher?.sex == 2}" value="2">女</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">语种：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="language" id="language" class="layui-input" lay-search="">
+                        <option value=""></option>
+                        <option th:each="item:${language}" th:value="${item.code}" th:text="${item.name}"
+                                th:selected="${teacher?.language eq item.code}"></option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">国籍：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="nationality" id="nationality" class="layui-input" lay-search="">
+                        <option value=""></option>
+                        <option th:each="item:${nationality}" th:value="${item.code}" th:text="${item.name}"
+                                th:selected="${teacher?.nationality eq item.code}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">教研室：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="researchOffice" id="researchOffice" class="layui-input">
+                        <option value=""></option>
+                        <option th:each="item:${researchOffice}" th:value="${item.officeCode}"
+                                th:text="${item.officeName}"
+                                th:selected="${teacher?.researchOffice eq item.officeCode || researchOfficeCode eq item.officeCode}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">照片：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <button type="button" class="layui-btn" id="test1">
+                        <i class="layui-icon">&#xe67c;</i>上传照片
+                    </button>
+                   <!-- <img alt="" th:src="@{${teacher?.pic}}" style="margin-top: 20px" id="imgShow" width="60%"
+                         height="100px">-->
+                    <input type="hidden" name="pic" id="pic" th:value="${teacher?.pic}">
+                    <input type="text" readonly name="picName" class="layui-input"  id="picName" th:value="${teacher?.picName}">
+                </div>
+            </div>
+
+        </div>
+        <div style="width: 32.333%; float: left;">
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2"><font style="color: red">*
+                </font>开户姓名：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" id="accountName" name="accountName"
+                           autocomplete="off" placeholder="请输入" class="layui-input" th:value="${teacher?.accountName}">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">身份证号：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input onblur="isRight(this)" type="text" id="idCard" name="idCard"
+                           autocomplete="off" placeholder="请输入" class="layui-input" th:value="${teacher?.idCard}">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">银行卡号：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" name="bankCode" id="bankCode" th:value="${teacher?.bankCode}" autocomplete="off"
+                           class="layui-input" onblur="checkBankCode()">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">入境日期：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" name="entryDate" id="entryDate" th:value="${teacher?.entryDate}"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">职称：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="job" id="job" class="layui-input">
+                        <option value=""></option>
+                        <option th:each="item:${job}" th:value="${item.code}" th:text="${item.name}"
+                                th:selected="${teacher?.job eq item.code}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">预计出境日期：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" name="prvOutDate" id="prvOutDate" th:value="${teacher?.prvOutDate}"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">个人简历：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <button type="button" class="layui-btn" id="resumeBtn">
+                        <i class="layui-icon">&#xe67c;</i>上传简历
+                    </button>
+                    <input type="text" readonly class="layui-input" name="resumeName"  id="resumeName" th:value="${teacher?.resumeName}">
+                    <input type="hidden" name="resume" id="resume">
+                </div>
+            </div>
+
+
+        </div>
+        <div style="width: 31.8%; float: left;">
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2"><font style="color: red">*
+                </font>教师类型：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="teacherType" id="teacherType" class="layui-input">
+                        <option value=""></option>
+                        <option th:selected="${teacher?.teacherType eq item.code}" th:each="item:${teacherType}"
+                                th:value="${item.code}" th:text="${item.name}"></option>
+
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">出生日期：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" name="birthDay" id="birthDay" th:value="${teacher?.birthDay}" autocomplete="off"
+                           class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">联系电话：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" id="teleNum" name="teleNum"
+                           autocomplete="off" placeholder="请输入" class="layui-input" th:value="${teacher?.teleNum}">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">一卡通号：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" id="cardNo" name="cardNo"
+                           autocomplete="off" placeholder="请输入" class="layui-input" th:value="${teacher?.cardNo}">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">学位：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <select name="degree" id="degree" class="layui-input">
+                        <option value=""></option>
+                        <option th:each="item:${edu}" th:value="${item.code}" th:text="${item.name}"
+                                th:selected="${teacher?.degree eq item.code}"></option>
+
+                    </select>
+                </div>
+            </div>
+            
+            <div class="layui-form-item">
+                <label class="layui-form-label layui-form-label2">入职日期：</label>
+                <div class="layui-input-block layui-input-block2">
+                    <input type="text" name="joinTime" id="joinTime" th:value="${teacher?.joinTime}"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <input type="hidden" name="teacherCode" th:value="${teacher?.teacherCode}">
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-input-block" style="margin-left: 500px">
+            <button class="layui-btn layui-btn-sm" id="submit">保存</button>
+            <button class="layui-btn layui-btn-sm layui-btn-primary" id="cancel" >取消</button>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+    var table;
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload'], function () {
+        table = layui.table;
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+
+        var uploadInst = upload.render({
+            elem: '#test1' //绑定元素
+            , url: '/common/uploadFile' //上传接口
+            , accept: 'images'
+            , acceptMime: 'image/*'
+            , done: function (res) {
+                //上传完毕回调
+                $('#pic').val(res.data.url)
+                $('#picName').val(res.data.fileName)
+               // $("#imgShow").attr("src", res.data.url);
+
+            }
+            , error: function () {
+                //请求异常回调
+            }
+        });
+
+        var uploadInst1 = upload.render({
+            elem: '#resumeBtn' //绑定元素
+            , url: '/common/uploadFile' //上传接口
+            , accept: 'file'
+            , done: function (res) {
+                //上传完毕回调
+                $('#resume').val(res.data.url)
+                $('#resumeName').val(res.data.fileName)
+            }
+            , error: function () {
+                //请求异常回调
+            }
+        });
+
+        laydate.render({
+            elem: '#entryDate' //指定元素
+        });
+        laydate.render({
+            elem: '#birthDay' //指定元素
+        });
+        laydate.render({
+            elem: '#joinTime' //指定元素
+        });
+        laydate.render({
+            elem:'#prvOutDate'
+        })
+    });
+
+    $("#cancel").click(function () {
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        parent.layer.close(index); //再执行关闭
+    });
+
+    $("#submit").click(function () {
+        var flg = false;
+        flg = verification();
+        if (flg == false) {
+            return;
+        }
+        flg = checkBankCode();
+        if (flg == false) {
+            return;
+        }
+        flg = isRight();
+        if (flg == false) {
+            return;
+        }
+        var success = function (response) {
+            if (response.result == 'OK') {
+
+                parent.$("#state").val("1");
+                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                parent.layer.close(index); //再执行关闭   
+                parent.reload();
+            } else {
+                layer.alert(response.message, {icon: 2}, function () {
+                    layer.closeAll();
+                })
+            }
+        }
+        var postData = $("#formDemo").serialize();
+        $.ajax({
+            url: "/teacher/addTeacher",
+            type: "post",
+            data: postData,
+            dataType: "json",
+            success: success,
+            error: function (jqXHR, textStatus, errorThrown) {
+
+            }
+
+        });
+        return false;
+    })
+
+    function checkBankCode() {
+        var bankCode = $("#bankCode").val();
+        var reg = /^([1-9]{1})(\d){9,20}$/;
+        if (reg.test(bankCode) === false && bankCode != "") {
+            tipinfo("银行卡输入不合法");
+            return false;
+        }
+        // else if (bankCode == "" || bankCode == undefined) {
+        //     tipinfo("请输入银行卡号")
+        //     return false;
+        // }
+        return true;
+    }
+
+    function isRight() {
+        var card = $("#idCard").val();
+        // 身份证号码为15位或者18位，15位时全为数字，18位前17位为数字，最后一位是校验位，可能为数字或字符X 
+        var reg = /^[0-9a-zA-Z]*$/g;
+        if (reg.test(card) === false) {
+            tipinfo("身份证输入不合法");
+            return false;
+        }
+        // else if (card == "" || card == undefined) {
+        //     tipinfo("请输入身份证号")
+        //     return false;
+        // }
+        return true;
+
+    }
+
+    function updateAccountName() {
+        var name = $('#teacherName').val();
+        $('#accountName').val(name)
+    }
+
+    function isteacherName() {
+        var teacherName = $("#teacherName").val();
+        if (teacherName == undefined || teacherName == "") {
+            tipinfo("请输入教师姓名");
+            return false;
+        }
+        return true;
+    }
+
+    function verification() {
+        var flg = true;
+        $(".layui-form font").each(function () {
+            var content = $(this).parent().next().find("input").val();
+            var obj = $(this).parent().text();
+            if (content == "" || content == undefined) {
+                tipinfo(obj + "不能为空");
+                flg = false;
+                return false;
+            }
+        });
+        return flg;
+    }
+</script>
+
+</html>

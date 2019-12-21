@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .onClick {
+        background-color: #00c1de;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px; min-height: 95%" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">管理员设置</h2>
+                <hr/>
+                <div class="layui-form" action="">
+                    <div class="layui-form-item" style="margin-top: 35px; margin-left: 5%">
+                        <div class="layui-inline">
+                            <button class="layui-btn layuiadmin-btn-list" lay-submit="" lay-filter="LAY-app-contlist-search"
+                                    style="font-size: 15px;width: 130px;height:70px;line-height: 35px;border-radius: 5px;background-color: #00c1de"
+                                    onclick="search()">
+                                时间设置
+                            </button>
+                            <button class="layui-btn layuiadmin-btn-list" lay-submit="" lay-filter="LAY-app-contlist-search"
+                                    style="font-size: 15px;width: 130px;height:70px;line-height: 35px;border-radius: 5px;background-color: #00c1de"
+                                    onclick="">
+                                项目名称
+                            </button>
+                            <button class="layui-btn layuiadmin-btn-list" lay-submit="" lay-filter="LAY-app-contlist-search"
+                                    style="font-size: 15px;width: 130px;height:70px;line-height: 35px;border-radius: 5px;background-color: #00c1de"
+                                    onclick="">
+                                教室类型
+                            </button>
+                            <button class="layui-btn layuiadmin-btn-list" lay-submit="" lay-filter="LAY-app-contlist-search"
+                                    style="font-size: 15px;width: 130px;height:70px;line-height: 35px;border-radius: 5px;background-color: #00c1de"
+                                    onclick="">
+                                教室属性
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var table;
+    var tableIns;
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+    })
+
+    function search() {
+        location.href = '/setting/timeSetting'
+    };
+
+    function add() {
+        openwindow("/api/teachResearchRoom/addResearchOfficePage", "新建教研室", "400", "200", false, reload);
+    }
+
+</script>
+</body>
+</html>

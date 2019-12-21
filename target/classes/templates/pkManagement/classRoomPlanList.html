@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .onClick {
+        background-color: #00c1de;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px; min-height: 95%" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">安排教室</h2>
+                <hr/>
+                <div class="layui-form" action="" >
+                    <div class="layui-row">
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">状态：</label>
+                            <div class="layui-input-block">
+                                <select name="finish" id="finish" >
+                                    <option value=""></option>
+                                    <option value="1">已完成排教室</option>
+                                    <option value="2">未完成排教室</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">项目名称：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="project_name" name="project_name" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-col-md6 mt5" >
+                            <button class="layui-btn layui-btn-sm ml20" lay-submit="" lay-filter="LAY-app-contlist-search" onclick="search()">
+                                搜索
+                            </button>
+                            <button class="layui-btn layui-btn-sm returnPK" th:each="func:${session.funcList}" th:if="${func == 'pjs_return'}">
+                                退回排课
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <table class="layui-table" lay-skin="line" id="classManageList" lay-filter="tableContent1"></table>
+
+                <script type="text/html" id="operation1">
+                    <a class="joysupply-txt-color-on" lay-event="pickGrade" th:each="func:${session.funcList}" th:if="${func == 'pjs_pjs'}">选择班级</a>
+                </script>
+
+            </section>
+        </div>
+
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height:95%;"
+             class="layui-anim layui-anim-upbit layui-hide">
+            <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle" style="cursor:pointer;" id="proName" onclick="toProjectList()">班级管理></h2>
+            <hr/>
+            <div class="layui-row layui-col-space10">
+                <input type="hidden" id="studentId"/>
+                <input type="hidden" id="source"/>
+                <input type="hidden" id="projectId"/>
+            </div>
+            <table class="layui-table" lay-skin="line" id="gradeList" lay-filter="tableContent2"></table>
+            <script type="text/html" id="operation2">
+                <a class="joysupply-txt-color-on" lay-event="classRoomPlan" th:each="func:${session.funcList}" th:if="${func == 'pjs_pjs'}">排教室</a>
+            </script>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var table;
+    var tableIns;
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table', 'layer'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        var table = layui.table;
+        var layer = layui.layer;
+        tableIns = table.render({
+            id: 'id',
+            elem: '#classManageList',
+            cellMinWidth: 80,
+            url: '/classManage/classRoomPlanList', //数据接口
+            skin: 'line',
+            where: {},
+            totalRow: true,
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        type: 'checkbox',
+                        align: 'center',
+                        totalRowText: '合计'
+                    },
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '5%',
+                        style: 'height:45px;',
+                        align: 'center'
+                    },
+                    {
+                        field: 'project_id',
+                        title: '项目id',
+                        hide: true
+                    },
+                    {
+                        field: 'organizeName',
+                        title: '项目部名称',
+                        width: '10%',
+                        style: 'height:45px;',
+                        align: 'center'
+                    },
+                    {
+                        field: 'project_name',
+                        title: '项目名称',
+                        width: '10%',
+                        style: 'height:45px;',
+                        align: 'center'
+                    },
+                    {
+                        field: 'start_time',
+                        title: '启动时间',
+                        width: '9%',
+                        style: 'height:45px;',
+                        align: 'center'
+                    },
+                    {
+                        field: 'end_time',
+                        title: '结束时间',
+                        width: '9%',
+                        style: 'height:45px;',
+                        align: 'center'
+                    },
+                    {
+                        field: 'count_hour',
+                        title: '总课时',
+                        width: '9%',
+                        style: 'height:45px;',
+                        align: 'center',
+                        totalRow: true,
+                        decimals: '0'
+                    },
+                    {
+                        field: 'pkNum',
+                        title: '已排课时',
+                        width: '10%',
+                        style: 'height:45px;',
+                        align: 'center',
+                        totalRow: true,
+                        decimals: '0'
+                    },
+                    {
+                        field: 'pjsNum',
+                        title: '已排教室课时',
+                        width: '15%',
+                        style: 'height:45px;',
+                        align: 'center',
+                        totalRow: true,
+                        decimals: '0'
+                    },
+                    // {
+                    //     field: 'status',
+                    //     title: '状态',
+                    //     width: '10%',
+                    //     style: 'height:45px;',
+                    //     align: 'center',
+                    //     templet: function (d) {
+                    //         if (d.pkNum == d.pjsNum) {
+                    //             return '已排课';
+                    //         } else {
+                    //             return '排课中';
+                    //         }
+                    //     }
+                    // },
+                    {
+                        title: '操作',
+                        width: '15%',
+                        align: 'center',
+                        toolbar: '#operation1',
+                        style: 'height:45px;',
+                        fixed: 'right'
+                    }
+                ]
+            ]
+        });
+
+        var tableIns2 = table.render({
+            id: 'id',
+            elem: '#gradeList',
+            cellMinWidth: 80,
+            url: '/classManage/gradeListPjs', //数据接口
+            skin: 'line',
+            where: {},
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '5%',
+                        align: 'center',
+                        fixed: 'left'
+                    },
+                    {
+                        field: 'projectName',
+                        title: '项目名称',
+                        width: '15%',
+                        fixed: 'left'
+                    },
+                    {
+                        field: 'gradeCode',
+                        title: '班级编号',
+                        width: '10%',
+                        fixed: 'left'
+                    },
+                    {
+                        field: 'startDate',
+                        title: '启动时间',
+                        width: '11%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'endDate',
+                        title: '结束时间',
+                        width: '11%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'totalKs',
+                        title: '总课时',
+                        width: '8%',
+                        align: 'center',
+                        totalRow: true,
+                        decimals: '0',
+                    },
+                    {
+                        field: 'pkNum',
+                        title: '已排课时',
+                        width: '9%',
+                        align: 'center',
+                        templet: "#pkNumTel",
+                        totalRow: true,
+                        decimals: '0',
+                    },
+                    {
+                        field: 'pjsNum',
+                        title: '已排教室课时',
+                        width: '12%',
+                        align: 'center',
+                        templet: "#pjsNumTel",
+                        totalRow: true,
+                        decimals: '0',
+                    },
+                    {
+                        field: 'status',
+                        title: '状态',
+                        width: '8%',
+                        align: 'center',
+                        templet: function (d) {
+                            if (d.pkNum == d.pjsNum) {
+                                return '已排课';
+                            } else if (d.status == '-1') {
+                                return '已退回';
+                            } else {
+                                return '排课中';
+                            }
+                        }
+                    },
+                    {
+                        title: '操作',
+                        width: '15%',
+                        align: 'center',
+                        toolbar: '#operation2',
+                        fixed: 'right'
+                    }
+                ]
+            ]
+        });
+
+        var data = [];
+
+        table.on('tool(tableContent1)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var project_id = data.project_id;
+            var project_name = data.project_name;
+            var grade_code = data.project_code;
+            var start_time = data.start_time;
+            var end_time = data.end_time;
+            var currentCount = data.currentCount;
+            var layEvent = obj.event;
+            if (layEvent === 'pickGrade') { // 进入排课页面
+                $('#proName').html(project_name + ">班级列表");
+                $('.layui-body').children().eq(0).addClass("layui-hide").next().removeClass("layui-hide");
+                reload2(project_id, grade_code);
+            }
+        });
+
+        table.on('tool(tableContent2)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            console.log(data);
+            var project_id = data.projectId;
+            var project_name = data.projectName;
+            var grade_code = data.gradeCode;
+            var grade_id = data.gradeId;
+            var start_time = data.startDate;
+            var end_time = data.endDate;
+            var currentCount = data.currentCount;
+            var layEvent = obj.event;
+            var url = '/classManage/classRoomPlan?projectId=' + project_id
+                + '&date=' + start_time
+                + '&endTime=' + end_time
+                + '&startTime=' + start_time
+                + "&projectName=" + project_name
+                + "&currentCount="+currentCount + "&gradeId=" + grade_id;
+            url = encodeURI(url);
+            if (layEvent === 'classRoomPlan') {
+                layer.open({
+                    type: 2,
+                    closeBtn: 0,
+                    title: false,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: url,
+                    success: function (layero, index) {
+                        layer.full(index);
+                    },
+                    end: function () { //销毁后触发
+                        // tableIns.reload();
+                    }
+                });
+            }
+        });
+
+        window.reload2 = function (project_id, grade_code) {
+            queryData = { //设定异步数据接口的额外参数，任意设
+                projectId : project_id,
+                gradeCode : grade_code
+            };
+            tableIns2.reload({
+                where: queryData,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        /*
+        	退回排课
+        */
+        $('.returnPK').click(function () {
+            var checkStatus = table.checkStatus('id');
+            var checkLength = checkStatus.data.length;
+            if (checkLength <= 0) {
+                layer.msg("请选择数据")
+                return;
+            }
+            var data = checkStatus.data;
+            var ids = [];
+            var names = [];
+            for (var i = 0; i < checkLength; i++) {
+                ids.push(data[i].project_id);
+                names.push(data[i].project_name);
+            }
+            layer.confirm('确定要退回吗?',{icon:3}, function (index) {
+                var success = function (result) {
+                    if (result.result == 'OK') {
+                        layer.msg("退回成功");
+                        tableIns.reload({
+                            where: {
+                                project_name: $('#project_name').val(),
+                                finish: $('#finish').val()
+                            }
+                        });
+                    } else {
+                        layer.msg(result.message, {
+                            icon: 2
+                        });
+                    }
+                }
+
+                $.ajax({
+                    type: "post",
+                    url: '/classManage/returnPK',
+                    data: {
+                        projectId: ids.join(","),
+                        projectName: names.join(","),
+                        status: -1},
+                    dataType: "json",
+                    success: success,
+                    error: function () {
+                        layer.alert('未知错误', {icon: 2});
+                    }
+                })
+            });
+        });
+    });
+
+    function toProjectList() {
+        location.href = "/classManage/setClassRoomPlan";
+    }
+
+    function search() {
+        var params = {
+            project_name: $('#project_name').val(),
+            finish: $('#finish').val()
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1
+            }
+        });
+    };
+
+</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .clearfix:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+
+    .clearfix {
+        zoom: 1;
+    }
+
+    .organize_left {
+        width: 18%;
+        height: 98%;
+        float: left;
+        margin-top: 0px;
+    }
+
+    .xtree_contianer {
+        border: 1px #e6e6e6 solid;
+        border-top: none;
+        min-height: 175px;
+        height: 496px;
+        overflow: auto;
+    }
+
+    .organize_right {
+        float: right;
+        width: 81%;
+        height: 98%;
+        margin-top: 0px;
+    }
+
+    .onClick {
+        border-radius: 3px;
+        color: white;
+        margin-left: 5px;
+        margin-right: 5px;
+        background-color: #00c1de;
+        padding: 3px;
+    }
+
+    .treeBtn {
+        color: #00c1de;
+        margin: 0 2px;
+        font-size: 12px;
+    }
+
+    .treeDelBtn {
+        color: #F00;
+        margin: 0 2px;
+        font-size: 12px;
+    }
+
+    .organize_left .layui-icon {
+        margin-right: 0 !important;
+    }
+
+    @media screen and (max-width: 1700px) {
+        .organize_left {
+            width: 24%;
+        }
+
+        .organize_right {
+            width: 75%;
+        }
+    }
+
+    .layui-tree-leaf {
+        display: none;
+    }
+
+    .layui-tree-branch {
+        display: none;
+    }
+
+    .layui-form-switch {
+        height: 16px !important;
+        line-height: 16px !important;
+        min-width: 20px;
+    }
+
+    .layui-form-switch i {
+        width: 12px;
+        height: 12px;
+        top: 2px;
+    }
+
+    .layui-form-onswitch em {
+        margin-right: 16px;
+    }
+
+    .layui-form-onswitch i {
+        margin-left: -16px;
+    }
+
+    .layui-tree li ul {
+        margin-left: 37px;
+    }
+
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;min-height:95%;" class="layui-anim layui-anim-upbit">
+            <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">部门信息</h2>
+            <hr/>
+            <section class="clearfix">
+                <div class="organize_left">
+                    <div>
+                        <h1 class="layui-btn" style="width: 100%">部门信息</h1>
+                        <div class="xtree_contianer">
+                            <div id="structTree" style="padding:15px 3px">
+                                <button class="layui-btn layui-btn-sm" onclick="addOrganizeStruct()" style="margin-bottom: 5px"
+                                        th:each="func:${session.funcList}" th:if="${func == 'bmda_addOrganize'}">添加部门
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="organize_right">
+                    <div class="layui-form layui-row">
+                        <div class="layui-col-lg8 layui-col-md12">
+                            <div class="layui-col-md6">
+                                <label class="layui-form-label">姓名</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="name" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-col-md6">
+                                <label class="layui-form-label">手机号</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="telphone" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class=" layui-col-lg4 layui-col-md12" style="margin-top: 5px;">
+                            <div class="layui-inline">
+                                <button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit="" lay-filter="LAY-app-contlist-search" onclick="search()"
+                                        style="margin-left: 40px;">
+                                    搜索
+                                </button>
+                            </div>
+                            <div class="layui-inline">
+                                <button class="layui-btn layuiadmin-btn-list layui-btn-sm" lay-submit="" lay-filter="LAY-app-contlist-search" onclick="addPerson()"
+                                        th:each="func:${session.funcList}" th:if="${func == 'bmda_addPerson'}">
+                                    新建人员
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="layui-table" lay-skin="line" id="organizePeople" lay-filter="tableContent" style="margin-top: 0px">
+                    </table>
+                </div>
+                <script type="text/html" id="operation">
+                    <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'bmda_delPerson'}">删除</a>
+                    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'bmda_updPerson'}">编辑</a>
+                    {{# if(d.userName != null && d.userName != ""){ }}
+                    <a class="joysupply-txt-color-on" lay-event="update" th:each="func:${session.funcList}" th:if="${func == 'bmda_updAccount'}">账号信息</a>
+                    <input type="checkbox" value="{{d.personCode}}" lay-text="" lay-skin="switch" th:each="func:${session.funcList}" th:if="${func == 'bmda_enableAccount'}"
+                           lay-filter="isEnable" {{ d.isEnable== 1 ? 'checked' : '' }}/>
+                    {{# }else{ }}
+                    <a class="joysupply-txt-color-on" lay-event="create" th:each="func:${session.funcList}" th:if="${func == 'bmda_addAccount'}">创建账号</a>
+                    {{# } }}
+                </script>
+                <script type="text/html" id="auth">
+                    {{# if((d.roleCode != null && d.roleCode != "") && (d.roleCode.indexOf("17") >= 0 || d.roleCode.indexOf("12") >= 0)){ }}
+                    <a class="joysupply-txt-color-on" lay-event="locAuth" th:each="func:${session.funcList}" th:if="${func == 'bmda_locAuth'}">楼群权限</a>
+                    {{# } }}
+                    {{# if((d.roleCode != null && d.roleCode != "") && (d.roleCode.indexOf("14") >= 0 || d.roleCode.indexOf("12") >= 0 || d.roleCode.indexOf("15") >= 0)){ }}
+                    <a class="joysupply-txt-color-on" lay-event="teacherAuth" th:each="func:${session.funcList}" th:if="${func == 'bmda_teacherAuth'}">教师权限</a>
+                    {{# } }}
+                    {{# if((d.roleCode != null && d.roleCode != "") && (d.roleCode.indexOf("12") >= 0||d.roleCode.indexOf("16") >= 0)){ }}
+                    <a class="joysupply-txt-color-on" lay-event="projectAuth" th:each="func:${session.funcList}" th:if="${func == 'bmda_projectAuth'}">项目权限</a>
+                    {{# } }}
+                </script>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var treedatas;
+    var upCode;
+    var table;
+    var tableIns;
+    layui.use(['element', 'form', 'table', 'tree'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $.ajax({
+            type: "post",
+            url: "/api/organizeStruct/tree",
+            data: data,
+            async: false,
+            dataType: "json",
+            success: function (data) {
+                treedatas = data
+            },
+            error: function () {
+                layer.msg('未知错误', {icon: 2});
+            }
+        });
+
+        layui.tree({
+            elem: '#structTree',
+            nodes: treedatas,
+            click: function (node) {
+                $("cite>span").removeClass("onClick");
+                $("#" + node.id).addClass("onClick");
+                upCode = node.id;
+                search();
+            }
+        });
+
+        function reload() {
+            tableIns.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        tableIns = table.render({
+            id: 'id',
+            elem: '#organizePeople',
+            cellMinWidth: 80,
+            url: '/api/organizeStruct/getOrganizePeopleList', //数据接口
+            where: {},
+            skin: 'line',
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        field: 'name',
+                        title: '姓名',
+                        width: '10%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'telphone',
+                        title: '联系方式',
+                        width: '15%',
+                        align: 'center',
+
+                    },
+                    {
+                        field: 'organizeName',
+                        title: '组织名称',
+                        align: 'center',
+                        width: '20%',
+                    },
+                    {
+                        field: 'jobName',
+                        title: '岗位名称',
+                        width: '20%',
+                        align: 'center',
+                    },
+                    {
+                        field: 'roleName',
+                        title: '角色名称',
+                        width: '20%',
+                        align: 'center',
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        toolbar: '#operation',
+                        fixed: 'right',
+                        width: '200'
+                    },
+                    {
+                        title: '权限',
+                        align: 'center',
+                        toolbar: '#auth',
+                        fixed: 'right',
+                        width: '230'
+                    }
+                ]
+            ],
+            done: function (res, curr, count) {
+            }
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var personCode = data.personCode;
+            var roleCode = data.roleCode;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/api/organizePeople/editOrganizePeoplePage?personCode=" + personCode, "修改人员信息", "700", "400", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.confirm("您确定要删除吗？", {
+                        icon: 3,
+                        title: "删除确认"
+                    },
+                    function (index) {
+                        var map = {"personCode": personCode};
+                        $.ajax({
+                            type: "post",
+                            url: '/api/organizePeople/delOrganizePeople',
+                            data: JSON.stringify(map),
+                            contentType: "application/json",
+                            success: function (data) {
+                                tipinfo("删除成功");
+                                tableIns.reload({
+                                    page: {
+                                        curr: 1
+                                    }
+                                });
+                            },
+                            error: function () {
+                                tipinfo(data.message);
+                            }
+                        })
+                        layer.close(index);
+                    },
+                    function (index) {
+                        layer.close(index);
+                    });
+            } else if (layEvent === 'create') {
+                openwindow("/systemUser/addSystemUserPage?personCode=" + personCode, "创建账户", "700", "250", false, reload);
+            } else if (layEvent === 'update') {
+                openwindow("/systemUser/updSystemUserPage?personCode=" + personCode, "账户信息", "700", "250", false, reload);
+            } else if (layEvent === 'locAuth') {
+                layer.open({
+                    type: 2,
+                    title: '楼群权限',
+                    area: ['800px', '650px'],
+                    shade: 0.3,
+                    offset: 'auto',
+                    content: '/teacher/setTeacherLocAuth?personCode=' + personCode,
+                    btn: ['确定', '取消'],
+                    btnAlign: 'c',
+                    yes: function (index, layero) {
+                        //do something
+                        var body = layer.getChildFrame('body', index);
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+                        var list = iframeWin.getList();
+                        var buildingCodes = list.join(",")
+                        $.post('/authority/insUpPersonBuildingAuth', {buildingCodes: buildingCodes, personCode: personCode}, function (data) {
+                            layer.close(index);
+                        })
+                    }
+                });
+            } else if (layEvent === 'teacherAuth') {
+                layer.open({
+                    type: 2,
+                    title: '教师权限',
+                    area: ['800px', '650px'],
+                    shade: 0.3,
+                    offset: 'auto',
+                    content: '/teacher/setTeacherAuth?personCode=' + personCode,
+                    btn: ['确定', '取消'],
+                    btnAlign: 'c',
+                    yes: function (index, layero) {
+                        //do something
+                        var body = layer.getChildFrame('body', index);
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+                        var list = iframeWin.getList();
+                        var teacherCodes = list.join(",");
+                        $.post('/authority/insUpPersonTeacherAuth', {teacherCodes: teacherCodes, personCode: personCode}, function (data) {
+                            layer.close(index); //如果设定了yes回调，需进行手工关闭
+                        })
+                    }
+                });
+            } else if (layEvent === 'projectAuth') {
+                layer.open({
+                    id: 'projectList',
+                    type: 2,
+                    title: '项目数据权限',
+                    area: ['65%', '65%'],
+                    content: '/teacher/setTeacherProjectAuth?personCode=' + personCode+'&roleCode='+roleCode,
+                    btn: ['确定', '取消'],
+                    btnAlign: 'c',
+                    yes: function (index, layero) {
+                        //do something
+                        var body = layer.getChildFrame('body', index);
+                        var iframeWin = window[layero.find('iframe')[0]['name']];
+                        var list = iframeWin.getList();
+                        var projectIds = list.join(",")
+                        $.post('/authority/insUpTeacherProjectAuth', {projectIds: projectIds, teacherCode: personCode}, function (data) {
+                            layer.close(index); //如果设定了yes回调，需进行手工关闭
+                        })
+
+                    }
+                });
+            }
+
+        });
+        form.on('switch(isEnable)', function (obj) {
+            var personCode = obj.value;
+            if (obj.elem.checked) {
+                update(personCode, 1);
+            } else {
+                update(personCode, 0);
+            }
+        });
+    });
+
+    function update(personCode, isEnable) {
+        var map = {"personCode": personCode, "isEnable": isEnable};
+        $.ajax({
+            type: "post",
+            url: '/systemUser/updSystemUser',
+            data: JSON.stringify(map),
+            contentType: "application/json",
+            success: function (data) {
+                tableIns.reload({
+                    page: {
+                        curr: 1
+                    }
+                });
+            },
+            error: function () {
+                tipinfo(data.message);
+            }
+        })
+    }
+
+    function addPerson() {
+        if (upCode == null || upCode == "") {
+            tipinfo("请选择组织机构");
+            return;
+        }
+        openwindow("/api/organizePeople/addOrganizePeoplePage?organizeCode=" + upCode, "新建组织人员", "700", "350", false, redirect);
+    }
+
+    function search() {
+        var params = {
+            name: $('#name').val(),
+            telphone: $('#telphone').val(),
+            organizeCode: upCode
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+
+    function addOrganizeStruct() {
+        openwindow("/api/organizeStruct/addOrganizeStructPage", "新建部门", "700", "200", false, redirect);
+    }
+
+    function addNode(upCode) {
+        openwindow("/api/organizeStruct/addOrganizeStructPage?upCode=" + upCode, "新建项目部", "700", "250", false, redirect);
+    }
+
+    th:value = "${organizeCode}"
+
+    function editNode(organizeCode) {
+        openwindow("/api/organizeStruct/editOrganizeStructPage?organizeCode=" + organizeCode, "编辑部门", "700", "200", false, redirect);
+    }
+    function editChildNode(organizeCode) {
+        openwindow("/api/organizeStruct/editOrganizeStructChildPage?organizeCode=" + organizeCode, "编辑项目部", "700", "300", false, redirect);
+    }
+
+    function delNode(organizeCode) {
+        layer.confirm("您确定要删除吗？", {
+                icon: 3,
+                title: "删除确认"
+            },
+            function (index) {
+                var map = {"organizeCode": organizeCode};
+                $.ajax({
+                    type: "post",
+                    url: '/api/organizeStruct/delOrganizeStruct',
+                    data: JSON.stringify(map),
+                    contentType: "application/json",
+                    success: function (data) {
+                        if(data.result == 'OK') {
+                            tipinfo("删除成功!");
+                            redirect();
+                        }else {
+                            tipinfo(data.message);
+                        }
+
+                        // window.location.reload();
+                    },
+                    error: function () {
+                        tipinfo(data.message);
+                    }
+                })
+                layer.close(index);
+            },
+            function (index) {
+                layer.close(index);
+            }
+        );
+    }
+
+    function redirect() {
+        window.location.href = "/api/organizeStruct/getOrganizePeoplePage";
+    }
+
+    function reload() {
+        var params = {
+            name: $('#name').val(),
+            telphone: $('#telphone').val(),
+            organizeCode: upCode
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    }
+</script>
+</body>
+</html>

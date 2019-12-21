@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    .layui-table td {
+        text-align: center;
+    }
+
+    body .layui-layer-title {
+        background-color: #01AAED;
+        color: #fff;
+        font-size: 14px;
+    }
+     #kcTable th {
+        text-align: center;
+    }
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height:95%;"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">课酬统计</h2>
+                <hr/>
+                <div id="app">
+                    <div class="layui-row" style="margin-bottom: 10px;">
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">启始年份：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="startTime" placeholder="启始年份" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">截止年份：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="endTime" placeholder="截止年份" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-md6 mt5">
+                            <button type="button" v-on:click="search()" class="layui-btn layui-btn-sm ml20">搜索</button>
+                            <button type="button" v-on:click="exportExcel()" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'jskcgl_export'}">导出</button>
+                        </div>
+                    </div>
+                    <div>
+                   	 	<div style="overflow:auto;">
+                            <div style="width:1650px;">
+	                        <table class="layui-table" lay-skin="line" id="kcTable">
+	                            <thead>
+	                            <tr>
+	                                <th>序号</th>
+	                                <th>年份</th>
+	                                <th>月份</th>
+	                                <th>教师类别</th>
+	                                <th>姓名</th>
+	                                <th>身份证号</th>
+	                                <th>银行卡号</th>
+	                                <th>国籍</th>
+	                                <th v-for="pname in productName">{{pname.projectName}}</th>
+	                                <th>课酬合计</th>
+	                            </tr>
+	                            </thead>
+	                            <tbody class="layui-table">
+	                            <tr v-for="kcList in kcInfo">
+	                                <td>{{ kcList.px }}</td>
+	                                <td>{{ kcList.year }}</td>
+	                                <td>{{ kcList.month }}</td>
+	                                <td>{{ kcList.teacherType }}</td>
+	                                <td><a href="javascript:void(0)" style="color: blue;" v-on:click="userInfo()">{{
+	                                    kcList.name }}</a></td>
+	                                <td>{{ kcList.idCard }}</td>
+	                                <td>{{ kcList.bankCode }}</td>
+	                                <td>{{ kcList.guoji }}</td>
+	                                <td v-for="pname in productName">{{kcList[pname.projectName] !=
+	                                    ''?kcList[pname.projectName]:'0.00'}}
+	                                </td>
+	                                <td><a href="javascript:void(0)" style="color: blue;"
+	                                       v-on:click="KCInfo(kcList.year,kcList.month)">{{ kcList.totalFee }}</a></td>
+	                            </tr>
+	                            </tbody>
+	                        </table>
+                          </div>
+                        </div>
+                        <div style="float: right;" id="jqPager"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/kcManagerTeacher/kcManagerTeacher.js}"></script>
+</html>

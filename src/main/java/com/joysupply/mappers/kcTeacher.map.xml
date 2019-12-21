@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.KcTeacherDao">
+
+    <select id="getKcTeacher" parameterType="hashMap" resultType="hashMap" useCache="false">
+        SELECT
+			cf.row_id,
+			cf.`year`,
+			cf.`month`,
+			d2.`name` as  teacherType,
+			ti.card_no as cardNo,
+			ti.teacher_name as teacherName,
+			ti.id_card as idCard,
+			ti.bank_code as bankCode,
+			d1.`name` as guoji,
+			pi.project_name,
+			cf.fee_course
+		FROM
+			course_fee cf
+		LEFT JOIN project_info pi ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON cf.teacher_code = ti.teacher_code
+		LEFT JOIN project_schedule_plan ps ON cf.project_id = ps.project_id
+		LEFT JOIN data_dic d1 ON ti.nationality = d1.`code`
+		LEFT JOIN data_dic d2 ON ti.teacher_type = d2.`code`
+		where 1 = 1
+		<if test="teacherType != null and teacherType != ''">and ti.teacher_type = #{teacherType}</if>
+		<if test="year != null and year != ''">and cf.year = #{year}</if>
+		<if test="month != null and month != ''">and cf.month = #{month}</if>
+    </select>
+    
+    <select id="getVdoingCount" parameterType="map" resultType="long" useCache="false">
+    	SELECT COUNT(1) FROM  (SELECT 
+			pi.project_id projectId
+		FROM project_info pi 
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		LEFT JOIN (SELECT COUNT(project_id) countHour,ROUND(SUM(fee_total), 2) totalFee,project_id FROM project_schedule_plan GROUP BY project_id ) psp ON psp.project_id = pi.project_id
+		WHERE 1=1
+		<if test="startTime != null and startTime != ''">AND pi.create_time <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND pi.create_time <![CDATA[<=]]> #{endTime}</if>
+		GROUP BY organize_code) a
+    </select>
+    <!-- 部门维度课酬 -->
+    <select id="getVdoingInfo" parameterType="hashMap" resultType="hashMap" useCache="false">
+		<!--SELECT pi.project_id projectId, os.organize_name organizeName, os.organize_code organizeCode, SUM(psp.countHour) countHour, SUM(cf.payed) payed, SUM(cf.payHour) payHour, SUM(psp.totalFee) totalFee ,SUM(cf.deductFee) deductFee,SUM(cf.deductKs) deductKs
+		FROM project_info pi LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		LEFT JOIN
+		(SELECT COUNT(project_id) countHour,class_date classDate,ROUND(SUM(fee_total), 2) totalFee,project_id
+		FROM project_schedule_plan where 1 = 1
+		<if test="startTime != null and startTime != ''">AND class_date <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND class_date <![CDATA[<=]]> #{endTime}</if>
+		GROUP BY project_id ) psp ON psp.project_id = pi.project_id
+		LEFT JOIN
+		(SELECT cf.project_id,SUM(cf.hour_actual) payHour,SUM(cf.fee_course) payed,SUM(distinct fd.fee_count) deductFee,SUM(distinct fd.k_s) deductKs
+		FROM course_fee cf
+		LEFT JOIN fee_deduct fd ON fd.project_id = cf.project_id AND cf.serial_number = fd.serial_num AND cf.mergeSerialNumber = cf.mergeSerialNumber AND fd.deduct_type = '1901' AND cf.start_time = fd.start_time AND cf.end_time = fd.end_time AND cf.teacher_code = fd.teacher_code
+		where cf.is_send = 1
+		<if test="startYear != null and startYear != ''">AND `year` <![CDATA[>=]]> #{startYear} AND `month` <![CDATA[>=]]> #{startMonth}</if>
+		<if test="endYear != null and endYear != ''">AND `year` <![CDATA[<=]]> #{endYear} AND `month` <![CDATA[<=]]> #{endMonth}</if>
+		GROUP BY cf.project_id) cf ON cf.project_id = pi.project_id GROUP BY organize_code
+		LIMIT #{start},#{pageSize};-->
+		SELECT
+			pi.project_id projectId,
+			os.organize_name organizeName,
+			os.organize_code organizeCode,
+			SUM(psp.countHour) countHour,
+			SUM(psp.totalFee) totalFee
+		FROM project_info pi LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		LEFT JOIN
+		(SELECT COUNT(project_id) countHour,class_date classDate,ROUND(SUM(fee_total), 2) totalFee,project_id
+		FROM project_schedule_plan where 1 = 1
+		<if test="startTime != null and startTime != ''">AND class_date <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND class_date <![CDATA[<=]]> #{endTime}</if>
+		GROUP BY project_id ) psp ON psp.project_id = pi.project_id
+		GROUP BY organize_code
+    </select>
+
+	<select id="getAlreadyKc" parameterType="map" resultType="map">
+		SELECT
+			cf.project_id,
+			cf.start_time startTime,
+			cf.end_time endTime,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+				ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+			cf.hour_actual hourActual,
+			cf.fee_course feeCourse,
+			cf.mergeSerialNumber,
+			cf.serial_number serialNumber,
+			cf.teacher_code teacherCode,
+			"0" deductType,
+			pi.dep_name
+		FROM  course_fee cf
+		LEFT JOIN project_info PI ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		WHERE cf.is_send = 1
+		<if test="startYear != null and startYear != ''">AND cf.`year` <![CDATA[>=]]> #{startYear} AND cf.`month` <![CDATA[>=]]> #{startMonth}</if>
+		<if test="endYear != null and endYear != ''">AND cf.`year` <![CDATA[<=]]> #{endYear} AND cf.`month` <![CDATA[<=]]> #{endMonth}</if>
+		UNION ALL
+		SELECT distinct
+			fd.project_id projectId,
+			fd.start_time startTime,
+			fd.end_time endTime,
+			CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902' THEN '讲座' ELSE '补发工资' END projectName,
+			fd.k_s hourActual,
+			fd.fee_count feeCourse,
+			fd.mergeSerialNumber,
+			fd.serial_num serialNumber,
+			fd.teacher_code teacherCode,
+			fd.deduct_type deductType,
+			dd.dep_name
+		FROM fee_deduct fd
+		LEFT JOIN (
+			SELECT
+			cf.project_id,
+			cf.start_time startTime,
+			cf.end_time endTime,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+				ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName,
+			cf.fee_course feeCourse,
+			cf.mergeSerialNumber,
+			cf.serial_number serialNumber,
+			cf.teacher_code teacherCode,
+			pi.dep_name
+		FROM  course_fee cf
+		LEFT JOIN project_info PI ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		WHERE cf.is_send = 1
+		<if test="startTime != null and startTime != ''">AND cf.start_time <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND cf.start_time <![CDATA[<=]]> #{endTime}</if>
+		) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code
+		WHERE fd.status='3'
+		and fd.deduct_type='1901'
+		AND dd.startTime = fd.start_time
+		AND dd.endTime = fd.end_time
+	</select>
+    
+    <!-- 项目名称 -->
+    <select id="getProductName" parameterType="string" resultType="map">
+			SELECT distinct
+		cf.project_id projectId,
+		CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+		ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_id) END projectName
+		FROM course_fee cf
+		WHERE cf.status = '3'
+	</select>
+	
+	<!-- 教师类别课酬 -->
+	<select id= "getKclbTeacher"  resultType="map">
+		SELECT  cf.`year`, 
+				cf.`month`, 
+				dd.`name` AS teacherType, 
+				cf.project_id,
+				CASE
+		WHEN CHAR_LENGTH(cf.project_id) > 4
+		THEN (SELECT project_name FROM project_info WHERE project_id=cf.project_id)
+		ELSE (SELECT `name` FROM data_dic WHERE `code` = cf.project_id)  END project_name,
+				cf.fee_course 
+		FROM `course_fee` cf, 
+				teacher_info ti, 
+				data_dic dd
+		WHERE cf.teacher_code = ti.teacher_code 
+				AND ti.teacher_type = dd.code
+		where 1 = 1
+		<if test="teacherType != null and teacherType != ''">and ti.teacher_type = #{teacherType}</if>
+		<if test="year != null and year != ''">and cf.year = #{year}</if>
+		<if test="month != null and month != ''">and cf.month = #{month}</if>
+		GROUP BY ti.teacher_type
+	</select>
+	<!--WANGYUELEI 老师课酬data -->
+	<select id="selRemTeacher" parameterType="hashMap" resultType="hashMap">
+		<!--select dd.year , dd.month , GROUP_CONCAT(dd.projectId) projectId  , dd.teacherType , GROUP_CONCAT(dd.projectName) projectName, GROUP_CONCAT(dd.information) information, GROUP_CONCAT(dd.depCodes) depCodes  from (
+		SELECT cf.year , cf.month , dd.name teacherType , GROUP_CONCAT(pi.project_id) projectId, dd.code code, ti.teacher_code,
+		GROUP_CONCAT(pi.project_name) projectName,
+		GROUP_CONCAT(
+		CASE WHEN cf.project_id != '1901' THEN cf.fee_course ELSE CONCAT("-",cf.fee_course)  END,"&#45;&#45;",
+		CASE WHEN cf.project_id = '1901' THEN 'x' WHEN cf.project_id ='1902' THEN 'y' WHEN cf.project_id ='1903' THEN 'z' ELSE pi.project_name END) AS information,
+		GROUP_CONCAT(pi.dep_name) depCodes
+		FROM course_fee cf
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+		LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+		WHERE cf.is_send = 1 and CHAR_LENGTH(cf.project_id)>5
+		and cf.status = 3
+		GROUP BY cf.year , cf.month , dd.code
+
+		UNION ALL
+
+		select fdd.year , fdd.month , fdd.teacherType , "" projectId, fdd.code code, fdd.teacher_code,
+		GROUP_CONCAT(fdd.project_name) projectName,
+		GROUP_CONCAT(
+		CASE WHEN fdd.deduct_type != '1901' THEN fdd.fee_count ELSE CONCAT("-",fdd.fee_count)  END,"&#45;&#45;",
+		CASE WHEN fdd.deduct_type = '1901' THEN 'x' WHEN fdd.deduct_type ='1902' THEN 'y' WHEN fdd.deduct_type ='1903' THEN 'z' ELSE fdd.project_name END) AS information,
+		"" depCodes
+		FROM ( select cf.year , cf.month , dd.name teacherType , fd.project_id, dd.code code, ti.teacher_code,pi.project_name,fd.deduct_type,fd.fee_count,dd.name
+		FROM
+		fee_deduct fd
+		LEFT JOIN course_fee cf ON fd.project_id = cf.project_id
+		and fd.mergeSerialNumber = cf.mergeSerialNumber
+		and fd.teacher_code  = cf.teacher_code
+		and fd.serial_num = cf.serial_number
+		LEFT JOIN teacher_info ti ON ti.teacher_code = fd.teacher_code
+		LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+		WHERE fd.status = 3 and fd.project_id != '0'
+		GROUP BY fd.row_id) fdd
+		GROUP BY fdd.year , fdd.month , fdd.code
+		) dd
+		<where>
+			<if test="year != null and year != ''">
+				AND dd.year = #{year}
+			</if>
+			<if test="month != null and month != ''">
+				AND dd.month = #{month}
+			</if>
+			<if test="teacherTypeCode != null and teacherTypeCode != ''">
+				AND dd.code = #{teacherTypeCode}
+			</if>
+		</where>
+		GROUP BY dd.year , dd.month ,dd.code-->
+		select dd.year , dd.month , GROUP_CONCAT(dd.projectId) projectId  , dd.teacherType , GROUP_CONCAT(dd.projectName) projectName, GROUP_CONCAT(dd.information) information, GROUP_CONCAT(dd.depCodes) depCodes  from (
+		SELECT cf.year , cf.month , dd.name teacherType , GROUP_CONCAT(pi.project_id) projectId, dd.code code, ti.teacher_code,
+		GROUP_CONCAT(os.organize_name) projectName,
+		GROUP_CONCAT(
+		CASE WHEN cf.project_id != '1901' THEN cf.fee_course ELSE CONCAT("-",cf.fee_course)  END,"--",
+		CASE WHEN cf.project_id = '1901' THEN 'x' WHEN cf.project_id ='1902' THEN 'y' WHEN cf.project_id ='1903' THEN 'z' ELSE os.organize_name END) AS information,
+		GROUP_CONCAT(pi.dep_name) depCodes
+		FROM course_fee cf
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+		LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		WHERE cf.is_send = 1 and CHAR_LENGTH(cf.project_id)>5
+		and cf.status = 3
+		GROUP BY cf.year , cf.month , dd.code
+
+		UNION ALL
+
+		select fdd.year , fdd.month , fdd.teacherType , "" projectId, fdd.code code, fdd.teacher_code,
+		GROUP_CONCAT(fdd.project_name) projectName,
+		GROUP_CONCAT(
+		CASE WHEN fdd.deduct_type != '1901' THEN fdd.fee_count ELSE CONCAT("-",fdd.fee_count)  END,"--",
+		CASE WHEN fdd.deduct_type = '1901' THEN 'x' WHEN fdd.deduct_type ='1902' THEN 'y' WHEN fdd.deduct_type ='1903' THEN 'z' ELSE fdd.project_name END) AS information,
+		"" depCodes
+		FROM ( select cf.year , cf.month , dd.name teacherType , fd.project_id, dd.code code, ti.teacher_code,os.organize_name project_name,fd.deduct_type,fd.fee_count,dd.name
+		FROM
+		fee_deduct fd
+		LEFT JOIN course_fee cf ON fd.project_id = cf.project_id
+		and fd.mergeSerialNumber = cf.mergeSerialNumber
+		and fd.teacher_code  = cf.teacher_code
+		and fd.serial_num = cf.serial_number
+		LEFT JOIN teacher_info ti ON ti.teacher_code = fd.teacher_code
+		LEFT JOIN project_info pi ON pi.project_id = cf.project_id
+		LEFT JOIN data_dic dd ON ti.teacher_type = dd.code
+		LEFT JOIN organize_struct os ON os.organize_code = pi.dep_name
+		WHERE fd.status = 3 and fd.project_id != '0'
+		GROUP BY fd.row_id) fdd
+
+		GROUP BY fdd.year , fdd.month , fdd.code
+		) dd
+		<where>
+			<if test="year != null and year != ''">
+				AND dd.year = #{year}
+			</if>
+			<if test="month != null and month != ''">
+				AND dd.month = #{month}
+			</if>
+			<if test="teacherTypeCode != null and teacherTypeCode != ''">
+				AND dd.code = #{teacherTypeCode}
+			</if>
+		</where>
+		GROUP BY dd.year , dd.month ,dd.code
+	</select>
+	<!--WANGYUELEI 获取老师课酬时间 -->
+	<select id="getYearMonth" resultType="String">
+        select GROUP_CONCAT(year,'-',month) yearMonth
+        from course_fee
+        where is_send = 1
+        GROUP BY year,month
+    </select>
+	 <!-- 部门明细 -->
+	<!--<select id="getDepartDetail" parameterType="hashMap" resultType="hashMap">
+		SELECT  cf.row_id rowId,
+			cf.start_time  startTime,
+			cf.end_time endTime,
+			ps.project_id projectId,
+			cf.teacher_code teacherCode,
+			ti.teacher_name teacherName,
+			dd.name teacherType,
+			cf.course_id courseId,
+			dd1.name courseName,
+			cf.base_fee baseFee,	 
+			cf.hour_actual hourActual,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+			ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName, 
+			(SELECT dep_name FROM project_info WHERE project_id = cf.project_id) depName,
+			cf.person_factor personFactor,
+			cf.course_factor courseFactor,
+			cf.fee_course feeCourse
+		FROM course_fee cf,teacher_info ti,project_schedule_plan ps,data_dic dd,data_dic dd1
+		WHERE cf.teacher_code = ti.teacher_code
+		and ti.teacher_type = dd.code
+		and cf.course_id = dd1.code
+		AND cf.status = #{status}
+	</select> -->
+	<!-- 部门明细 -->
+	<select id="getDepartDetail" parameterType="hashMap" resultType="hashMap">
+
+		SELECT 
+			cf.project_id,
+			cf.start_time startTime,
+			cf.end_time endTime,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+				ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName, 
+			ti.teacher_name teacherName,
+			dd1.`name` teacherType,
+			dd.`name` courseName,
+			cf.base_fee baseFee,
+			cf.hour_actual hourActual,
+			cf.person_factor personFactor,
+			cf.course_factor courseFactor,
+			cf.fee_course feeCourse,
+			cf.mergeSerialNumber,
+			cf.serial_number serialNumber,
+			cf.teacher_code teacherCode,
+			"0" deductType
+		FROM  course_fee cf
+		LEFT JOIN project_info PI ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd ON dd.`code` = cf.course_id
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+		WHERE pi.dep_name = #{organizeCode} AND cf.is_send = 1
+		<if test="startYear != null and startYear != ''">
+			AND case when (cf.`year` = #{startYear}) then cf.month <![CDATA[>=]]> #{startMonth}
+			when (cf.year <![CDATA[>]]> #{startYear}) then cf.year <![CDATA[>]]> #{startYear}
+			when (cf.year <![CDATA[<]]> #{startYear} ) then cf.year <![CDATA[<]]> #{startYear} end
+		</if>
+		<if test="endYear != null and endYear != ''">
+			AND case when (cf.`year` = #{endYear}) then cf.month <![CDATA[<=]]> #{endMonth}
+			when (cf.year <![CDATA[>]]> #{endYear}) then cf.year <![CDATA[>]]> #{endYear}
+			when (cf.year <![CDATA[<]]> #{endYear} ) then cf.year <![CDATA[<]]> #{endYear} end
+		</if>
+
+		UNION ALL
+		
+		SELECT distinct
+			fd.project_id projectId,
+			fd.start_time startTime,
+			fd.end_time endTime,
+			CASE WHEN fd.deduct_type='1901' THEN '工作量扣除' WHEN fd.deduct_type='1902' THEN '讲座' ELSE '补发工资' END projectName,
+			dd.teacherName,
+			dd.teacherType,
+			"" courseName,
+			fd.base_course_fee baseFee,
+			fd.k_s hourActual,
+			fd.person_coef personFactor,
+			fd.course_coef courseFactor,
+			fd.fee_count feeCourse,
+			fd.mergeSerialNumber,
+			fd.serial_num serialNumber,
+			fd.teacher_code teacherCode,
+			fd.deduct_type deductType
+		FROM fee_deduct fd
+		LEFT JOIN (
+			SELECT 
+			cf.project_id,
+			cf.start_time startTime,
+			cf.end_time endTime,
+			CASE WHEN LENGTH(cf.project_id)>4 THEN (SELECT project_name FROM project_info WHERE project_id = cf.project_id)
+				ELSE (SELECT NAME FROM data_dic WHERE CODE = cf.project_Id) END projectName, 
+			ti.teacher_name teacherName,
+			dd1.`name` teacherType,
+			dd.`name` courseName,
+			cf.base_fee baseFee,
+			cf.hour_actual hourActual,
+			cf.person_factor personFactor,
+			cf.course_factor courseFactor,
+			cf.fee_course feeCourse,
+			cf.mergeSerialNumber,
+			cf.serial_number serialNumber,
+			cf.teacher_code teacherCode
+		FROM  course_fee cf
+		LEFT JOIN project_info PI ON cf.project_id = pi.project_id
+		LEFT JOIN teacher_info ti ON ti.teacher_code = cf.teacher_code
+		LEFT JOIN data_dic dd ON dd.`code` = cf.course_id
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+		WHERE pi.dep_name = #{organizeCode} AND cf.is_send = 1
+		<if test="startTime != null and startTime != ''">AND cf.start_time <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND cf.start_time <![CDATA[<=]]> #{endTime}</if>
+		) dd ON dd.mergeSerialNumber = fd.mergeSerialNumber AND dd.serialNumber = fd.serial_num AND dd.teacherCode = fd.teacher_code
+		WHERE fd.status='3'
+		and fd.deduct_type='1901'
+		AND dd.startTime = fd.start_time 
+		AND dd.endTime = fd.end_time
+	</select>
+
+	<select id="getShouleDepartDetail" parameterType="map" resultType="map">
+		SELECT
+		psp.class_date timeSolt,
+		pi.project_name projectName,
+		psp.teacher_code teacherCode,
+		ti.teacher_name teacherName,
+		dd1.`name` teacherType,
+		dd.`name` courseName,
+		psp.base_fee baseFee,
+		"1" hourActual,
+		psp.person_factor personFactor,
+		psp.course_factor courseFactor,
+		ROUND(psp.fee_total, 2) feeCourse,
+		"0" deductType
+		FROM project_schedule_plan psp
+		LEFT JOIN data_dic dd ON dd.`code` = psp.course_name
+		LEFT JOIN project_info pi ON pi.project_id = psp.project_id
+		LEFT JOIN teacher_info ti ON ti.teacher_code = psp.teacher_code
+		LEFT JOIN data_dic dd1 ON dd1.`code` = ti.teacher_type
+		where pi.dep_name = #{organizeCode}
+		<if test="startTime != null and startTime != ''">AND psp.class_date <![CDATA[>=]]> #{startTime}</if>
+		<if test="endTime != null and endTime != ''">AND psp.class_date <![CDATA[<=]]> #{endTime}</if>
+		order by psp.class_date asc;
+	</select>
+</mapper>

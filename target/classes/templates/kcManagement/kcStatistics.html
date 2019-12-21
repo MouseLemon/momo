@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    .layui-table th {
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .layui-table td {
+        text-align: center;
+    }
+
+    body .layui-layer-title {
+        font-size: 14px;
+    }
+
+    .trBackground {
+        background-color: #fdf5e5;
+    }
+
+    #kcTable th {
+        text-align: center;
+    }
+
+    #kcTable {
+        cellpadding: 0%;
+        cellspacing: 0%
+    }
+
+    .inp input {
+        width: 100%;
+    }
+
+    .inp {
+        width: 7%;
+    }
+
+    .thCenter tr th {
+        text-align: center;
+    }
+
+    .totalBackground {
+        background-color: #f7e7c8;
+    }
+
+    select {
+        font-family: "微软雅黑";
+        height: 30px;
+        font-size: 18px;
+        text-align: center;
+        border-radius: 5px;
+    }
+
+    .inp input {
+        display: block;
+        padding: 12px 4px;
+        width: 100%;
+        text-align: center;
+        border-width: 0 0 1px;
+        border-radius: 0;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, .12);
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0);
+        font-size: 16px;
+        background: transparent;
+        outline: none;
+    }
+
+    .layui-form-select .layui-input {
+        border: 1px #e6e6e6 solid;
+    }
+    .blueFont {
+    	color:blue;
+    	cursor: pointer;
+    }
+</style>
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+<META HTTP-EQUIV="expires" CONTENT="0">
+<head th:replace="fragments/layout::htmlhead">
+<body id="asdf">
+<div class="layui-layout layui-layout-admin" id="app">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height: 95%"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">课酬统计</h2>
+                <hr/>
+                <div>
+                    <form class="layui-form" id="form1">
+                        <div class="layui-form-item layui-row">
+                            <div class="layui-col-md12 layui-col-lg6">
+                                <div class="layui-col-md6">
+                                    <label class="layui-form-label">起始日期：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" class="layui-input" autocomplete="off" name="startTime"
+                                               id="startTime">
+                                    </div>
+                                </div>
+                                <div class="layui-col-md6">
+                                    <label class="layui-form-label">结束日期：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="endTime" id="endTime" autocomplete="off"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                                <!-- <div class="layui-col-md4">
+                                    <label class="layui-form-label">教师姓名：</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" id="teacherName" name="teacherName" placeholder="教师姓名"
+                                               autocomplete="off" class="layui-input">
+                                    </div>
+                                </div> -->
+                            </div>
+                            <div class="layui-col-md12 layui-col-lg6">
+                                <div class="layui-inline" style="margin-top: 5px;">
+                                    <button type="button" v-on:click="search('teacherCode')"
+                                            id="search" class="layui-btn layui-btn-sm" style="margin-left:40px">搜索
+                                    </button>
+                                    <!-- <button type="button" v-on:click="saveKclist()" class="layui-btn layui-btn-sm" >保存</button> -->
+                                    <button type="button" v-on:click="commit" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'kctj_commit'}">提交</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </form>
+                    <div style="overflow:auto;">
+                    <font color="#FF3030" size="2px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;搜索出数据后,双击项目名称可新增课酬</font>
+                        <div style="width:1650px;">
+                            <table class="layui-table" lay-skin="line" id="kcTable">
+                                <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>时段</th>
+                                    <th>项目名称</th>
+                                    <th>教师姓名</th>
+                                    <th>身份证号</th>
+                                    <th>教师类别</th>
+                                    <th>课程名称</th>
+                                    <th>语种</th>
+                                    <th>基础课酬</th>
+                                    <th>实际课时</th>
+                                    <th>人数系数</th>
+                                    <th>课程系数</th>
+                                    <th>课酬（元）</th>
+                                    <th>备注</th>
+                                </tr>
+                                </thead>
+                                <tbody v-for="kc in kcInfo.data">
+                                <tr v-for="kcList in kc"
+                                    :class="kcList.px=='小计'?'trBackground':kcList.px=='合计' ?'totalBackground':'' "
+                                    v-on:dblclick="functionClassify(kcList)">
+
+                                    <td>{{ kcList.px }}</td>
+                                    <td>{{ kcList.timeSolt }}</td>
+                                    <td>{{kcList.projectName}}</td>
+                                    <td>{{ kcList.teacherName }}</td>
+                                    <td>{{ kcList.idCard }}</td>
+                                    <td>{{ kcList.teacherType }}</td>
+                                    <td>{{ kcList.courseName }}</td>
+                                    <td>{{ kcList.language }}</td>
+                                    <td>
+                                        <div v-html="kcList.baseFee"></div>
+                                    </td>
+                                    <td>
+                                        <div v-html="kcList.ksCount"></div>
+                                    </td>
+                                    <td>
+                                        <div v-html="kcList.personFactor"></div>
+                                    </td>
+                                    <td>
+                                        <div v-html="kcList.courseFactor"></div>
+                                    </td>
+                                    <td v-on:click="kcDetail(kcList.timeSolt,kcList.teacherCode,kcList.courseId,kcList.projectId)" >
+                                    	<span :class="kcList.courseId !='' && kcList.courseId != null ? 'blueFont' : ''">
+                                    		{{ kcList.kcCount }}
+                                    	</span>
+                                    </td>
+                                    <td>{{kcList.feeType}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                  <!--   <div style="height:40px;" id="jqPager"></div> -->
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="/static/js/kcManager/kcManager.js"></script>
+<script th:inline="javascript">
+    vm.startTime = [[${startTime}]];
+    vm.endTime = [[${endTime}]];
+    var flag = [[${flag}]];
+    if (flag != '' && flag != 'undefind' && flag != null) {
+        vm.flag = flag;
+    }
+    
+</script>
+</html>

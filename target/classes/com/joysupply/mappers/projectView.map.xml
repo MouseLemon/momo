@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProjectViewDao">
+    <select id="getProjectView" parameterType="hashMap" resultType="hashMap">
+		select
+			psp.schedule_id scheduleId,
+			dc.name course,
+			psp.class_date classDate,
+			psp.start_time startTime,
+			psp.end_time endTime,
+			psp.person_count personCount,
+			ifnull(gi.grade_code, '') gradeCode,
+			cr.room_num roomNum,
+			d.name roomName,
+			t.teacher_name teacherName
+		from project_schedule_plan psp
+		left join class_room cr on psp.class_room_id = cr.room_id
+		left join data_dic d on cr.room_loc = d.code
+		left join data_dic dc on psp.course_name = dc.code
+		left join teacher_info t on psp.teacher_code = t.teacher_code
+		left join grade_info gi on gi.grade_id = psp.grade_id
+		where psp.project_id = #{projectId}
+		and psp.class_date between #{startDate} and #{endDate}
+		order by psp.start_time
+	</select>
+
+	<select id="getBmList" parameterType="hashMap" statementType="CALLABLE" resultType="hashMap">
+        {call getBmList(#{projectId}, #{startDate}, #{endDate})}
+    </select>
+
+	<select id="getOaProjectList" parameterType="hashMap" resultType="hashMap">
+		select * from grade_info where project_id = #{projectId}
+	</select>
+
+</mapper>

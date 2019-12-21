@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style>
+    .viewStyle {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+        word-wrap: break-word;
+        word-break: normal;
+    }
+    .planCont {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+        word-wrap: break-word;
+        word-break: normal;
+
+        background: #0eb4cd;
+        color: #fff;
+        border-radius: 8px;
+        min-height: 60px;
+        padding: 2% 0;
+        margin: 2% 0;
+        padding-left: 5%;
+    }
+
+    .planCont p {
+        padding-left: 5%;
+    }
+
+    .plan_span2 {
+        margin-left: 3%;
+    }
+
+    .planList {
+        margin-top: 10%;
+    }
+
+    .td_num {
+        position: absolute;
+        text-align: right;
+        top: 2%;
+        right: 6%;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">教师视图
+                    <div style="float: right">
+                        <button class="layui-btn layui-btn-sm outBtn" onclick="exportData()" >导出</button>
+                        <button class="layui-btn layui-btn-sm printBtn" onclick="printHtml()" >打印</button>
+                    </div>
+                </h2>
+                <hr/>
+                <div class="layui-form layui-row" action="">
+                    <div class="layui-col-lg3 layui-col-md12">
+                        <input type="hidden" id="year" th:value="${year}">
+                        <input type="hidden" id="month" th:value="${month}">
+                        <input type="hidden" id="day" th:value="${day}">
+                        <input type="hidden" id="week" th:value="${week}">
+                        <input type="hidden" id="weekOrMonth" th:value="${weekOrMonth}">
+                        <div class="layui-col-md12">
+                            <div class="layui-col-md11">
+                                <input type="hidden" id="teacher_code1" name="teacher_code1" th:value="${teacher_code}">
+                                <input type="hidden" id="myName" th:value="${myName}">
+                                <input type="hidden" id="userType" name="userType" th:value="${userType}">
+                                <th:block th:if="${userType != '13'}">
+                                    <div class="layui-col-md12">
+                                        <label class="layui-form-label" style="padding: 9px 0;width: 80px;text-align: left;">教师名称:</label>
+                                        <div class="layui-input-block" style="margin-left: 80px;">
+                                            <select id="teacher_code" name="teacher_code" lay-filter="teacher" th:disabled="${userType eq '13'}" lay-search>
+                                                <option th:each="item:${teacherList}" th:value="${item.teacher_code}"  th:text="${item.teacher_name}" th:selected="${teacher_name eq item.teacher_name}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-lg3 layui-col-md12" style="margin-top:5px;">
+                        <th:block th:if="${userType != '13'}">
+                            <button class="layui-btn layui-btn-sm" onclick="search(0)">搜索</button>
+                        </th:block>
+                    </div>
+                </div>
+                <div class="layui-col-lg4 layui-col-md12" style="margin-top: 5px">
+                    <span id="teacher_name"></span>
+                </div>
+                <div class="layui-col-lg4 layui-col-md12">
+                    <div class="layui-col-md6" style="margin-top: 5px">
+                        <span id="startTime"></span>
+                    </div>
+                    <div class="layui-col-md6" style="margin-top: 5px">
+                        <span id="endTime"></span>
+                    </div>
+                </div>
+
+                <div class="layui-col-lg4 layui-col-md12">
+                    <div class="layui-col-md7" style="margin-top: 10px; text-align: right;">
+                        <label id="up" onclick="search(-1)">
+                            <strong style="color: #01AAED;margin-right: 20px;cursor:pointer;"><</strong>
+                        </label>
+                        <span th:style="'display:' + @{(${weekOrMonth == 2} ? 'none' : 'inline-block')} + ''" th:text="${currentDate}" id="currentDate"></span>
+                        <span th:style="'display:' + @{(${weekOrMonth == 2} ? 'none' : 'inline-block')} + ''" th:text="${weekLable}" id="weekLable"></span>
+                        <span th:style="'display:' + @{(${weekOrMonth == 1} ? 'none' : 'inline-block')} + ''" th:text="${currentMonth}" id="monthLable"></span>
+                        <label id="next" onclick="search(1)">
+                            <strong style="color: #01AAED;margin-left: 20px;cursor:pointer;">></strong>
+                        </label>
+                    </div>
+                    <div class="layui-col-md5" style="margin-bottom: 5px;text-align: right">
+                        <div class="layui-btn layui-btn-sm " id="weekView">周视图</div>
+                        <div class="layui-btn layui-btn-sm " id="monthView">月视图</div>
+                    </div>
+                </div>
+
+                <table class="joysupply-plan-table" id="classSheetWeek" >
+                    <thead id="weekHead" class="head">
+                    </thead>
+                    <tbody id="weekTbody">
+                    </tbody>
+                </table>
+                <table class="joysupply-plan-table" id="classSheetMonth" style="display: none;">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>星期一</th>
+                        <th>星期二</th>
+                        <th>星期三</th>
+                        <th>星期四</th>
+                        <th>星期五</th>
+                        <th>星期六</th>
+                        <th>星期日</th>
+                    </tr>
+                    </thead>
+                    <tbody id="monthTbody">
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+<script th:inline="javascript">
+    var currentDate = [[${currentDate}]];
+    var currentMonth = [[${currentMonth}]];
+    var week = [[${week}]];
+</script>
+<script type="text/javascript">
+
+    $(function () {
+        search(0);
+    })
+
+    $("#weekView").click(function () {
+        $("#weekOrMonth").val(1);
+        $("#weekView").attr("background-color", "#0eb4cd")
+        $("#monthView").removeAttr("background-color");
+        $('#classSheetWeek').show();
+        $('#classSheetMonth').hide();
+        $('#weekLable').show();
+        $('#currentDate').show();
+        $('#monthLable').hide();
+        search(0);
+    })
+
+    $("#monthView").click(function () {
+        $("#weekOrMonth").val(2);
+        $("#monthView").attr("background-color", "#0eb4cd")
+        $("#weekView").removeAttr("background-color");
+        $('#classSheetMonth').show();
+        $('#classSheetWeek').hide();
+        $('#monthLable').show();
+        $('#weekLable').hide();
+        $('#currentDate').hide();
+        search(0);
+    });
+
+    function exportData() {
+        // ------------------------------------------------------------------------
+        var xhr = null;
+        if(window.XMLHttpRequest){
+            xhr = new window.XMLHttpRequest();
+        }else{ // ie
+            xhr = new ActiveObject("Microsoft")
+        }
+
+        xhr.open("GET","/",false)//false不可变
+        xhr.send(null);
+        var date = xhr.getResponseHeader("Date");
+        var nowTime = new Date(date);
+        // 获取服务器时间
+        var now = nowTime.getFullYear() + "-" + (nowTime.getMonth()+1) + "-" + nowTime.getDate();
+        // ------------------------------------------------------------------------
+
+        var userType = $('#userType').val();
+        if (userType == '13'){ // 某教师进入
+            var teacherName = $('#myName').val();
+        } else {
+            var teacherName = $('#teacher_code').next().find('input').val();
+        }
+
+        var weekLable = $('#weekLable').text();
+        var monthLable = $('#monthLable').text();
+
+        var weekHtml = document.getElementById('classSheetWeek').outerHTML.replace(/<thead/,"<p style='font-size: 20px' align='center'>" + teacherName + weekLable + "课表</p><thead");
+        var monthHtml = document.getElementById('classSheetMonth').outerHTML.replace(/<thead>/,"<p style='font-size: 20px' align='center'>" + teacherName + monthLable +"课表</p><thead>");
+        var html1 = "<html>" +
+            "<head><meta charset='utf-8' /></head>" +
+            "<body>" + weekHtml + "</body>" +
+            "</html>";
+        var html2 = "<html>" +
+            "<head><meta charset='utf-8' /></head>" +
+            "<body>" + monthHtml + "</body>" +
+            "</html>";
+        html1 = html1.replace(/<table/g,"<table border=\"1\"");
+        var html11 = html1.replace(/<td/g, "<th width='130' height='50' ");
+
+        html2 = html2.replace(/<table/g,"<table border=\"1\"");
+        var html22 = html2.replace(/<td/g, "<th width='130' height='50' ");
+
+        if ($("#classSheetMonth").css("display") === 'none'){
+            var blob = new Blob([html11], { type: "application/vnd.ms-excel" });
+            // 实例化一个Blob对象，其构造函数的第一个参数是包含文件内容的数组，第二个参数是包含文件类型属性的对象
+            // 利用URL.createObjectURL()方法为a元素生成blob URL
+            // 设置文件名
+            // a.download = now + "_" + teacherName + "_" + weekLable + "_周视图" + ".xls";
+            var name = now + "_" + teacherName + "_" + weekLable + "_周视图" + ".xls";
+            if('msSaveOrOpenBlob' in navigator){
+                window.navigator.msSaveOrOpenBlob(blob, name);
+            }else{
+                var a = document.getElementsByTagName("a")[0];
+                a.download = now + "_" + teacherName + "_" + weekLable + "_周视图" + ".xls";
+                a.href = URL.createObjectURL(blob);
+                a.click();
+            }
+        } else {
+            var blob = new Blob([html22], { type: "application/vnd.ms-excel" });
+            // 实例化一个Blob对象，其构造函数的第一个参数是包含文件内容的数组，第二个参数是包含文件类型属性的对象
+            // 利用URL.createObjectURL()方法为a元素生成blob URL
+            // 设置文件名
+            var name = now + "_" + teacherName + "_" + monthLable + "_月视图" + ".xls";
+            if('msSaveOrOpenBlob' in navigator){
+                window.navigator.msSaveOrOpenBlob(blob, name);
+            }else{
+                var a = document.getElementsByTagName("a")[0];
+                a.download = now + "_" + teacherName + "_" + monthLable + "_月视图" + ".xls";
+                a.href = URL.createObjectURL(blob);
+                a.click();
+            }
+        }
+    }
+
+    // 打印
+    var form;
+    function printHtml() {
+        var teacher_code = $("#teacher_code").val();
+
+        if ($("#classSheetMonth").css("display") === 'none'){
+            var tableid = "classSheetWeek";
+        } else {
+            var tableid = "classSheetMonth";
+        }
+
+        var month = $("#classSheetMonth").text();
+        var week = $("#classSheetWeek").text();
+        var html = document.getElementById(tableid).outerHTML;
+        var old_str = document.body.innerHTML;
+        document.body.innerHTML = html; //构建新网页
+        window.print(); //打印刚才新建的网页
+        document.body.innerHTML = old_str; //将网页还原
+        $("#teacher_code").val(teacher_code);
+        form.render('select');
+        // search(0);
+    }
+
+    var laydate;
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        form = layui.form;
+        laydate = layui.laydate;
+        form.on('select(teacher)', function (data) {
+            var teacher_name = $('#teacher_code option:selected').text();
+            $("#teacher_name").html(teacher_name + "<strong style='color: #01AAED;margin-right: 20px;cursor:pointer;'>&nbsp;></strong>");
+        })
+
+        laydate.render({
+            elem: '#test1', //指定元素
+            type: 'date',
+            value: startTime
+        })
+        laydate.render({
+            elem: '#test2', //指定元素
+            type: 'date',
+            value: endTime
+        })
+
+        var ins1 = laydate.render({
+            elem: '#currentDate',
+            format: 'yyyy/MM/dd', //可任意组合
+            value: currentDate,
+            isInitValue: false,
+            done: function (value, date, endDate) {
+                var map = {
+                    "currentDate": value,
+                    "weekOrMonth": 1
+                };
+                $.ajax({
+                    url: '/scheduleView/getCalendar',
+                    type: 'post',
+                    data: JSON.stringify(map),
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (data) {
+                        $("#year").val(data.year);
+                        $("#month").val(data.month);
+                        $("#day").val(data.day);
+                        $("#week").val(data.week);
+                        $("#currentDate").text(data.currentDate);
+                        $("#weekLable").text("第" + data.week + "周");
+                        $("#monthLable").text(data.monthLable);
+
+                        var userType = $('#userType').val();
+                        if (userType != '13'){
+                            var teacher_code = $('#teacher_code').val();
+                            if (teacher_code != null && teacher_code != "") {
+                                search(0);
+                            }
+                        } else {
+                            search(0)
+                        }
+
+
+                    }
+                });
+            }
+        });
+
+        var ins2 = laydate.render({
+            elem: '#monthLable',
+            format: 'yyyy/MM', //可任意组合
+            value: currentMonth,
+            isInitValue: false,
+            done: function (value, date, endDate) {
+                var map = {
+                    "currentDate": value,
+                    "weekOrMonth": 2
+                };
+                console.log(map)
+                $.ajax({
+                    url: '/scheduleView/getCalendar',
+                    type: 'post',
+                    data: JSON.stringify(map),
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (data) {
+                        $("#year").val(data.year);
+                        $("#month").val(data.month);
+                        $("#day").val(data.day);
+                        $("#week").val(data.week);
+                        $("#monthLable").text(data.monthLable);
+                        currentDate = data.currentDate;
+                        var userType = $('#userType').val();
+                        if (userType != '13'){
+                            var teacher_code = $('#teacher_code').val();
+                            if (teacher_code != null && teacher_code != "") {
+                                search(0);
+                            }
+                        } else {
+                            search(0);
+                        }
+                    }
+                });
+            }
+        });
+    })
+
+    function search(beforeOrAfter) {
+        var teacher_code1 = $('#teacher_code1').val();
+        var teacher_code = $('#teacher_code').val();
+        var userType = $('#userType').val();
+        if (userType != '13'){
+            if (teacher_code == null || teacher_code == "") {
+                tipinfo("请选择教师！");
+                return false;
+            }
+        }
+
+        var map = {
+            userType : userType,
+            teacher_code: teacher_code,
+            teacher_code1: teacher_code1,
+            year: $("#year").val(),
+            month: $("#month").val(),
+            day: $("#day").val(),
+            week: $("#week").val(),
+            beforeOrAfter: beforeOrAfter,
+            weekOrMonth: $("#weekOrMonth").val()
+        };
+
+        $.ajax({
+            url: '/scheduleView/getSchedule',
+            type: 'post',
+            data: JSON.stringify(map),
+            dataType: "json",
+            contentType: "application/json",
+            success: function (data) {
+                $("#year").val(data.year);
+                $("#month").val(data.month);
+                $("#day").val(data.day);
+                $("#week").val(data.week);
+                $("#currentDate").text(data.currentDate);
+                $("#weekLable").text("第" + data.week + "周");
+                $("#monthLable").text(data.currentMonth);
+                if (data.weekOrMonth == 2) {
+                    var calendar = "";
+                    var monthCalendar = data.monthCalendar;
+                    var teacherViewList = data.teacherViewList;
+                    for (var i = 0; i < monthCalendar.length; i++) {
+                        var week = monthCalendar[i];
+                        var row = "<tr>";
+                        for (var j = 0; j < week.length; j++) {
+                            var day = week[j];
+                            var cell = "<td style='position: relative'>";
+                            if (day.day != null && day.day != "") {
+                                cell += "<p class='td_num'>" + day.day + "</p>";
+                            }
+                            if (day.startDate != null && day.startDate != "") {
+                                cell += "<p>" + day.startDate + "-" + day.endDate + "</p>";
+                            }
+                            cell += "<div class='planList'>";
+                            for (var k = 0; k < teacherViewList.length; k++) {
+                                var course = teacherViewList[k];
+
+                                var roomLocB = course.room_loc;
+                                var roomNumB = course.room_num;
+
+                                if (roomLocB == null || roomLocB == '' || roomLocB == 'undefined') {
+                                    roomLocB = '';
+                                }
+
+                                if (roomNumB == null || roomNumB == '' || roomNumB == 'undefined') {
+                                    roomNumB = '';
+                                }
+
+                                if (course.class_date == day.classDate) {
+                                    // if (course.room_loc == null || course.room_num == null){
+                                    //     // 为空的话不显示
+                                    //     cell += "<div></div>"
+                                    // } else {
+                                        cell += "<div class='planCont'>" +
+                                                      course.class_name + "<br/>" +
+                                                      course.teacher_name + "<br/>" +
+                                                      course.start_time + "-" + course.end_time + "<br/>" +
+                                                        roomLocB + " " + roomNumB + "<br/>" +
+                                                "</div>"
+                                    // }
+                                }
+                            }
+                            cell += "</td>"
+                            row += cell;
+                        }
+                        row += "</tr>";
+                        calendar += row;
+                    }
+                    $("#monthTbody").html(calendar);
+                } else {
+                    // 周视图
+                    var weekCalendar = data.weekCalendar;
+                    var timeTable = data.timeTable.data;
+                    var teacherViewList = data.teacherViewList;
+                    console.log(teacherViewList);
+                    var thead = "<tr><th>时段</th>";
+                    //创建head
+                    for (var w = 0; w < weekCalendar.length; w++) {
+                        thead += "<th>" + weekCalendar[w].weekDay + "(" + weekCalendar[w].date + ")" + "</th>"
+                    }
+                    thead += "</tr>";
+                    $("#weekHead").html(thead);
+                    //创建body
+
+                    var tbody = "";
+                    for (var t = 0; t < timeTable.length; t++) {
+                        tbody += "<tr><td>" + timeTable[t].start_time + "-" + timeTable[t].end_time + "</td>"
+                        for (var w = 0; w < weekCalendar.length; w++) {
+                            tbody += "<td>";
+                            for (var p = 0; p < teacherViewList.length; p++) {
+                                var roomLocA = teacherViewList[p].room_loc;
+                                var roomNumA = teacherViewList[p].room_num;
+                                if (roomLocA == null || roomLocA == '' || roomLocA == 'undefined') {
+                                    roomLocA = '';
+                                }
+                                if (roomNumA == null || roomNumA == '' || roomNumA == 'undefined') {
+                                    roomNumA = '';
+                                }
+                                if (teacherViewList[p].class_date == weekCalendar[w].classDate && teacherViewList[p].start_time == timeTable[t].start_time) {
+                                    // if (teacherViewList[p].room_loc == null || teacherViewList[p].room_num == null){
+                                    //     // 没有的话显示为空
+                                    //     tbody += "<div></div>";
+                                    // } else {
+                                        tbody +="<div class='viewStyle'  data-value='" + teacherViewList[p].schedule_id + "' onclick=\"scheduleDetail('"+teacherViewList[p].schedule_id+"')\" >" +
+                                                    teacherViewList[p].teacher_name + '<br/>' +
+                                                    teacherViewList[p].class_name + '<br/>' +
+                                                    roomLocA + " " + roomNumA + '<br/>' +
+                                                "</div>";
+                                    // }
+                                }
+                            }
+                            tbody += "</td>";
+                        }
+                        tbody += "</tr>";
+                    }
+                    $("#weekTbody").html(tbody);
+                }
+            }
+        })
+    }
+
+    // 排课详情
+    function scheduleDetail(schedule_id){
+        console.log("schedule_id" + schedule_id);
+        openwindow("/scheduleView/teacherViewInfo?schedule_id=" + schedule_id, "课程信息", "400", "400", false);
+    }
+
+    $("#weekView").click(function () {
+        weekOrMonth = 1;
+        search(0);
+    })
+
+    $("#monthView").click(function () {
+        weekOrMonth = 2;
+        search(0);
+    })
+
+    // 导出
+
+
+
+
+</script>
+</html>

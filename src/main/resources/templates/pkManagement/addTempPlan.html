@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+    .layui-form-select .layui-input {
+        padding-right: 24px !important;
+    }
+</style>
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div>
+    <form class="layui-form">
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs12">
+                    <label class="layui-form-label"><font style="color: red">*
+                    </font>课程名称：</label>
+                        <div class="layui-input-block">
+                            <input type="text" name = "courseName" id="courseName" th:value="${courseName}" required lay-verify="required"  style="width: 584px;" autocomplete="off" placeholder="请输入"  class="layui-input">
+                        </div>
+                </div>
+                <div class="layui-col-xs12" style="margin-top: 15px">
+                    <label class="layui-form-label"><font style="color: red">*
+                    </font>教师名称：</label>
+                    <div class="layui-input-block layui-unselect layui-form-select pxkeji-select" style="width: 584px;margin-left: 110px;z-index: 222">
+                        <div class="layui-select-title">
+                            <input id="teacher_name" type="text" th:value="${teacherName}" data-value="" placeholder="请选择"  class="layui-input layui-unselect" autocomplete="off">
+                            <input id="teacher_code" type="hidden" th:value="${teacherCode}"  readonly="" class="layui-input layui-unselect">
+                            <i class="layui-edge"></i>
+                        </div>
+
+                        <dl id="hideOrShow" class="layui-anim layui-anim-upbit" style="">
+                            <dd lay-value="" class="layui-select-tips" >请选择</dd>
+                            <dd th:each="item:${teacherList}"  th:value="${item.dataCode}" >
+                                <p th:text="${item.teacherName}" style="line-height: 20px"></p>
+                                <input type="hidden"  th:value="${item.dataCode}">
+                                <p th:text="${'&nbsp;&nbsp;'+item.idCard}" style="line-height: 20px;color: #ccc"></p>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs12">
+                    <label class="layui-form-label"><font style="color: red">*
+                    </font>上课日期：</label>
+                    <div class="layui-input-block">
+                        <input name="classdate" id="classdate" style="width: 584px;" type="text" th:value="${classdate}" readonly="readonly" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs6">
+                        <label class="layui-form-label"><font style="color: red">*
+                        </font>开始时间：</label>
+                        <div  class="layui-inline">
+                            <!--<select name="start_time_hour" id="start_time_hour" class="layui-input" lay-search>-->
+                                <!--<option th:each="item:${timeList}" th:value="${item.start_time}"-->
+                                        <!--th:selected="${startTime.substring(0,2) == item.start_time.substring(0,2)}"	th:text="${item.start_time}" ></option>-->
+                            <!--</select>-->
+                            <input name="startTime" id="startTime" type="text" th:value="${startTime}"   lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-col-xs6">
+                        <label class="layui-form-label"><font style="color: red">*
+                        </font>结束时间：</label>
+                        <div  class="layui-inline">
+                            <input name="endTime" id="endTime" type="text" th:value="${endTime}"   lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+               <!--     <div class="layui-col-xs2">
+                        <div style="" class="layui-inline">
+                            <input name="startHour" id="startHour" type="text" th:value="${startTime.substring(0,2)}" readonly  lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-col-xs1">
+                        <div style="text-align: center" class="layui-inline">
+                            <strong>:</strong>
+                        </div>
+                    </div>
+                    <div class="layui-col-xs2">
+                        <div style="" class="layui-inline">
+                            <input name="startMinute" id="startMinute" type="text" th:value="${startTime.substring(3,5)}"  lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>-->
+
+           <!--     <div class="layui-col-xs6">
+                    <label class="layui-form-label">结束时间：</label>
+                    <div  class="layui-inline">
+                        &lt;!&ndash;<select name="start_time_hour" id="start_time_hour" class="layui-input" lay-search>&ndash;&gt;
+                        &lt;!&ndash;<option th:each="item:${timeList}" th:value="${item.start_time}"&ndash;&gt;
+                        &lt;!&ndash;th:selected="${startTime.substring(0,2) == item.start_time.substring(0,2)}"	th:text="${item.start_time}" ></option>&ndash;&gt;
+                        &lt;!&ndash;</select>&ndash;&gt;
+                        <input name="endTime" id="endTime" type="text" th:value="${endTime}" readonly  lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-col-xs2">
+                    <div style="" class="layui-inline">
+                        <input name="endHour" id="start" type="text" th:value="${endTime.substring(0,2)}" readonly  lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-col-xs1">
+                    <div style="text-align: center" class="layui-inline">
+                        <strong>:</strong>
+                    </div>
+                </div>
+                <div class="layui-col-xs2">
+                    <div style="" class="layui-inline">
+                        <input name="endMinute" id="endMinute" type="text" th:value="${endTime.substring(3,5)}"  lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>-->
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script th:inline="javascript">
+    var classdate = [[${classdate}]];
+    var weekDay = [[${weekDay}]];
+    var startTime = [[${startTime}]];
+    var endTime = [[${endTime}]];
+
+</script>
+<script>
+
+    $(function() {
+        var hideOrShow = document.getElementById("hideOrShow");
+        $(document).on("click", ".pxkeji-select input", function() {
+            // 判断课程框内是否有值
+
+            $(this).addClass('layui-this');
+            $(this).parents('.pxkeji-select').find('.layui-anim-upbit').show();
+
+            $(document).one("click",
+                function() { // 对document绑定一个隐藏Div方法
+                    $(hideOrShow).hide();
+                }
+            );
+
+        });
+        $(document).on("click", ".pxkeji-select dd", function() {
+            $(this).parent().find('dd').removeClass('layui-this')
+            $(this).addClass('layui-this');
+            $(this).parents('.pxkeji-select').find('#teacher_name').val($($($(this).html())[0]).html());
+            $(this).parents('.pxkeji-select').find('#teacher_code').attr('data-value',$(this).find('input').val())
+            $(this).parents('.pxkeji-select').find('.layui-anim-upbit').hide();
+        });
+    })
+
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+
+    });
+    function getParams() {
+        var params = {
+            classdate:classdate,
+            weekDay:weekDay,
+            courseName:$('#courseName').val(),
+            teacherCode:$('#hideOrShow .layui-this input').val(),
+            teacherName:$('.layui-this').val(),
+            startTime:$('#startTime').val(),
+            endTime:$('#endTime').val(),
+            msg:""
+        }
+        if(($('#hideOrShow .layui-this input').val() == undefined || $('#hideOrShow .layui-this input').val() == '') && $('#teacher_code').val()!='') {
+            params.teacherCode = $('#teacher_code').val();
+            params.teacherName = $('#teacher_name').val();
+        }
+        if($('#courseName').val() == undefined || $('#courseName').val() == '') {
+            params.msg = "课程名称不能为空";
+            return params;
+        }
+        if(($('#hideOrShow .layui-this input').val() == undefined || $('#hideOrShow .layui-this input').val() == '') && $('#teacher_code').val()=='') {
+            params.msg = "教师名称不能为空";
+            return params;
+        }
+        if($('#startTime').val() == undefined || $('#startTime').val() == '') {
+            params.msg = "开始时间不能为空";
+            return params;
+        }
+        if($('#endTime').val() == undefined || $('#endTime').val() == '') {
+            params.msg = "结束时间不能为空";
+            return params;
+        }
+        var time = $('#startTime').val();
+        var end = $('#endTime').val();
+        var st = parseInt(time.replace(":",""));
+        var et = parseInt(end.replace(":",""));
+        var oldTime = parseInt(startTime.replace(":",""));
+        var oldEndTime = parseInt(endTime.replace(":",""));
+        if(st < oldTime) {
+            params.msg = "开始时间不能小于"+startTime;
+            return params;
+        }
+        if(st >= oldEndTime) {
+            params.msg = "开始时间不能大于"+endTime;
+            return params;
+        }
+        if(st > et) {
+            params.msg = "结束时间不能小于开始时间";
+            return params;
+        }
+
+        return params;
+
+    }
+</script>
+
+</html>

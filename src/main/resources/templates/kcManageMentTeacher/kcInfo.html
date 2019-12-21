@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+	.layui-table td {
+        text-align: center;
+    }
+
+    body .layui-layer-title {
+        background-color: #01AAED;
+        color: #fff;
+        font-size: 14px;
+    }
+     #kcTable th {
+        text-align: center;
+    }
+.trBackground {
+    background-color: #fdf5e5;
+}
+.totalBackground {
+    background-color: #f7e7c8;
+}
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+	<div class="layui-layout layui-layout-admin">
+		<div th:replace="fragments/layout :: header">Header</div>
+		<div th:replace="fragments/layout :: sidebar">sidebar</div>
+		<div class="layui-body" style="background-color: #f2f2f2">
+			<section>
+				<div class="layui-row layui-col-space10">
+					<div
+						style="padding: 15px; background-color: #FFFFFF; margin: 15px;"
+						class="layui-anim layui-anim-upbit">
+						<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">课酬统计&gt;明细</h2>
+						<hr />
+						<div id="app">
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">项目名称：</label>
+									<div class="layui-input-inline">
+										<input type="text" id="projectName" placeholder="请输入项目名称" autocomplete="off" class="layui-input">
+									</div>
+								</div>
+								<div class="layui-inline">
+									<button type="button" v-on:click="search()" class="layui-btn serach layui-btn-sm" >搜索</button>
+									<button type="button" v-on:click="exportExcel()" class="layui-btn serach layui-btn-sm" >导出</button>
+									<button type="button" class="layui-btn serach layui-btn-sm" onclick="javascript:history.back(-1);" >返回</button>
+								</div>
+							</div>
+							<div class="layui-form">
+								<table class="layui-table" lay-skin="line" id="kcTable"> 
+									<thead>
+										<tr>
+											<th>序号</th>
+											<th>年份</th>
+											<th>月份</th>
+											<th>项目部名称</th>
+											<th>项目名称</th>
+											<th>课程名称</th>
+											<th>基础课酬</th>
+											<th>课时</th>
+											<th>人数系数</th>
+											<th>课程系数</th>
+											<th>课酬(元)</th>
+										</tr> 
+									</thead> 
+									<tbody class="layui-table">  
+										<tr v-for="kcList in kcInfo"  :class="kcList.px=='小计'?'trBackground':kcList.px=='合计' ?'totalBackground':'' " >
+											<td>{{ kcList.px }}</td>
+											<td>{{ kcList.year }}</td>
+											<td>{{ kcList.month }}</td>
+											<td>{{ kcList.depName }}</td>
+											<td>{{ kcList.project_name }}</td>
+											<td>{{ kcList.courseName }}</td>
+											<td>{{ kcList.base_fee }}</td>
+											<td>{{ kcList.hour_actual }}</td>
+											<td>{{ kcList.person_factor }}</td>
+											<td>{{ kcList.course_factor }}</td>
+											<td>{{ kcList.fee_course }}</td>
+										</tr>
+									</tbody>
+								</table>
+								<div style="float: right;" id="jqPager"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</div>
+</body>
+
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/kcManagerTeacher/kcInfo.js}"></script>
+<script th:inline="javascript">
+	vm.year = [[${year}]];
+	vm.month = [[${month}]];
+	/* layui.use(['laydate'],function(){
+		var laydate = layui.laydate;
+		
+	}) */
+</script>
+</html>

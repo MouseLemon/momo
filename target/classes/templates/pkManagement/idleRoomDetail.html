@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+    .layui-input {
+        width: 80% !important;
+    }
+
+    .layui-form-label {
+        width: 100px !important;
+    }
+
+    td {
+        cursor: pointer;
+    }
+    td div {
+        text-align: left;
+    }
+    .plan{
+        color: #1BC3A2 !important;
+    }
+</style>
+<link rel="stylesheet" th:href="@{/css/classRoom/unUse.css}">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-anim layui-anim-upbit">
+            <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">
+                空闲详情
+                <div class="joysupply-title-right">
+                    <button class="layui-btn layui-btn-sm closeBtn">返回</button>
+                </div>
+            </h2>
+            <hr/>
+            <form action="">
+                <span th:text="${roomLocName}"></span>><span
+                    th:text="${classRoom?.roomNum}"></span> <input type="hidden"
+                                                                   name="week" id="week" th:value="${weeks}"> <input
+                    type="hidden" name="roomId" id="roomId"
+                    th:value="${classRoom?.roomId}"> <input type="hidden"
+                                                            name="year" id="year" th:value="${year}">
+                <div class="joysupply-title-right" style="margin-bottom: 10px">
+                    <label id="up" onclick="switchTime('up')"> <strong
+                            style="color: #01AAED; margin-right: 20px; cursor: pointer;"><</strong></label>
+
+                    <label id="time"></label><span id="week" th:text="${weekString}"></span>
+                    <label id="next" onclick="switchTime('next')"><strong
+                            style="color: #01AAED; margin-left: 20px; cursor: pointer;">></strong></label>
+
+                </div>
+                <table class="joysupply-plan-table">
+                    <thead>
+                    <tr>
+                        <th>时段</th>
+                        <th th:each="item:${cul}" th:text="${item}"></th>
+
+                    </tr>
+                    </thead>
+                    <tbody class="courseTbody">
+                    <tr th:each="info,infoStat : ${data}">
+                        <td class="head" th:text="|${info.start_time}-${info.end_time}|"></td>
+                        <td th:each="k : ${#numbers.sequence(0,6)}"
+                            th:id="|${k}_${#strings.replace(info.start_time,':','')}|"
+                            th:attr="data-timeStop=|${years[__${k}__]}-${months[__${k}__]}-${days[__${k}__]}-${weekDay[__${k}__]}-${info.start_time}-${info.end_time}|">
+                        </td>
+                    </tr>
+
+
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+
+<script th:src="@{/js/jquery-ui.js}"></script>
+
+<script type="text/html" id="planItem">
+    <div class="courseItem">{msg}</div>
+</script>
+<script th:inline="javascript">
+    var list = [[${list}]];
+    var classRoomPlan = [[${classRoomPlan}]];
+    var timeSheetList = [[${data}]];
+    var tempPlan = [[${tempPlan}]];
+    var classRoomType = [[${classRoom.roomType}]];
+    var weeks = [[${weeks}]];
+    var roomLocName1 = [[${roomLocName}]];
+    var roomNum1 = [[${classRoom?.roomNum}]];
+</script>
+<script th:inline="javascript">
+    var dateTime = [[${dateString}]];
+    var roomLocName = [[${roomLocName}]];
+</script>
+
+<script type="text/javascript">
+
+
+    $(function () {
+        // console.log(list);
+        for (var i = 0; i < list.length; i++) {
+            var week_day = list[i].weekDay;
+            var starTime = list[i].startTime.replace(":", "");
+            var id = week_day + "_" + starTime;
+            var html = "<div class=\"courseItem ui-draggable ui-draggable-handle\" style=\"position: relative;\">不可用</div>"
+            $('#' + id).html(html)
+
+        }
+
+        for (var i = 0; i < classRoomPlan.length; i++) {
+            var week_day = classRoomPlan[i].week_day;
+            var start = classRoomPlan[i].start_time.replace(":", "");
+            // var schedule_id = classRoomPlan[i].schedule_id;
+            var course_name = classRoomPlan[i].course_name;
+            var class_room_type = classRoomPlan[i].class_room_type;
+            var teacher_name = classRoomPlan[i].teacher_name;
+            var start_time = classRoomPlan[i].start_time;
+            var end_time = classRoomPlan[i].end_time;
+            var roomNum = classRoomPlan[i].roomNum;
+            var roomLoc = classRoomPlan[i].roomLoc;
+            for (var j = 0; j < timeSheetList.length; j++) {
+                var st = parseInt(timeSheetList[j].start_time.replace(":", ""));
+                var et = parseInt(timeSheetList[j].end_time.replace(":", ""));
+                var startTime = parseInt(start);
+                if (startTime >= st && startTime <= et) {
+                    var id = week_day + "_" + timeSheetList[j].start_time.replace(":", "");
+                    console.log(id)
+                    // 展示空白格数据
+                    // 课程名称，位置(查出来的)/教室类型，教师，开始时间-结束时间
+                    var html =
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + course_name
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        +  class_room_type
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + teacher_name + "  "
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + start_time + "-" + end_time
+                        + "</div>"
+
+                    if (roomNum != undefined && roomLoc != undefined) {
+                        html += "<div class=\"courseItem ui-draggable ui-draggable-handle isPlan\" style=\"position: relative;\">" + roomLoc + "  " + roomNum + "</div>"
+                    }
+                    $('#' + id).html(html);
+                    break;
+                }
+            }
+        }
+        for (var i = 0; i < tempPlan.length; i++) {
+            var week_day = tempPlan[i].week_day;
+            var start = tempPlan[i].start_time.replace(":", "");
+            var course_name = tempPlan[i].course_name;
+            var class_room_type = tempPlan[i].class_room_type;
+            var teacher_name = tempPlan[i].teacher_name;
+            var start_time = tempPlan[i].start_time;
+            var end_time = tempPlan[i].end_time;
+            var schedule_id = tempPlan[i].schedule_id;
+            for (var j = 0; j < timeSheetList.length; j++) {
+                var st = parseInt(timeSheetList[j].start_time.replace(":", ""));
+                var et = parseInt(timeSheetList[j].end_time.replace(":", ""));
+                var startTime = parseInt(start);
+                if (startTime >= st && startTime <= et) {
+                    var id = week_day + "_" + timeSheetList[j].start_time.replace(":", "");
+                    console.log(id)
+                    // 展示空白格数据
+                    // 课程名称，位置(查出来的)/教室类型，教师，开始时间-结束时间
+                    var html =
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + "<input type='hidden' value='" + schedule_id + "'>"
+                        + course_name
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + class_room_type
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + teacher_name
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + start_time + "-" + end_time
+                        + "</div>"
+                        +
+                        "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                        + roomLocName1 + " " + roomNum1
+                        + "</div>";
+
+                    // if(roomNum != undefined && roomLoc != undefined) {
+                    //     html +="<div class=\"courseItem ui-draggable ui-draggable-handle isPlan\" style=\"position: relative;cursor:pointer;\">"+roomLoc+"  "+roomNum+"</div>"
+                    // }
+                    $('#' + id).html(html);
+                    $('#' + id).addClass('plan');
+                    break;
+                }
+            }
+        }
+
+    });
+
+    // 上一周或下一周不可用时间段
+    function switchTime(param) {
+        var roomId = $('#roomId').val();
+        var date = $('#time').text();
+        if (param == 'up') {
+
+            location.href = '/classRoom/idleRoomDetail?roomId=' + roomId + '&date=' + date + '&up=' + param + '&roomLocName=' + roomLocName;
+        } else if (param == 'next') {
+            location.href = '/classRoom/idleRoomDetail?roomId=' + roomId + '&date=' + date + '&next=' + param + '&roomLocName=' + roomLocName;
+        }
+    }
+
+    var selTd;
+    var sad = 0;
+    var isSumbit = false; // 是否已提交
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var week = 10;
+        var ins1 = laydate.render({
+            elem: '#time'
+            , done: function (value, date, endDate) {
+                // console.log(value); //得到日期生成的值，如：2017-08-18
+                // console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                // console.log(dateTime); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+                var roomId = $('#roomId').val();
+                location.href = '/classRoom/idleRoomDetail?roomId=' + roomId + '&date=' + value + '&roomLocName=' + roomLocName;
+            }
+            , format: 'yyyy-MM-dd' //可任意组合
+            , value: dateTime
+        });
+
+
+        $(".closeBtn").click(function () { //返回
+            //window.history.back();  //返回上一页
+            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(index); //再执行关闭
+        });
+
+
+        $('.joysupply-plan-table tbody td:not(".head")').click(function () {
+            var roomId = $('#roomId').val();
+            selTd = $(this);
+            var text = $(this).find('div').html();
+            var id = $(this).find('input').val();
+            if (text != undefined && id == undefined) {
+                return false;
+            }
+            var date = this.getAttribute("data-timeStop");
+            // 先判断自定义时间是否超出当前时间
+            $.post("/classRoom/getNowTimeIsAble",{date:date,roomId:roomId},function (data) {
+                if(data.result != "OK" && id == undefined) {
+                    layer.msg(data.message)
+                    return false;
+                }else {
+                    layer.open({
+                        type: 2,
+                        title: ['临时排课', 'font-size:18px;'],
+                        shadeClose: false,
+                        area: ['740px', '440px'],
+                        content: '/classRoom/setTempPlanPage?date='+date+'&id='+id,
+                        btn: ['确定', '取消'],
+                        btnAlign: 'c',
+                        yes: function(index, layero){
+
+                            var body = layer.getChildFrame('body', index);
+                            var iframeWin = window[layero.find('iframe')[0]['name']];
+                            var params = iframeWin.getParams();
+
+                            params.roomId = roomId;
+                            params.classRoomType = classRoomType;
+                            params.week = weeks;
+                            params.id = id;
+                            if(params.msg != '') {
+                                layer.msg(params.msg);
+                                return false;
+                            }
+                            console.log(params);
+                            var dateNow = params.classdate+"-"+weeks+"-"+params.startTime + "-" +params.endTime
+                            $.post("/classRoom/getNowTimeIsAble",{date:dateNow,roomId:roomId},function (data) {
+                                if(data.result != "OK" && id == undefined) {
+                                    layer.msg(data.message)
+                                    return false;
+                                }else {
+                                    $.post("/classRoom/saveTempPlan",params,function(data) {
+                                        if(data.result == 'OK') {
+                                            layer.close(index); //如果设定了yes回调，需进行手工关闭
+                                            layer.msg("设置成功");
+                                            var html =
+                                                "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                                                + "<input type='hidden' value='" + data.scheduleId + "'>"
+                                                + params.courseName
+                                                + "</div>"
+                                                +
+                                                "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                                                + data.roomType
+                                                + "</div>"
+                                                +
+                                                "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                                                + params.teacherName + "  "
+                                                + "</div>"
+                                                +
+                                                "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                                                + params.startTime + "-" + params.endTime
+                                                + "</div>"
+                                                +
+                                                "<div class='courseItem ui-draggable ui-draggable-handle' style='position: relative;'>"
+                                                + data.roomType + "  " + data.room_num
+                                                + "</div>";
+                                            $(selTd).html(html);
+                                            $(selTd).addClass('plan');
+
+                                        }else {
+                                            layer.msg(data.message)
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    });
+                }
+            });
+
+
+
+
+        })
+
+    });
+
+
+</script>
+
+</html>

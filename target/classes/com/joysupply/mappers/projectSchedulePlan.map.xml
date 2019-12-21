@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ProjectSchedulePlanDao">
+	<resultMap type="ProjectSchedulePlan" id="projectSchedulePlanMap">
+    	<id property="scheduleId" column="schedule_id" />  
+        <result property="projectId" column="project_id" />   
+        <result property="courseName" column="course_name" />   
+        <result property="teacherCode" column="teacher_code" />   
+        <result property="gradeId" column="grade_id" />   
+        <result property="classRoomType" column="class_room_type" />   
+        <result property="classDate" column="class_date" />   
+        <result property="startTime" column="start_time" />   
+        <result property="endTime" column="end_time" />   
+        <result property="baseFee" column="base_fee" />   
+        <result property="personFactor" column="person_factor" />   
+        <result property="courseFactor" column="course_factor" />   
+        <result property="personCount" column="person_count" />   
+        <result property="feeTotal" column="fee_total" />   
+        <result property="year" column="year" />   
+        <result property="week" column="week" />   
+        <result property="status" column="status" />   
+        <result property="classRoomId" column="class_room_id" />   
+        <result property="scheduleType" column="schedule_type" />   
+        <result property="addFeeCount" column="add_fee_count" />   
+    </resultMap> 
+    <sql id="projectSchedulePlanField">
+		schedule_id,project_id,course_name,teacher_code,grade_id,class_room_type,class_date,start_time,end_time,base_fee,
+		person_factor,course_factor,person_count,fee_total,year,week,status,class_room_id,schedule_type,add_fee_count
+	</sql> 
+	<select id="getProjectSchedulePlanList" parameterType="ProjectSchedulePlan" resultMap="projectSchedulePlanMap">
+		select 
+			<include refid="projectSchedulePlanField"/>
+		from
+			project_schedule_plan
+		<where>
+			<if test="classRoomId != null and classRoomId != ''">
+    			and class_room_id = #{classRoomId}
+    		</if>
+    	</where>
+	</select>
+	<select id="getProjectSchedulePlanByRooId"  resultType="java.lang.Integer">
+		select 
+			count(0)
+		from
+			project_schedule_plan
+
+		where  class_room_id = #{_paramter}
+	</select>
+	
+	<select id="getProjectSchedulePlanByScheduleId" parameterType="hashmap" resultMap="projectSchedulePlanMap">
+		select 
+			<include refid="projectSchedulePlanField"/>
+		from
+			project_schedule_plan
+		<where>
+			<if test="scheduleId != null and scheduleId != ''">
+				schedule_id = #{scheduleId}
+			</if>
+			<if test="roomId != null and roomId != ''">
+				and class_room_id = #{roomId}
+			</if>
+			<if test="roomDate != null and roomDate != ''">
+				and class_date = #{roomDate}
+			</if>
+			<if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+    			and NOT ((end_time &lt; #{startTime}
+				OR start_time &gt; #{endTime}))
+    		</if>
+		</where>
+	</select>
+	
+	<update id="updateProjectSchedulePlan" parameterType="hashmap">
+		update  
+			project_schedule_plan
+		<set>
+			<if test="roomId != null and roomId != ''">
+    			class_room_id =#{roomId},
+    		</if>
+    		<if test="status != null and status != ''">
+    			status = #{status}
+    		</if>
+		</set>  
+		where
+    		schedule_id = #{scheduleId}
+	</update>
+	<delete id="delProjectSchedulePlanByProjectId" parameterType="Project">
+		delete from project_schedule_plan where project_id = #{projectId}
+	</delete>
+	
+	<!-- WYL 发放课酬后修改 is_send 状态 -->
+	<update id="upIsSend" parameterType="list">
+		UPDATE
+			project_schedule_plan
+		SET 
+			is_send = 1
+		WHERE
+		<foreach collection="list" item="item" separator="or" >
+			( <![CDATA[class_date >= #{item.startTime} AND class_date <= #{item.endTime} ]]>AND project_id = #{item.projectId} )
+		</foreach> 
+	</update>
+</mapper>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+    .layui-input {
+        width: 80% !important;
+
+    }
+
+    .layui-form-label {
+        width: 100px !important;
+    }
+</style>
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <div style="width: 80%;margin: 0 auto;margin-top: 10%">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择开始时间：</label>
+                <div class="layui-input-block">
+                    <input type="text" name="startTime" id="test1" placeholder="请选择开始时间" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择结束时间：</label>
+                <div class="layui-input-block">
+                    <input type="text" name="endTime" id="test2" placeholder="请选择结束时间" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+
+        </div>
+
+    </form>
+</div>
+
+</body>
+<script th:inline="javascript">
+    var startTime = [[${startTime}]];
+    var endTime = [[${endTime}]];
+</script>
+<script type="text/javascript">
+    var table;
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload'], function () {
+        table = layui.table;
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+        if(startTime != null && endTime != null) {
+
+            var ins1 = laydate.render({
+                elem: '#test1'
+                , format: 'yyyy-MM-dd' //可任意组合
+                ,min:startTime
+                ,max:endTime
+                ,value : startTime
+            });
+
+            var ins2 = laydate.render({
+                elem: '#test2'
+                , format: 'yyyy-MM-dd' //可任意组合
+                ,min:startTime
+                ,max:endTime
+                ,value : endTime
+            });
+        }else {
+            var ins1 = laydate.render({
+                elem: '#test1'
+                , format: 'yyyy-MM-dd' //可任意组合
+            });
+
+            var ins2 = laydate.render({
+                elem: '#test2'
+                , format: 'yyyy-MM-dd' //可任意组合
+            });
+        }
+
+
+    });
+
+
+</script>
+
+</html>

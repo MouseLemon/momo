@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-disabled {
+        background : rgba(181, 181, 181, 0.16);
+    }
+    .tt +div dl{
+        max-height: 228px;
+    }
+</style>
+<div>
+    <form>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">课程名称：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="hidden" id="schedule_id" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${schedule_id}" class="layui-input">
+                        <input type="hidden" id="project_id" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${project_id}" class="layui-input">
+                        <input type="hidden" id="grade_id" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${grade_id}" class="layui-input">
+                        <input type="hidden" id="start_time" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${start_time}" class="layui-input">
+                        <input type="hidden" id="end_time" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${end_time}" class="layui-input">
+                        <input type="hidden" id="yStartTime" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${yStartTime}" class="layui-input">
+                        <input type="hidden" id="yEndTime" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${yEndTime}" class="layui-input">
+                        <select name="course_name" id="searchSpecial" class="   layui-input" lay-search lay-filter="backFactor">
+                            <option th:each="item:${courseList}" th:selected="${course_name eq item.code}" th:value="${item.code}" th:text="${item.name}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">教师名称：</span>
+                    </label>
+
+                    <div class="layui-unselect layui-form-select pxkeji-select" style="width: 225px;margin-left: 110px;z-index: 222">
+                        <div class="layui-select-title">
+                            <input id="teacher_name" type="text" data-value="" th:value="${teacher_name}" onkeyup="ccc()" class="layui-input layui-unselect" autocomplete="off">
+                            <input id="teacher_code" type="hidden" th:value="${teacher_code}" readonly="" class="layui-input layui-unselect">
+                            <!-- 传入原本格子开始时间和结束时间 -->
+                            <input id="ystart_time" type="hidden" th:value="${start_time}" readonly="" class="layui-input layui-unselect">
+                            <input id="yend_time" type="hidden" th:value="${end_time}" readonly="" class="layui-input layui-unselect">
+                            <i class="layui-edge"></i>
+                        </div>
+                        <dl id="hideOrShow" class="layui-anim layui-anim-upbit" style="">
+                            <dd lay-value="" class="layui-select-tips" >请选择</dd>
+                            <dd th:each="item:${teacherList}" th:selected="${teacher_code eq item.dataCode}" th:value="${item.dataCode}" >
+                                <p th:text="${item.teacherName}" style="line-height: 20px;"></p>
+                                <input type="hidden" th:selected="${teacher_name eq item.teacherName}" th:value="${item.dataCode}">
+                                <p th:text="${ '&nbsp;&nbsp;' +item.idCard}" style="line-height: 20px;color: #ccc"></p>
+                            </dd>
+                        </dl>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs6">
+                        <label class="layui-form-label">
+                            <span class="required">教室类型：</span>
+                        </label>
+                        <div class="layui-input-block">
+                            <select name="class_room_type" id="class_room_type" class="layui-input" lay-search>
+                                <option th:each="item:${class_room_typeList}" th:selected="${class_room_type eq item.code}" th:value="${item.code}" th:text="${item.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">上课日期：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" readonly="readonly" id="class_date" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${class_date}" class="layui-input layui-disabled" disabled="true">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                    <div class="layui-col-xs6">
+                        <label class="layui-form-label">
+                            <span class="required">开始时间：</span>
+                        </label>
+                        <div style="width: 90px" class="layui-inline">
+                            <select name="start_time_hour" id="start_time_hour" class="layui-input change tt">
+                                <option th:selected="${start_time.substring(0,2) == '05'}">05</option>
+                                <option th:selected="${start_time.substring(0,2) == '06'}">06</option>
+                                <option th:selected="${start_time.substring(0,2) == '07'}">07</option>
+                                <option th:selected="${start_time.substring(0,2) == '08'}">08</option>
+                                <option th:selected="${start_time.substring(0,2) == '09'}">09</option>
+                                <option th:selected="${start_time.substring(0,2) == '10'}">10</option>
+                                <option th:selected="${start_time.substring(0,2) == '11'}">11</option>
+                                <option th:selected="${start_time.substring(0,2) == '12'}">12</option>
+                                <option th:selected="${start_time.substring(0,2) == '13'}">13</option>
+                                <option th:selected="${start_time.substring(0,2) == '14'}">14</option>
+                                <option th:selected="${start_time.substring(0,2) == '15'}">15</option>
+                                <option th:selected="${start_time.substring(0,2) == '16'}">16</option>
+                                <option th:selected="${start_time.substring(0,2) == '17'}">17</option>
+                                <option th:selected="${start_time.substring(0,2) == '18'}">18</option>
+                                <option th:selected="${start_time.substring(0,2) == '19'}">19</option>
+                                <option th:selected="${start_time.substring(0,2) == '20'}">20</option>
+                                <option th:selected="${start_time.substring(0,2) == '21'}">21</option>
+                                <option th:selected="${start_time.substring(0,2) == '22'}">22</option>
+                            </select>
+                        </div>
+                        <span>:&nbsp;&nbsp;&nbsp;</span>
+                        <div style="width: 90px" class="layui-inline">
+                            <select name="start_time_minute" id="start_time_minute" class="layui-input tt">
+                                <option th:selected="${start_time.substring(3,5) == '00'}">00</option>
+                                <option th:selected="${start_time.substring(3,5) == '05'}">05</option>
+                                <option th:selected="${start_time.substring(3,5) == '10'}">10</option>
+                                <option th:selected="${start_time.substring(3,5) == '15'}">15</option>
+                                <option th:selected="${start_time.substring(3,5) == '20'}">20</option>
+                                <option th:selected="${start_time.substring(3,5) == '25'}">25</option>
+                                <option th:selected="${start_time.substring(3,5) == '30'}">30</option>
+                                <option th:selected="${start_time.substring(3,5) == '35'}">35</option>
+                                <option th:selected="${start_time.substring(3,5) == '40'}">40</option>
+                                <option th:selected="${start_time.substring(3,5) == '45'}">45</option>
+                                <option th:selected="${start_time.substring(3,5) == '50'}">50</option>
+                                <option th:selected="${start_time.substring(3,5) == '55'}">55</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-col-xs6">
+                        <label class="layui-form-label">
+                            <span class="required">结束时间：</span>
+                        </label>
+                        <div style="width: 90px" class="layui-inline">
+                            <select name="end_time_hour" id="end_time_hour" class="layui-input tt">
+                                <option th:selected="${end_time.substring(0,2) == '05'}">05</option>
+                                <option th:selected="${end_time.substring(0,2) == '06'}">06</option>
+                                <option th:selected="${end_time.substring(0,2) == '07'}">07</option>
+                                <option th:selected="${end_time.substring(0,2) == '08'}">08</option>
+                                <option th:selected="${end_time.substring(0,2) == '09'}">09</option>
+                                <option th:selected="${end_time.substring(0,2) == '10'}">10</option>
+                                <option th:selected="${end_time.substring(0,2) == '11'}">11</option>
+                                <option th:selected="${end_time.substring(0,2) == '12'}">12</option>
+                                <option th:selected="${end_time.substring(0,2) == '13'}">13</option>
+                                <option th:selected="${end_time.substring(0,2) == '14'}">14</option>
+                                <option th:selected="${end_time.substring(0,2) == '15'}">15</option>
+                                <option th:selected="${end_time.substring(0,2) == '16'}">16</option>
+                                <option th:selected="${end_time.substring(0,2) == '17'}">17</option>
+                                <option th:selected="${end_time.substring(0,2) == '18'}">18</option>
+                                <option th:selected="${end_time.substring(0,2) == '19'}">19</option>
+                                <option th:selected="${end_time.substring(0,2) == '20'}">20</option>
+                                <option th:selected="${end_time.substring(0,2) == '21'}">21</option>
+                                <option th:selected="${end_time.substring(0,2) == '22'}">22</option>
+                            </select>
+                        </div>
+                        <span>:&nbsp;&nbsp;&nbsp;</span>
+                        <div style="width: 90px" class="layui-inline">
+                            <select name="end_time_minute" id="end_time_minute" class="layui-input tt">
+                                <option th:text="${end_time.substring(3,5)}" ></option>
+                                <option th:selected="${end_time.substring(3,5) == '00'}">00</option>
+                                <option th:selected="${end_time.substring(3,5) == '05'}">05</option>
+                                <option th:selected="${end_time.substring(3,5) == '10'}">10</option>
+                                <option th:selected="${end_time.substring(3,5) == '15'}">15</option>
+                                <option th:selected="${end_time.substring(3,5) == '20'}">20</option>
+                                <option th:selected="${end_time.substring(3,5) == '25'}">25</option>
+                                <option th:selected="${end_time.substring(3,5) == '30'}">30</option>
+                                <option th:selected="${end_time.substring(3,5) == '35'}">35</option>
+                                <option th:selected="${end_time.substring(3,5) == '40'}">40</option>
+                                <option th:selected="${end_time.substring(3,5) == '45'}">45</option>
+                                <option th:selected="${end_time.substring(3,5) == '50'}">50</option>
+                                <option th:selected="${end_time.substring(3,5) == '55'}">55</option>
+                            </select>
+                        </div>
+                    </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">基础课酬：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="base_fee" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${base_fee}" class="layui-input" onblur="countTotal(this)">
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">人&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;数：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="person_count" lay-verify="required"  th:value="${start_person_count}" class="layui-input layui-disabled" disabled="true">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">人数系数：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="person_factor" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${person_factor}" class="layui-input" onblur="countTotal(this)">
+                    </div>
+                </div>
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">课程系数：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="course_factor" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${course_factor}" class="layui-input" onblur="countTotal(this)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-row layui-form layui-form-item">
+                <div class="layui-col-xs6">
+                    <label class="layui-form-label">
+                        <span class="required">课酬合计：</span>
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="fee_total" disabled lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${fee_total}" class="layui-input layui-disabled">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+            <button class="layui-btn layui-btn-danger" style="margin-left: 20px;margin-right: 20px" onclick="deletePice()">删除</button>
+        </div>
+    </div>
+
+</div>
+</div>
+</body>
+<script>
+
+    function ccc() {
+        var teacherName = $('#teacher_name').val();
+        var map = {
+            teacherName : teacherName
+        };
+
+        $.ajax({
+            type: "post",
+            url: '/classManage/selectTeacher', // 修改pi表中project_id与psp表相同的所有状态
+            data: map,
+            dataType: "json",
+            success: function (data) {
+                console.log(data.selectTeacherList);
+                var tList = data.selectTeacherList;
+                var html = "";
+                for(var i = 0; i < tList.length; i++){
+                    var tName = tList[i].teacher_name;
+                    var tId = tList[i].id_card;
+                    var tCode = tList[i].teacher_code;
+                    console.log(tName + " --- " + tId + " --- " + tCode); // 信息获取到了,开始拼html
+                    html += "<dd>" +
+                                "<p style='line-height: 20px'>" + tName + "</p>" +
+                                "<input type='hidden' value='" + tCode + "'>" +
+                                "<p style='line-height: 20px;color: #ccc'>" + tId + "</p>" +
+                            "</dd>";
+                }
+                $('#hideOrShow').html(html);
+            },
+            error: function () {
+                window.location.reload();
+            }
+        });
+    }
+
+    $(function() {
+        var hideOrShow = document.getElementById("hideOrShow");
+        var course_name = $('select[name = "course_name"]').val();
+        var courseInput1 = $('#searchSpecial').next().find('input').val()
+        $(document).on("click", ".pxkeji-select input", function() {
+            if (course_name == "" && courseInput1 == ""){
+                tipinfo("请先选择课程名称！");
+                return false;
+            }
+
+            $(this).addClass('layui-this');
+            $(this).parents('.pxkeji-select').find('.layui-anim-upbit').show();
+
+            $(document).one("click",
+                function() { // 对document绑定一个隐藏Div方法
+                    $(hideOrShow).hide();
+                }
+            );
+        });
+
+        $(document).on("click", ".pxkeji-select dd", function() {
+            $(this).parent().find('dd').removeClass('layui-this')
+            $(this).addClass('layui-this');
+            $(this).parents('.pxkeji-select').find('#teacher_name').val($($($(this).html())[0]).html());
+            $(this).parents('.pxkeji-select').find('#teacher_code').attr('value',$(this).find('input').val())
+            $(this).parents('.pxkeji-select').find('.layui-anim-upbit').hide();
+
+            var course_name = $('select[name = "course_name"]').val();
+            var teacher_code = $(this).find('input').val();
+            var project_id = $("#project_id").val();
+            var map = {
+                teacher_code:teacher_code,
+                project_id:project_id,
+                course_name : course_name
+            };
+            $.ajax({
+                type: "post",
+                url: '/classManage/backCoefficient',
+                data: map,
+                dataType: "json",
+                success: function (data) {
+                    document.getElementById('base_fee').value = data.base_fee;
+                    document.getElementById('person_factor').value = data.person_factor;
+                    document.getElementById('course_factor').value = data.course_factor;
+                    var fee_total = Math.round(Number(data.base_fee) * Number(data.person_factor) * Number(data.course_factor) * 100) / 100;
+                    if (data.base_fee == '1.00' && data.person_factor == '1.00' && data.course_factor == '1.00'){
+                        document.getElementById('fee_total').value = '1.00';
+                    } else {
+                        document.getElementById('fee_total').value = fee_total;
+                    }
+                },
+                error: function () {
+                    window.location.reload();
+                }
+            });
+        });
+    })
+
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+        form.on('select(backFactor)', function (data) {
+            var teacher_code = $("#teacher_code").attr('value');
+            if (teacher_code == 'undefined' || teacher_code == "" || teacher_code == null){
+                return false;
+            } else {
+                var project_id = $("#project_id").val();
+                var course_name = $('select[name = "course_name"]').val();
+                var map = {
+                    teacher_code : teacher_code,
+                    project_id : project_id,
+                    course_name : course_name
+                };
+                $.ajax({
+                    type: "post",
+                    url: '/classManage/backCoefficient', // 修改pi表中project_id与psp表相同的所有状态
+                    data: map,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(map);
+                        document.getElementById('base_fee').value = data.base_fee;
+                        document.getElementById('person_factor').value = data.person_factor;
+                        document.getElementById('course_factor').value = data.course_factor;
+                        var fee_total = Math.round(Number(data.base_fee) * Number(data.person_factor) * Number(data.course_factor) * 100) / 100;
+                        if (data.base_fee == '1.00' && data.person_factor == '1.00' && data.course_factor == '1.00'){
+                            document.getElementById('fee_total').value = '1.00';
+                        } else {
+                            document.getElementById('fee_total').value = fee_total;
+                        }
+                    },
+                    error: function () {
+                    }
+                });
+            }
+        })
+    });
+
+    //监听人数
+    $("#person_count").blur(function () {
+        var conent = $(this).parent().prev().text();
+        var num = Number($(this).val());
+        var reg = /^([1-9]\d*|0)$/;
+        if(isNaN(num) || num < 0 ||!reg.test(num)){
+            $(this).val(0);
+            tipinfo(conent+"只能输入正整数")
+        }
+    });
+
+    // 课酬合计
+    function countTotal(obj) {
+        var conent = $(obj).parent().prev().text();
+        var val = $(obj).val();
+        if(isNaN(Number(val)) || val < 0 ){
+            tipinfo("只能输入正数");
+            $(obj).val(0);
+        }else if(val == ""){
+            tipinfo(conent+"不能为空！");
+        }else{
+            $(obj).val(Number(val).toFixed(2));
+        }
+        calculation();
+    }
+
+    // 课酬合计
+    function countTotalInteger(obj) {
+        var conent = $(obj).parent().prev().text();
+        var val = Number($(obj).val());
+        var reg = /^([1-9]\d*|0)$/;
+        if(isNaN(val) || val < 0 ||!reg.test(val)){
+            tipinfo("只能输入正整数");
+            $(obj).val(0);
+        }else if(val == ""){
+            tipinfo(conent+"不能为空！");
+        }
+        calculation();
+    }
+
+    //计算
+    function calculation(){
+        var base_fee = $('#base_fee').val();
+        var person_factor = $('#person_factor').val();
+        var course_factor = $('#course_factor').val();
+        var fee_total = Math.round(Number(base_fee) * Number(person_factor) * Number(course_factor) * 100) / 100;
+        var aaa = fee_total.toFixed(2)
+        document.getElementById('fee_total').value = aaa;
+    }
+
+    function deletePice() {
+        var schedule_id = $("#schedule_id").val();
+        layer.confirm('是否删除当前排课记录？', {btn: ['确定', '取消'], title: "提示"}, function (index) {
+            var map = {
+                schedule_id:schedule_id
+            };
+            $.ajax({
+                type: "post",
+                url: '/classManage/deleteEdit',
+                data: map,
+                dataType: "application/json",
+                success: function () {
+                    tipinfo("删除成功！",closewindow(1));
+                },
+                error: function () {
+                    tipinfo("删除成功！",closewindow(1));
+                }
+            })
+            layer.close(index);
+        })
+    }
+
+    function save() {
+        var ystart_time = $('#ystart_time').val();
+        var project_id = $("#project_id").val();
+        var grade_id = $("#grade_id").val();
+        var schedule_id = $("#schedule_id").val();
+        var course_name = $('select[name = "course_name"]').val();
+        var teacher_code = $("#teacher_code").attr('value');
+        var class_room_type = $("#class_room_type").val();
+        var class_date = $("#class_date").val();
+        var start_time_hour = $("#start_time_hour").val();
+        var start_time_minute = $("#start_time_minute").val();
+        var startNum = start_time_hour + start_time_minute;
+        var start_time = start_time_hour + ":" + start_time_minute;
+        var end_time_hour = $("#end_time_hour").val();
+        var end_time_minute = $("#end_time_minute").val();
+        var end_time = end_time_hour + ":" + end_time_minute;
+        var endNum = end_time_hour + end_time_minute;
+        var base_fee = $("#base_fee").val();
+        var person_count = $("#person_count").val();
+        var person_factor = $("#person_factor").val();
+        var course_factor = $("#course_factor").val();
+        var fee_total = $("#fee_total").val();
+
+        // 时间数值
+        var sn = Number(startNum);
+        var en = Number(endNum);
+        if (sn >= en){
+            tipinfo("开始时间有误，请从新输入！");
+            return;
+        }
+
+        var yStartTime_hour = $('#yStartTime').val().substring(0,2);
+        var yStartTime_minute = $('#yStartTime').val().substring(3,5);
+        var yStartTime = Number(yStartTime_hour + yStartTime_minute);
+
+        var yEndTime_hour = $('#yEndTime').val().substring(0,2);
+        var yEndTime_minute = $('#yEndTime').val().substring(3,5);
+        var yEndTime = Number(yEndTime_hour + yEndTime_minute);
+
+        // 新添加一个课程
+        var courseInput = $('#searchSpecial').next().find('input').val();
+
+        if (sn < yStartTime || en < yStartTime){
+            tipinfo("超出本节课的时间范围！")
+            return false;
+        }
+        if (teacher_code == null || teacher_code == "") {
+            tipinfo("请选择教师！")
+            return false;
+        }
+        if (class_room_type == null || class_room_type == "") {
+            tipinfo("请选择教室类型！")
+            return false;
+        }
+        if (class_date == null || class_date == "") {
+            tipinfo("请输入正确的上课日期！")
+            return false;
+        }
+        if (base_fee == null || base_fee == "") {
+            tipinfo("请输入正确的基础课酬！")
+            return false;
+        }
+        if (base_fee.length > 7) {
+            tipinfo("数值过大, 请从新输入!");
+            return false;
+        }
+        if (person_count == null || person_count == "" || Number(person_count)<1) {
+            tipinfo("请输入正确的人数！")
+            return false;
+        }
+        if (person_factor == null || person_factor == "") {
+            tipinfo("请输入正确的人数系数！")
+            return false;
+        }
+        if (course_factor == null || course_factor == "") {
+            tipinfo("请输入正确的课程系数！")
+            return false;
+        }
+
+        var map = {
+            "project_id": project_id,
+            "grade_id": grade_id,
+            "schedule_id": schedule_id,
+            "course_name": course_name,
+            "teacher_code": teacher_code,
+            "class_room_type": class_room_type,
+            "class_date": class_date,
+            "start_time": start_time,
+            "end_time": end_time,
+            "base_fee": base_fee,
+            "person_count": person_count,
+            "person_factor": person_factor,
+            "course_factor": course_factor,
+            "fee_total": fee_total,
+            "courseInput" : courseInput,
+            "status" : "0"
+        };
+
+        // 判断开始时间 和 结束时间 差值是否超过60分钟，超过的话 有提示窗口，点击确定，发ajax，取消则不发
+        var sss = (class_date + " " + start_time + ":00").replace(/-/g, "/");
+        var eee = (class_date + " " + end_time + ":00").replace(/-/g, "/");
+        var starttime = Date.parse(sss);
+        var endtime = Date.parse(eee);
+
+        var timeBegin = new Date(starttime);
+        var timeEnd = new Date(endtime);
+        var cha = timeEnd.getTime() - timeBegin.getTime();
+
+        var timeCha = cha%(24*3600*1000);
+        var chaMinutes = Math.floor(timeCha/(60*1000)); // 开始时间 与 结束时间 差值（分钟）
+
+        if (chaMinutes >= 60){
+            layer.confirm('课程超过60分钟，是否继续？', {btn: ['确定', '取消'], title: "提示"}, function (index) {
+                $.ajax({
+                    type: "post",
+                    url: "/classManage/saveEdit",
+                    data: JSON.stringify(map),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        if (data.result == 'OK'){
+                            tipinfo("修改成功!")
+                            closewindow(1);
+                        } else {
+                            tipinfo(data.message);
+                            return false;
+                        }
+                    },
+                    error: function (data) {
+                        tipinfo("修改失败！");
+                        return false;
+                    }
+                });
+            }, function (index) {
+                layer.close(index); //再执行关闭
+            })
+        } else {
+            $.ajax({
+                type: "post",
+                url: "/classManage/saveEdit",
+                data: JSON.stringify(map),
+                contentType: 'application/json',
+                success: function (data) {
+                    if (data.result == 'OK'){
+                        tipinfo("修改成功");
+                        closewindow(1);
+                    } else {
+                        tipinfo(data.message);
+                        return false;
+                    }
+                },
+                error: function (data) {
+                    tipinfo("修改失败！");
+                    return false;
+                }
+            });
+        }
+    }
+</script>
+<script th:src="@{/js/jquery.js}"></script>
+</html>

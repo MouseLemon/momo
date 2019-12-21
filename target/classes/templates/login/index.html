@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <title>MOMO-OA管理系统</title>
+    <link th:href="@{/css/login/login.css}" rel="stylesheet">
+    <script th:src="@{/layui/layui.js}"></script>
+    <script th:src="@{/js/master/master.js}"></script>
+    <script th:src="@{/js/jquery.js}"></script>
+    <script th:src="@{/js/jquery.cookie.js}"></script>
+</head>
+<body>
+<div class="loginContainer">
+    <img class="logoImg" th:src="@{/img/login_06.png}" alt=""/>
+    <div class="loginForm">
+        <h3 class="title">欢迎登录</h3>
+        <div class="formIrem">
+            <img th:src="@{/img/user.png}" alt=""/>
+            <input type="text" id="username" autocomplete="off" disableautocomplete required lay-verify="required" placeholder="请输入用户名"/>
+        </div>
+        <div class="formIrem pwdItem">
+            <img th:src="@{/img/pwd.png}" alt=""/>
+            <input type="password" id="password" autocomplete="off" disableautocomplete placeholder="请输入密码"/>
+            <a class="lookPwd" href="javascript:void(0)">
+                <img th:src="@{/img/no.png}" alt=""/>
+            </a>
+        </div>
+        <div class="remPwd">
+            为达到最佳显示效果，推荐使用 <a target="_blank" style="color: red ; text-decoration: none;" href="http://browser.360.cn/" >360浏览器极速模式</a>
+        </div>
+        <button class="loginBtn">登&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;录</button>
+    </div>
+</div>
+<script th:src="@{/js/login/login.js}"></script>
+</body>
+</html>

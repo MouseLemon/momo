@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ClassRoomDao">
+    <resultMap type="ClassRoom" id="classRoomMap">
+        <id property="roomId" column="room_id"/>
+        <result property="roomNum" column="room_num"/>
+        <result property="roomLoc" column="room_loc"/>
+        <result property="roomType" column="room_type"/>
+        <result property="useSeason" column="use_season"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="seating" column="seating"/>
+    </resultMap>
+
+    <sql id="classRoomField">
+		room_id roomId,room_num roomNum,room_loc
+		roomLoc,seating,room_type roomType,use_season
+		useSeason,status,create_time createTime
+	</sql>
+
+
+    <select id="getClassRooms" parameterType="ClassRoom" resultMap="classRoomMap" flushCache="true">
+        select
+        room_id,
+        room_num,
+        d3.name AS room_loc,
+        seating,
+        d2.name AS room_type,
+        use_season,
+        status,
+        create_time
+        from
+        class_room
+        LEFT JOIN data_dic d2 ON room_type = d2.`code`
+        LEFT JOIN data_dic d3 ON room_loc = d3.`code`
+        <where>
+            <if test="roomLoc != null and roomLoc != ''">
+                and room_loc = #{roomLoc}
+            </if>
+            <if test="roomNum != null and roomNum != ''">
+                and room_id = #{roomNum}
+            </if>
+            <if test="roomType != null and roomType != ''">
+                and room_type = #{roomType}
+            </if>
+            <if test="useSeason != null and useSeason != ''">
+                and
+               <foreach collection="season" item="item" separator="and">
+                    INSTR(use_season,#{item})
+               </foreach>
+            </if>
+            <if test="status != null and status != 0">
+                and status = #{status}
+            </if>
+            <if test="seating != null and seating != 0">
+                and seating &gt;= #{seating}
+            </if>
+            <if test="roomLocList != null">
+                and room_loc in
+                <foreach collection="roomLocList" open="(" close=")" separator="," item="item">
+                    #{item.dataCode}
+                </foreach>
+
+            </if>
+        </where>
+        ORDER BY
+        create_time DESC,
+        `status`
+    </select>
+
+
+    <!-- 新建教室 -->
+    <insert id="saveNewClassRoom" parameterType="hashmap">
+		insert into
+		class_room
+		(`room_id`,`room_num`,`room_loc`,`seating`,`room_type`,`use_season`,`create_time`
+		)
+		values
+		(#{roomId},#{roomNum},#{roomLoc},#{seating},#{roomType},#{useSeason},#{createTime})
+	</insert>
+
+    <select id="getRoomByLocAndNum" resultType="int">
+		select count(0) from class_room where room_num = #{roomNum} and room_loc = #{roomLoc}
+	</select>
+
+    <!-- 编辑教室 -->
+    <update id="updateClassRoom" parameterType="hashmap">
+        update
+        class_room
+        <set>
+            <if test="roomNum != null and roomNum != ''">
+                room_num =#{roomNum},
+            </if>
+            <if test="roomLoc != null and roomLoc != ''">
+                room_loc =#{roomLoc},
+            </if>
+            <if test="seating != null and seating != ''">
+                seating =#{seating},
+            </if>
+            <if test="roomType != null and roomType != ''">
+                room_type =#{roomType},
+            </if>
+            <if test="useSeason != null and useSeason != ''">
+                use_season =#{useSeason},
+            </if>
+            <if test="status != null and status != ''">
+                status =#{status},
+            </if>
+        </set>
+        where
+        room_id =#{roomId}
+    </update>
+    <update id="updateProhibitionStatus" parameterType="hashmap">
+        update
+        class_room
+        set
+        status =#{status}
+        where
+        room_id in
+        <foreach collection="roomIdList" item="room" open="("
+                 separator="," close=")">
+            #{room}
+        </foreach>
+    </update>
+    <delete id="deleteClassRoom" parameterType="hashmap">
+		<![CDATA[
+
+			delete  from class_room  where room_id=#{roomId}
+
+        ]]>
+	</delete>
+
+    <select id="getMactchingRooms" parameterType="hashmap"
+            resultType="hashmap">
+        SELECT
+        <include refid="classRoomField"/>
+        FROM
+        class_room
+        WHERE
+        seating &gt;= #{personCount}
+        AND status = 1
+        AND room_type = #{roomType}
+        AND
+        room_id NOT IN (
+        SELECT
+        room_id
+        FROM
+        room_unuse_time_frame
+        WHERE
+        YEAR = #{year}
+        AND MONTH = #{month}
+        AND DAY = #{day}
+        AND NOT (
+        (end_time &lt; #{startTime})
+        OR (start_time &gt; #{endTime})
+        )
+        )
+    </select>
+    <select id="getClassRoomSpareTime" parameterType="hashmap"
+            resultType="hashmap">
+        SELECT
+        room_id roomId,
+        GROUP_CONCAT(disabletime) disabletime
+        FROM
+        (
+        SELECT
+        psp.class_room_id room_id,
+        GROUP_CONCAT(
+        CONCAT_WS(
+        '-',
+        psp.start_time,
+        psp.end_time
+        )
+        ) disabletime
+        FROM
+        project_schedule_plan psp
+        JOIN class_room cr ON psp.class_room_id = cr.room_id
+        <where>
+            psp.class_date = #{classDate}
+            <if test="roomNum != null and roomNum != ''">
+                AND cr.room_num = #{roomNum}
+            </if>
+            <if test="roomLoc != null and roomLoc != ''">
+                AND cr.room_loc = #{roomLoc}
+            </if>
+            <if test="roomId != null and roomId != ''">
+                AND cr.room_id = #{roomId}
+            </if>
+        </where>
+        GROUP BY
+        psp.class_room_id
+        UNION ALL
+        SELECT
+        rutf.room_id,
+        GROUP_CONCAT(
+        CONCAT_WS(
+        '-',
+        rutf.start_time,
+        rutf.end_time
+        )
+        ) disabletime
+        FROM
+        room_unuse_time_frame rutf
+        JOIN class_room cr ON rutf.room_id = cr.room_id
+        <where>
+            rutf.`year` = #{year}
+            AND rutf.`month` = #{month}
+            AND rutf.`day` = #{day}
+            <if test="roomNum != null and roomNum != ''">
+                AND cr.room_num = #{roomNum}
+            </if>
+            <if test="roomLoc != null and roomLoc != ''">
+                AND cr.room_loc = #{roomLoc}
+            </if>
+            <if test="roomId != null and roomId != ''">
+                AND cr.room_id = #{roomId}
+            </if>
+        </where>
+        GROUP BY
+        rutf.room_id
+        ) a
+        GROUP BY
+        room_id
+    </select>
+
+    <!-- 根据id查询教室 -->
+    <select id="getClassRoomByRoomId" resultMap="classRoomMap">
+		select
+			room_id,
+			room_num,
+			room_loc,
+			seating,
+			room_type,
+			use_season,
+			status,
+			create_time
+		from class_room
+			where room_id = #{_paramter}
+	</select>
+
+    <!-- 根据id查询教室 -->
+    <select id="getRoom" resultType="map" flushCache="true">
+		select
+			room_id,
+			room_num,
+			room_loc,
+			seating,
+			d.name as roomType
+		from class_room , data_dic d  
+			where d.code = room_Type and room_id = #{_paramter}
+			and status = 1
+	</select>
+
+    <!-- 查询空闲时间 -->
+    <select id="getIdleRoom" resultMap="classRoomMap" flushCache="true">
+        SELECT
+        c.room_id, c.room_num
+        FROM
+        class_room c
+        WHERE
+        c.`status` = 1
+
+        <if test="roomLoc!= null and roomLoc != ''">and c.room_loc = #{roomLoc}</if>
+        <!--<if test="season!= null and season != ''">and c.use_season like "%"#{season}"%"</if>-->
+        <if test="person_count != null and person_count != ''">and c.seating &gt;= #{person_count}</if>
+        <if test="class_room_type != null and class_room_type != ''">and c.room_type = #{class_room_type}</if>
+        <if test="year != null and year != '' and month != null and month != '' and day != null and day != ''">
+            AND c.room_id NOT IN (
+            SELECT
+              room_id
+            FROM
+              room_unuse_time_frame
+            WHERE
+                `year` = #{year}
+                AND `month` = #{month}
+                AND `day` = #{day}
+                AND start_time &gt;= #{starTime}
+                AND start_time &lt; #{endTime}
+            union
+            SELECT
+                room_id
+            FROM
+                room_unuse_time_frame
+            WHERE
+                `year` = #{year}
+                AND `month` = #{month}
+                AND `day` = #{day}
+                AND start_time &lt;= #{starTime}
+                AND end_time &gt;= #{endTime}
+                union
+                SELECT
+                class_room_id AS room_id
+                FROM
+                project_schedule_plan
+                WHERE
+                class_date BETWEEN '${class_date}'
+                AND '${class_date}'
+                AND start_time &gt;= '${starTime}'
+                AND (end_time &lt;= '${endTime}' or start_time &lt;='${endTime}')
+                AND class_room_id IS NOT NULL
+            <if test="roomId != null and roomId != ''">
+                AND class_room_id != #{roomId}
+            </if>
+            )
+
+        </if>
+
+    </select>
+
+    <!-- 查看教室已排课详情 -->
+    <select id="getRoomPlan" resultType="map" flushCache="true">
+		SELECT
+			GROUP_CONCAT(
+				start_time,
+				'-',
+				end_time
+				ORDER BY start_time
+			)AS isPlan
+		FROM
+			`project_schedule_plan`
+		WHERE
+			class_date = #{class_date}
+		AND class_room_id = #{roomId}
+		GROUP BY
+			class_date
+	</select>
+
+    <select id="getUnTimeData" resultType="map">
+        <!--SELECT distinct-->
+        <!--c.room_id,-->
+        <!--ru.start_time t2,-->
+        <!--ru.end_time e2-->
+        <!--FROM-->
+        <!--class_room c-->
+        <!--LEFT JOIN room_unuse_time_frame ru ON c.room_id = ru.room_id AND ru.`year`= #{year} AND ru.`month` = #{month}-->
+        <!--AND ru.`day` = #{day}-->
+        <!--WHERE-->
+        <!--c.`status` = 1-->
+        <!--<if test="roomList != null and roomList.size > 0">-->
+            <!--AND c.room_id in-->
+            <!--<foreach collection="roomList" open="(" separator="," close=")" item="item">-->
+                <!--#{item.roomId}-->
+            <!--</foreach>-->
+
+        <!--</if>-->
+        <!--ORDER BY t2-->
+
+        SELECT
+        *
+        FROM
+        (
+        SELECT
+        room_id,
+        start_time,
+        end_time
+        FROM
+        room_unuse_time_frame
+        where `year`= #{year} AND `month` = #{month}
+        AND `day` = #{day}
+        <if test="roomList != null and roomList.size > 0">
+            AND room_id in
+            <foreach collection="roomList" open="(" separator="," close=")" item="item">
+                #{item.roomId}
+            </foreach>
+
+        </if>
+        UNION
+        SELECT
+        class_room_id,
+        start_time,
+        end_time
+        FROM
+        project_schedule_plan
+        WHERE
+        class_date = #{classDate}
+        <if test="roomList != null and roomList.size > 0">
+            AND class_room_id in
+            <foreach collection="roomList" open="(" separator="," close=")" item="item">
+                #{item.roomId}
+            </foreach>
+
+        </if>
+
+        ) a
+        ORDER BY
+        a.start_time
+
+
+    </select>
+    <select id="getUnTimeDataPsp" resultType="map">
+        SELECT distinct
+        c.room_id,
+        psp.start_time t1,
+        psp.end_time e1
+        FROM
+        class_room c
+        LEFT JOIN project_schedule_plan psp ON c.room_id = psp.class_room_id AND psp.class_date = #{classDate}
+        WHERE
+        c.`status` = 1
+        <if test="roomList != null and roomList.size > 0">
+            AND c.room_id in
+            <foreach collection="roomList" open="(" separator="," close=")" item="item">
+                #{item.roomId}
+            </foreach>
+
+        </if>
+        ORDER BY t1
+
+
+    </select>
+
+    <select id="getIdleRoomListData" resultType="map">
+        SELECT
+        count(b.week_day) num,
+        b.week_day weekDay,
+        b.room_id roomId
+        FROM
+        (
+        SELECT
+        a.class_date,a.week_day,a.room_id
+        FROM
+        (
+        SELECT
+        class_room_id AS room_id,
+        week_day,
+        class_date
+        FROM
+        project_schedule_plan
+        WHERE
+        class_date BETWEEN '${startTime}'
+        AND '${endTime}'
+        AND start_time &gt;= '${start}'
+        AND (end_time &lt;= '${end}' or start_time &lt;='${end}')
+        AND class_room_id IS NOT NULL
+        <if test="roomNum != null and roomNum != ''">
+            and class_room_id = #{roomNum}
+        </if>
+        AND week_day IN
+        <foreach collection="weeks" open="(" separator="," close=")" item="item">
+            '${item}'
+        </foreach>
+        UNION
+        SELECT
+        room_id,
+        week_day,
+        GROUP_CONCAT(
+        `year`,
+        '-',
+        `month`,
+        '-',
+        `day`
+        ) AS class_date
+        FROM
+        room_unuse_time_frame
+        WHERE
+        start_time &gt;= '${start}'
+        AND end_time &lt;= '${end}'
+        <if test="roomNum != null and roomNum != ''">
+            and room_id = #{roomNum}
+        </if>
+        AND week_day IN
+        <foreach collection="weeks" open="(" separator="," close=")" item="item">
+            '${item}'
+        </foreach>
+        GROUP BY
+        frame_id
+        HAVING
+        GROUP_CONCAT(
+        `year`,
+        '-',
+        `month`,
+        '-',
+        `day`
+        ) BETWEEN '${startTime}'
+        AND '${endTime}'
+        ) a
+        ) b
+        GROUP BY
+        b.week_day,
+        b.room_id
+    </select>
+
+    <!-- 查询项目 -->
+    <select id="getProjectInfo" resultType="map">
+		select
+			a.project_id,
+			a.project_name,
+			a.start_time,
+			a.end_time,
+			a.teacher_code,
+			b.person_code,
+			b.message_content,
+			b.message_time
+		from
+			(select DISTINCT
+				pi.project_id,
+				pi.project_name,
+				pi.start_time,
+				pi.end_time,
+				pi.creater,
+				psp.teacher_code
+			from project_info pi
+			inner join project_schedule_plan psp on psp.project_id = pi.project_id
+			where psp.teacher_code = #{teacherCode}
+			ORDER BY pi.end_time desc) a
+		left join
+			(select pm.person_code, pm.message_content, pm.message_time
+			from person_message pm
+			inner join system_user su on pm.person_code = su.person_code
+			where pm.is_reading = 0
+			) b
+		on a.teacher_code = b.person_code
+	</select>
+
+    <select id="getTempPlan" resultType="map">
+        select psp.course_name courseName,psp.teacher_code teacherCode,psp.start_time startTime,psp.end_time endTime,
+        t.teacher_name teacherName
+        from project_schedule_plan psp,teacher_info t where schedule_id = #{_parameter} and psp.teacher_code = t.teacher_code
+    </select>
+
+    <!-- 正在进行的项目数量 -->
+    <select id="getOnWayProjectCount" parameterType="hashMap" resultType="int" >
+        <!--select count(*) from-->
+        <!--(SELECT distinct-->
+            <!--pi.project_id,-->
+            <!--pi.project_name,-->
+            <!--pi.start_time,-->
+            <!--pi.end_time,-->
+            <!--pi.count_hour,-->
+            <!--b.pkNum,-->
+            <!--b.pjsNum,-->
+            <!--b.status-->
+        <!--from project_info pi-->
+        <!--left join (select count(schedule_id) pkNum, count(class_room_id) pjsNum, project_id, status from project_schedule_plan group by project_id) b on b.project_id = pi.project_id-->
+        <!--<where>-->
+            <!--pi.status != 1-->
+            <!--<if test="personCode != null and personCode !=''">-->
+                <!--and pi.project_id in(select data_code from person_data_auth where p_code = #{personCode} and auth_type = 2)-->
+            <!--</if>-->
+            <!--and #{today} BETWEEN pi.start_time and pi.end_time-->
+        <!--</where>-->
+        <!--) doingNum-->
+        select count(*) doingNum from
+        (SELECT
+        pi.project_id,
+        pi.project_name,
+        pi.start_time,
+        pi.end_time,
+        pi.count_hour,
+        COUNT(psp.schedule_id) AS pkNum,
+        COUNT(psp.class_room_id) AS pjsNum,
+        pi.current_count as currentCount
+        FROM
+        project_info pi,
+        project_schedule_plan psp
+        WHERE
+        pi.project_id = psp.project_id
+        AND psp.`status` = 1
+        and pi.project_id in (select data_code from person_data_auth where p_code = #{personCode} and auth_type = 2)
+        GROUP BY
+        pi.project_id) pjsList
+        where pkNum != pjsNum
+    </select>
+
+    <!-- 已经结束的项目数量 -->
+    <select id="getFinishedProjectCount" parameterType="hashMap" resultType="int" >
+        <!--select count(*) from-->
+        <!--(SELECT distinct-->
+        <!--pi.project_id,-->
+        <!--pi.project_name,-->
+        <!--pi.start_time,-->
+        <!--pi.end_time,-->
+        <!--pi.count_hour,-->
+        <!--b.pkNum,-->
+        <!--b.pjsNum,-->
+        <!--b.status-->
+        <!--from project_info pi-->
+        <!--left join (select count(schedule_id) pkNum, count(class_room_id) pjsNum, project_id, status from project_schedule_plan group by project_id) b on b.project_id = pi.project_id-->
+        <!--<where>-->
+            <!--pi.status != 1-->
+            <!--<if test="personCode != null and personCode !=''">-->
+                <!--and pi.project_id in(select data_code from person_data_auth where p_code = #{personCode} and auth_type = 2)-->
+            <!--</if>-->
+            <!--and #{today} > pi.end_time-->
+        <!--</where>-->
+       <!--) doneNum-->
+        select count(*) doingNum from
+        (SELECT
+        pi.project_id,
+        pi.project_name,
+        pi.start_time,
+        pi.end_time,
+        pi.count_hour,
+        COUNT(psp.schedule_id) AS pkNum,
+        COUNT(psp.class_room_id) AS pjsNum,
+        pi.current_count as currentCount
+        FROM
+        project_info pi,
+        project_schedule_plan psp
+        WHERE
+        pi.project_id = psp.project_id
+        AND psp.`status` = 1
+        and pi.project_id in (select data_code from person_data_auth where p_code = #{personCode} and auth_type = 2)
+        GROUP BY
+        pi.project_id) pjsList
+        where pkNum = pjsNum
+    </select>
+
+    <!-- 还未开始的项目数量 -->
+    <select id="getNotBeginProjectCount" resultType="int">
+		select count(0)
+		from project_info pi
+		<![CDATA[ where pi.start_time > #{today}
+        ]]>
+    </select>
+
+    <select id="getRoomLocByAuth" resultType="map">
+		SELECT room_loc as dataCode ,d3.name as buildingName FROM class_room,data_dic d3  where
+        room_loc = d3.`code`
+        and room_type = #{roomType}
+		and seating &gt;=#{seating}
+        and room_loc in
+        <foreach collection="buildingAuth" open="(" separator="," close=")" item="item">
+            #{item.dataCode}
+        </foreach>
+        and status = 1
+        GROUP BY room_loc
+	 </select>
+
+    <!--<select id="getNowSeason" resultType="java.lang.String">
+		SELECT dataId FROM `season_month` where `option` = #{_paramter};
+	</select>
+
+    <select id="getSeasonByMonths" resultType="java.lang.String">
+        SELECT
+        GROUP_CONCAT(DISTINCT dataId)
+        FROM
+        `season_month`
+        WHERE
+        `option` IN
+        <foreach collection="list" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+    </select> -->
+
+    <insert id="saveTempPlan">
+        insert into project_schedule_plan (
+            schedule_id,
+            course_name,
+            grade_id,
+            teacher_code,
+            class_room_type,
+            class_date,
+            start_time,
+            end_time,
+            week_day,
+            status,
+            week,
+            year,
+            schedule_type,
+            class_room_id
+        )
+        values(
+            #{scheduleId},
+            #{courseName},
+            #{gradeId},
+            #{teacherCode},
+            #{classRoomType},
+            #{classdate},
+            #{startTime},
+            #{endTime},
+            #{weekDay},
+            #{status},
+            #{week},
+            #{year},
+            #{scheduleType},
+            #{roomId}
+        )
+
+	</insert>
+
+    <select id="getIsPlanRoomId" resultType="map">
+        SELECT
+        class_room_id as roomId,schedule_id as scheduleId
+        FROM
+        project_schedule_plan
+        WHERE
+        class_room_id in
+        <foreach collection="idleRoom" open="(" separator="," close=")" item="item">
+            #{item.roomId}
+        </foreach>
+        AND class_date = #{class_date}
+        AND start_time &gt;= #{starTime}
+        AND end_time &lt;= #{endTime}
+        union
+        SELECT  class_room_id as roomId,schedule_id as scheduleId
+        FROM `project_schedule_plan`
+        where class_date = #{class_date} and
+        class_room_id in
+        <foreach collection="idleRoom" open="(" separator="," close=")" item="item">
+            #{item.roomId}
+        </foreach>
+        AND start_time &lt; #{starTime} AND end_time &gt; #{starTime}
+    </select>
+
+
+    <insert id="importClassRoom" >
+        insert into
+        class_room
+        (`room_id`,`room_num`,`room_loc`,`seating`,`room_type`,`use_season`,`create_time`
+        )
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.roomId},#{item.roomNum},#{item.roomLoc},#{item.seating},#{item.roomType},#{item.useSeason},#{item.createTime})
+        </foreach>
+    </insert>
+
+    <select id="getIsPlanTeacherCode" resultType="java.lang.String">
+        SELECT
+        teacher_code as teacher_code
+        FROM
+        project_schedule_plan
+        WHERE
+        class_room_id in
+        <foreach collection="teacherList" open="(" separator="," close=")" item="item">
+            #{item.teacher_code}
+        </foreach>
+        AND class_date = #{class_date}
+        AND start_time &gt;= #{starTime}
+        AND end_time &lt;= #{endTime}
+        union
+        SELECT teacher_code as teacher_code FROM `project_schedule_plan`
+        where class_date = #{class_date} and
+        class_room_id in
+        <foreach collection="teacherList" open="(" separator="," close=")" item="item">
+            #{item.teacher_code}
+        </foreach>
+        AND start_time &lt; #{starTime} AND end_time &gt; #{starTime}
+    </select>
+
+    <select id="existList" resultType="com.joysupply.entity.ClassRoom">
+        SELECT
+            d.`name` AS roomLocName,
+            c.room_num roomNum
+        FROM
+            `class_room` c,
+            data_dic d
+        WHERE
+            c.room_loc = d.`code`
+            and d.name in
+            <foreach collection="list" open="(" close=")" separator="," item="item">
+                #{item.roomLoc}
+            </foreach>
+          AND c.room_num in
+        <foreach collection="list" open="(" close=")" separator="," item="item">
+            #{item.roomNum}
+        </foreach>
+
+
+        and status = 1
+    </select>
+
+    <update id="updateTempPlan">
+        update  project_schedule_plan set
+            course_name = #{courseName},
+            teacher_code = #{teacherCode},
+            start_time = #{startTime},
+            end_time = #{endTime}
+            where schedule_id = #{id}
+    </update>
+</mapper>

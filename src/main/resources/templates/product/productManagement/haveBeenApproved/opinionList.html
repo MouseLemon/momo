@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>北外OA</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+    <script th:src="@{/layui/layui.js}"></script>
+    <script th:src="@{/js/jquery.js}"></script>
+    <script th:src="@{/js/master/master.js}"></script>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin" style="width:95%;margin: 0 auto">
+    <table class="layui-table" lay-skin="line" id="opioninTabel" style="margin-top: 0px"></table>
+</div>
+<script type="text/html" id="operation">
+    <a class="joysupply-txt-color-on" lay-event="opinion">审批意见</a>
+</script>
+<script type="text/html" id="statusTlb">
+    {{# if(d.approveResult == 1) { }}
+    <span>同意</span>
+    {{# }else{ }}
+    <span>不同意</span>
+    {{# } }}
+</script>
+<script type="text/javascript">
+    var table;
+    var tableIns;
+    var rowId = "[[${rowId}]]";
+    var params = {};
+    layui.use('table', function () {
+        table = layui.table;
+        tableIns = table.render({
+            id: 'id',
+            elem: '#opioninTabel',
+            cellMinWidth: 80,
+            page: false,
+            skin: 'line',
+            url: '/projectApproveOption/opioninData', //数据接口
+            where: {
+                rowId: rowId
+            },
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        field: 'approveOption',
+                        title: '审批意见',
+                        align: 'center',
+                    },
+                    {
+                        field: 'name',
+                        title: '审批人',
+                        align: 'center',
+                        width: '15%'
+                    },
+                    {
+                        field: 'dataTime',
+                        title: '审批时间',
+                        align: 'center',
+                        width: '15%'
+                    },
+                    {
+                        field: 'approveResult',
+                        title: '审批结果',
+                        toolbar: '#statusTlb',
+                        align: 'center',
+                        width: '10%'
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+    });
+
+
+    function reload() {
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    }
+</script>
+</body>
+</html>

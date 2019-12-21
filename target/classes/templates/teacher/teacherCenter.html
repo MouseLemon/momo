@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style>
+	.headImg img{
+		width: 200px;
+		height: 200px;
+		float: right;
+		margin-right: 10px;
+	}
+	.layui-input, .layui-textarea {
+		width:88% !important;
+	}
+	.headTip{
+		font-size: 14px;
+		color: #ccc;
+		margin-top: 5px;
+		margin-left: 10px;
+	}
+	.headTip img{
+		width: 100%;
+	}
+	.layui-input{
+		border-radius: 6px!important;
+	}
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background: #f2f2f2">
+        <div class="layui-anim layui-anim-upbit" style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height: 95%;">
+            <div class="layui-row layui-col-space10">
+                <section>
+                <div style="width: 70%;margin: 0 auto;">
+                <form action="" class="layui-form">
+				     <div class="layui-form-item layui-row" style="margin: 60px auto;">
+				     	<div class="layui-col-md6">
+				     		<div class="headImg">
+								<img  id="imgShow"  th:if="${teacher?.pic != null && teacher?.pic != ''}" th:src="@{${teacher?.pic}}" >
+								<img  id="imgShow"  th:if="${teacher?.pic == null || teacher?.pic == ''}" th:src="@{/img/moren.png}" >
+
+								<!--<img src="/img/moren.png">-->
+								<!--<img  id="imgShow" alt="暂无图片" th:src="@{${teacher?.pic}}" style="display: none;">-->
+					        </div>
+				     	</div>
+					     <div class="layui-col-md6">
+							 <button type="button" class="layui-btn" id="test1" style="margin-top: 112px;margin-left: 10px;">
+								<i class="layui-icon">&#xe67c;</i>上传照片
+							 </button>
+							 <div class="headTip">
+							     <p>支持jpg gif png格式图片，</p>
+							     <p>上传文件大小不得超过5MB</p>
+						     </div >
+						 </div>
+					</div>
+
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+						<div class="layui-form-item">
+							<label class="layui-form-label">个性签名：</label>
+							<div class="layui-input-block">
+								<input type="text" id="signature" name="signature" onblur="updateSigna()"
+									    class="layui-input" th:value="${signature?.signature}">
+
+							</div>
+					</div>
+					</div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">教师姓名：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teacherName" name="teacherName"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.teacherName}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">学位：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="edu"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.degree}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                 
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">联系电话：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.teleNum}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+				       <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">电子邮箱：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.email}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+					     <div class="layui-form-item">
+							<label class="layui-form-label">性别：</label>
+							<div class="layui-input-block">
+								<input type="text" id="teleNum" name="teleNum" th:if="${teacher?.sex == 1}"
+									required="required" readonly="readonly" class="layui-input" value="男">
+								<input type="text" id="teleNum" name="teleNum" th:if="${teacher?.sex == 2}"
+									required="required" readonly="readonly" class="layui-input" value="女">
+		
+							</div>
+						</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">最高学历：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.edu}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">国籍：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.nationality}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">语种：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.language}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">教室类别：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.teacherType}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">职称：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.job}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">身份证号：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.idCard}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">开户姓名：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.accountName}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">出生日期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.birthDay}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">银行卡号：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.bankCode}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+				      <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">教研室：</label>
+						<div class="layui-input-block">
+							<input type="text" 
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.researchOffice}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+				     <div class="layui-form-item">
+						<label class="layui-form-label">入境日期：</label>
+						<div class="layui-input-block">
+							<input type="text" id="teleNum" name="teleNum"
+								required="required" readonly="readonly" class="layui-input" th:value="${teacher?.entryDate}">
+	
+						</div>
+					</div>
+					     
+				    </div>
+                  
+				</form>
+				</div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var oldsignature = [[${signature?.person_code}]];
+        var teacherCode = [[${teacher.teacherCode}]];
+	</script>
+    <script>
+        function updateSigna() {
+            var signature = $('#signature').val();
+            $.post("/teacher/updateSigna",{signature:signature,oldsignature:oldsignature});
+        }
+        //JavaScript代码区域
+        layui.use(['form','upload','element'], function () {
+            var element = layui.element;
+            var form = layui.form;
+            var upload = layui.upload;
+            
+            var uploadInst = upload.render({
+                elem: '#test1' //绑定元素
+                ,url: '/common/uploadFile' //上传接口
+                ,accept:'images'
+                ,acceptMime:'image/*'
+                ,done: function(res){
+                    debugger;
+                  //上传完毕回调
+                  $("#imgShow").attr("src",res.data.url);
+                  $.post("/teacher/updateTeacher",{pic:res.data.url,teacherCode:teacherCode})
+                }
+                ,error: function(){
+                  //请求异常回调
+                }
+            });
+
+        });
+    </script>
+</div>
+</body>
+</html>

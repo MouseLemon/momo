@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" th:href="@{/css/classRoom/unUse.css}">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .courseItem{
+        z-index: 2;
+        cursor:pointer;
+    }
+    .courseItem1,.courseItem2, .courseItem3, .courseItem4{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    .sb_loading, .sb_success {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        display: none;
+    }
+
+    .inner_loading, .inner_success {
+        width: 668px;
+        height: 125px;
+        border-radius: 4px;
+        border: 1px #ccc solid;
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        margin-left: -334px;
+        background: #fff;
+        text-align: center;
+    }
+
+    .inner_loading p {
+        margin-top: 40px;
+    }
+
+    .inner_loading img {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .Rotation {
+        -webkit-transform: rotate(360deg);
+        animation: layui-rotate 2s linear infinite;
+        -moz-animation: layui-rotate 2s linear infinite;
+        -webkit-animation: layui-rotate 2s linear infinite;
+        -o-animation: layui-rotate 2s linear infinite;
+    }
+
+    .inner_success {
+        position: relative;
+    }
+
+    .inner_success img {
+        width: 40px;
+        height: 40px;
+        float: left;
+        margin: 20px 15px 0 40px;
+
+    }
+
+    .inner_success > div {
+        float: left;
+        margin-top: 20px;
+    }
+
+    .inner_success > div h1 {
+        text-align: left;
+    }
+
+    .inner_success > div p {
+        line-height: 36px;
+    }
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <section>
+        <div class="layui-row layui-col-space10">
+            <div class="layui-anim layui-anim-upbit">
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">排课
+                    <div class="joysupply-title-right" style="margin-right: 0;">
+                        <button class="layui-btn layui-btn-sm closeBtn">返回</button>
+                        <button class="layui-btn layui-btn-sm sumbitBtn">提交</button>
+                        <button class="layui-btn layui-btn-sm" id="copy">复制排课</button>
+                    </div>
+                </h2>
+                <hr />
+                <form action="">
+                    <!-- 左上角（教学楼，教室号） -->
+                    <div style="text-align: center;margin-bottom: 5px;">
+                        <span id="project_name" style="font-size: 23px;text-align:center" th:text="${projectInfo?.project_name} + '-' + ${grade_code}"></span>
+                    </div>
+                    <div class="layui-row">
+                        <div class="layui-col-lg3" style="margin-top: 1px;"></div>
+                        <div class="layui-col-lg6" style="text-align: center">
+                            <div>
+                                <span id="projectStartTime" th:text="'起始日期：'+${projectInfo?.start_time}"></span>
+                                <span id="projectEndTime" style="margin-left: 25px;" th:text="'截至日期：'+${projectInfo?.end_time}"></span>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="week1" id="week1" th:value="${weeks}">
+                        <input type="hidden" name="project_id" id="project_id" th:value="${projectInfo?.project_id}">
+                        <input type="hidden" name="year" id="year" th:value="${year}">
+                        <input type="hidden" name="pkCount" id="pkCount" th:value="${pkCount}">
+                        <input type="hidden" name="count_hour" id="count_hour" th:value="${count_hour}">
+                        <input type="hidden" name="status" id="status" th:value="${status}">
+                        <input type="hidden" name="kcEndTime" id="kcEndTime" th:value="${kcEndTime}">
+                        <input type="hidden" name="grade_id" id="grade_id" th:value="${grade_id}">
+                    </div>
+
+                    <!-- 右上角（年月日周），其中点击”<“或”>“按钮，会进行跳转 -->
+                    <div class="layui-col-lg12 layui-col-md12">
+                        <div class="layui-col-lg12" style="margin-bottom:5px; text-align: right">
+                            <label id="up" onclick="switchTime('up')">
+                                <strong style="color: #01AAED;margin-right: 20px; cursor:pointer;">
+                                    <
+                                </strong>
+                            </label>
+                            <label id="time" ></label><span id="week" th:text="${weekString}"></span>
+                            <label id="next" onclick="switchTime('next')">
+                                <strong style="color: #01AAED;margin-left: 20px;cursor:pointer;">
+                                    >
+                                </strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <table style="table-layout: fixed;" class="joysupply-plan-table" id="classSheet">
+
+                        <thead>
+                            <tr>
+                                <th>时段</th>
+                                <th class="cul" th:each="item:${cul}" th:text="${item}"></th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="courseTbody">
+                            <tr th:each="info,infoStat : ${data}">
+                                <td class="head" th:text="|${info.start_time}-${info.end_time}|"></td>
+                                <td th:each="k : ${#numbers.sequence(0,6)}" th:id="|${k}_${#strings.replace(info.start_time,':','')}|"
+                                    th:attr="data-timeStop=|${years[__${k}__]}-${months[__${k}__]}-${days[__${k}__]}-${weekDay[__${k}__]}-${info.start_time}-${info.end_time}|"
+                                    class="divText">
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 可拖拽提示 -->
+    <div class="drafting_diolog">
+        <div class="drafting_bg"></div>
+        <div class="inner_drafting">
+            <div class="boxBorder"></div>
+            <div class="boxJiantou"></div>
+            <div class="tipCont">排课后, 拖拽可进行复制</div>
+            <div class="tipBtn">我知道了</div>
+        </div>
+    </div>
+
+</div>
+
+<!--提交加载中弹框-->
+<div class="sb_loading">
+    <div class="inner_loading">
+        <p><img src="/img/loading.png" class="Rotation"><span>处理中...</span></p>
+    </div>
+</div>
+<!--提交成功弹框-->
+<div class="sb_success">
+</div>
+
+</body>
+<script th:src="@{/js/jquery-ui.js}"></script>
+<script type="text/html" id="planItem">
+    <div class="courseItem">{msg}</div>
+</script>
+<script th:inline="javascript">
+    var list = [[${list}]];
+</script>
+<script th:inline="javascript">
+    var timeSheetList = [[${timeSheetList}]];
+    var startTime = [[${projectInfo?.start_time}]];
+    var endTime = [[${projectInfo?.end_time}]];
+    var flag = [[${flag}]]
+</script>
+<script th:inline="javascript">
+    var dateTime = [[${dateString}]];
+</script>
+<script type="text/javascript">
+
+    $(function() {
+        draggleFun();
+        function draggleFun() {
+            $(".courseItem").draggable({
+                start:function(event, ui){
+                    var projectStatus = $('#status').val();
+                    var templeteA = $('#planItem').html().replace('{msg}', $(this).html());
+                    $(this).parent('td').css('position','relative');
+                    $(this).css({'position':'absolute','width':'fit-content'});
+                    $(this).parent().append(templeteA);
+                },
+                revert: false,
+                stop: function(event, ui) {
+                    $(this).remove();
+                }
+            });
+        }
+
+        $(document).keyup(function (e) {
+            var key = e.which;
+            if (key == 27) {
+                layer.closeAll();
+            }
+        })
+
+        var ids = [];
+        var selTd;
+
+        for (var i = 0; i < list.length; i++) {
+            var week_day = list[i].week_day;
+            var start_time = list[i].start_time.replace(":","");
+            var end_time = list[i].end_time.replace(":","");
+
+            // for所有条时间表，获取每一条 开始时间和结束时间
+            // if (start_time 在时间段范围内， id为原本开始时间，非现在课程时间)
+            for (var j = 0; j < timeSheetList.length; j++) {
+                var st = parseInt(timeSheetList[j].start_time.replace(":",""));
+                var et = parseInt(timeSheetList[j].end_time.replace(":",""));
+                var pkStartTime = timeSheetList[j].start_time.replace(":","");
+                var startTime = parseInt(start_time);
+                var endTime = parseInt(end_time);
+                if (startTime >= st && startTime <= et) {
+                    var id = week_day + "_" + pkStartTime;
+                    ids.push(id);
+                    continue;
+                }
+            }
+
+            var schedule_id = list[i].schedule_id;
+            var course_name = list[i].course_name;
+            var class_room_type = list[i].class_room_type;
+            var teacher_name = list[i].teacher_name;
+            var start_time1 = list[i].start_time;
+            var end_time1 = list[i].end_time;
+            var fee_total = list[i].fee_total;
+
+            // 展示空白格数据
+            // 课程名称，位置(查出来的)/教室类型，教师，开始时间-结束时间
+            var html =
+                "<div class='courseItem' id='" + id + "'>" +
+                    "<div class='courseItem1 ' style='position: relative; '>" +
+                        "<input type='hidden' value='" + schedule_id + "'>" + course_name + "  " + class_room_type +
+                    "</div>" +
+                    "<div class='courseItem2' style='position: relative; '>" +
+                        teacher_name + "  " +
+                    "</div>" +
+                    "<div class='courseItem3' style='position: relative; '>" +
+                        start_time1 + "-" + end_time1 +
+                    "</div>" +
+                    "<div class='courseItem4' style='position: relative; '>" +
+                        "课酬合计 : " + fee_total +
+                    "</div>" +
+                "</div>"
+
+            $('#'+id).html(html);
+            $('.joysupply-plan-table tr').each(function() {
+                var val = $(this).find('td').eq(0).text();
+                if (val != undefined && val != '') {
+                    $(this).find('td').each(function(index){
+                        if (index>0) {
+                            var a = $(this).find('.courseItem3 ').text();
+                            if(a != undefined && a != "") {
+                                var time = a.substring(a.length-11,a.length);
+                                if (time == val) {
+                                    $(this).find('.courseItem3 ').html(a.substring(0,a.length-11));
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            var a = $('#'+id).attr("data-timeStop");
+        }
+    })
+
+    // 提示可以拖动的灰色底层
+    function tipAlert(layero, index) {
+        if (flag) {
+            var selTd = $('.joysupply-plan-table tbody tr:eq(0) td:eq(1)');
+            flag = false;
+            $('.drafting_diolog').show();
+            $('body').css("overflow", "hidden");//阻止页面滚动
+            $('.boxBorder').css({'width':(selTd.innerWidth())+'px','height':(selTd.innerHeight())+'px','left':selTd.offset().left+'px','top':selTd.offset().top-$(window).scrollTop()+'px'})
+            $('.boxJiantou').css({'left':(selTd.offset().left+(selTd.innerWidth())+20)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2)+'px'});
+            $('.tipCont').css({'left':(selTd.offset().left+(selTd.innerWidth())+205)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2+13)+'px'})
+            $('.tipBtn').css({'left':(selTd.offset().left+(selTd.innerWidth())+205)+'px','top':(selTd.offset().top-$(window).scrollTop())+((selTd.innerHeight()-45)/2+103)+'px'})
+
+            $('.drafting_diolog').click(function() {
+                $(this).hide();
+                $('body').css("overflow", "auto");
+            })
+
+            $('.tipBtn').click(function() {
+                $('.drafting_diolog').hide()
+                $('body').css("overflow", "auto");
+                $.post('/hintInfo/saveHintInfo',{hintType:'00'})
+            })
+        }
+    }
+
+    // 生成uuid方法
+    function guid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
+    }
+
+    // 上一周或下一周
+    function switchTime(param) {
+        var project_id = $('#project_id').val();
+        var status = $('#status').val();
+        var date = $('#time').text(); // date是表中星期一的 年月日
+        var grade_id = $('#grade_id').val();
+        var count_hour = Number($('input[name="count_hour"]').val());
+        if (param == 'up') {
+            location.href='/classManage/pkPage?project_id='+project_id
+                +'&count_hour='+count_hour
+                +'&date='+date + '&status=' + status + '&grade_id=' + grade_id
+                +'&up=' + param;
+        } else if (param == 'next') {
+            location.href='/classManage/pkPage?project_id='+project_id
+                +'&count_hour='+count_hour
+                +'&date='+date + '&status=' + status + '&grade_id=' + grade_id
+                +'&next=' + param;
+        }
+    }
+
+    var selTd;
+    var sad = 0;
+    var isSumbit = false; // 是否已提交
+    layui.use(['element', 'layer', 'laydate'], function() {
+        var element = layui.element;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var week = 10;
+        var ins1 = laydate.render({
+            elem: '#time'
+            ,done: function(value, date, endDate) {
+                var date = value;
+                var project_id = $('#project_id').val();
+                var projectStartTime = $('#projectStartTime').val();
+                var projectEndTime = $('#projectEndTime').val();
+                location.href='/classManage/pkPage?project_id='+project_id+'&date='+date+'&status=';
+            }
+            ,format: 'yyyy-MM-dd' //可任意组合
+            ,value : dateTime
+        });
+
+        $(".closeBtn").click (function() { //返回
+            var projectId = $('#project_id').val();
+            $.ajax({
+                type: "post",
+                url: '/classManage/validate',
+                data: {
+                    projectId:projectId
+                },
+                dataType: "json",
+                success: function (data) {
+                    if (data.result == 'OK') {
+                        // 提交成功, 返回父页面
+                        window.parent.location.reload();
+                        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        parent.layer.close(index); //再执行关闭
+                    } else { // 不能用return false, 如果进行后, 则无法再次出发下一行tipinfo, 直接走最下面的tipinfo
+                        layer.confirm('未提交此次修改记录，是否确定退出？', {btn: ['确定', '取消'], title: "提示"},
+                            function (index) { // 确定按钮
+                                window.parent.location.reload();
+                                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                                parent.layer.close(index); //再执行关闭
+                            },
+                            function (index) { // 取消按钮
+                                layer.close(layer.index);
+                            }
+                        );
+                    }
+                },
+                error: function (data) {
+                    var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                    parent.layer.close(index); //再执行关闭
+                }
+            })
+        });
+
+        // 上一周或下一周
+        function switchTime(param) {
+            var project_id = $('#project_id').val();
+            var status = $('#status').val();
+            var date = $('#time').text(); // date是表中星期一的 年月日
+            var count_hour = Number($('input[name="count_hour"]').val());
+            if (param == 'up') {
+                location.href='/classManage/pkPage?project_id='+project_id
+                    +'&count_hour='+count_hour
+                    +'&date='+date + '&status=' + status
+                    +'&up=' + param;
+            } else if (param == 'next') {
+                location.href='/classManage/pkPage?project_id='+project_id
+                    +'&count_hour='+count_hour
+                    +'&date='+date + '&status=' + status
+                    +'&next=' + param;
+            }
+            draggleFun();
+        }
+
+        var option=[];
+        $(".sumbitBtn").click(function() { //提交
+            var projectStatus = $('#status').val();
+            var project_id = $('#project_id').val();
+            var project_name = $('#project_name').text();
+            var week = $('#week1').val();
+            var year = $('#year').val();
+            var gradeId = $('#grade_id').val();
+            isSumbit = true;
+            $('.joysupply-plan-table tbody td:not(".head")').each(function(n,i) {
+                var schedule_idList = $(this).find('input').val();
+                option.push(schedule_idList);
+            })
+
+            layer.confirm('是否提交当前排课记录？', {btn: ['确定', '取消'], title: "提示"}, function (index) {
+                document.getElementById('status').value = '1';
+                var map = {
+                    option:option.join(","),
+                    project_id:project_id,
+                    project_name:project_name,
+                    week:week,
+                    year:year,
+                    grade_id:gradeId
+                };
+                $.ajax({
+                    type: "post",
+                    url: '/classManage/submitBtn',
+                    data: map,
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.result == 'OK') {
+                            window.parent.location.reload();
+                            // 提交成功, 返回父页面
+                            var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                            parent.layer.close(index); //再执行关闭
+                        } else { // 不能用return false, 如果进行后, 则无法再次出发下一行tipinfo, 直接走最下面的tipinfo
+                            tipinfo(data.message);
+                            document.getElementById('status').value = 0;
+                        }
+                    },
+                    error: function (data) {
+                        window.parent.location.reload();
+                        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        parent.layer.close(index); //再执行关闭
+                    }
+                })
+                layer.close(index);
+            })
+        })
+
+        var flag = true;
+        // 点击格子,弹出课程信息界面
+        $('.joysupply-plan-table tbody td:not(".head")').click(function() {
+            selTd = $(this);
+            var projectStatus = $('#status').val();
+            // 判断结算课酬的日期
+            var data_timeStop = $(this).attr("data-timeStop"); // 月-日-星期-开始时间-结束时间
+            var arr = data_timeStop.split("-");
+
+            var year = arr[0];
+            var month = arr[1];
+            var day = arr[2];
+            var week_day = arr[3];
+            var start_time = arr[4];
+            var end_time = arr[5];
+            // year为表中所点年份 -------------------------------------------------------------------------------------
+
+            var ymd = year + "-" + month + "-" + day;
+
+            var projectStartTime = $('#projectStartTime').text().substring(5,15);
+            var projectEndTime = $('#projectEndTime').text().substring(5,15);
+            var kcEndTime = $('#kcEndTime').val();
+
+            var startDate = Number(new Date(projectStartTime.replace(/-/g,"/")));
+            var endDate = Number(new Date(projectEndTime.replace(/-/g,"/")));
+            var clickDate = Number(new Date(ymd.replace(/-/g,"/")));
+            if (kcEndTime == '' || kcEndTime == null) {
+                kcTime = 0;
+            } else {
+                var kcTime = Number(new Date(kcEndTime.replace(/-/g,"/")));
+            }
+
+            // 获取当前表格id
+            var id = $(this).attr("id"); // id = week_day + "_" + start_time
+            var project_id = $('input[name="project_id"]').val();
+            var pkCount = Number($('input[name="pkCount"]').val());
+            var count_hour = Number($('input[name="count_hour"]').val());
+            var schedule_id = $('#'+id).find('input').val(); //-----------------------------------------------------
+            // *********************************
+            // grade_id应根据grade_info查出，此处先自定义
+            // *********************************
+            var grade_id = $("#grade_id").val();
+            var text = $(this).text().trim();
+            if (clickDate <= endDate && clickDate >= startDate) { // 判断点击日期是否在项目日期内
+                // 判断点击日期是否在已结算课酬日期内
+                if (clickDate > kcTime) {
+                    if (text == "") {//开始时间，结束时间，日期
+                        // 如果当前格子开始时间,小于 目标课程结束时间,提示不能排课
+                        // 目标课程,为当天的 此格子时段 的上一个已排课程
+                        // 如果点击当前空白，查询是否在上一节课时段内
+                        var selTd = $('.joysupply-plan-table tbody tr:eq(0) td:eq(1)');
+                        var map = {
+                            // 当前格子 开始时间，日期
+                            "nowStartTime" : start_time,
+                            "nowEndTime" : end_time,
+                            "nowDate" : ymd,
+                            "project_id" : project_id,
+                            "grade_id" : grade_id
+                        };
+                        $.ajax({
+                            type: "post",
+                            url: "/classManage/selectBlank",
+                            data: map,
+                            dataType:'json',
+                            success: function (data) {
+                                if (data.result == 'OK') {
+                                    openwindow("/classManage/addClassInfoPage?year=" + year
+                                        + "&project_id=" + project_id
+                                        + "&grade_id=" + grade_id
+                                        + "&week_day=" + week_day
+                                        + "&start_time=" + start_time
+                                        + "&end_time=" + end_time
+                                        + "&projectStartTime=" + projectStartTime
+                                        + "&projectEndTime=" + projectEndTime
+                                        + "&ymd=" + ymd, "添加课程信息", "700", "484", false);
+                                } else {
+                                    tipinfo(data.message, draggleFun());
+                                    return false;
+                                }
+                            },
+                            error: function (data) {
+                                tipinfo("网络连接中断，请稍后再试！",reload2());
+                            }
+                        });
+                        // 判断项目日期内课时数，是否超过总课时
+                        // 总课时从上个页面获取
+                        // 查询当前项目课时数量
+                    } else {
+                        openwindow("/classManage/editClassInfoPage?schedule_id=" + schedule_id
+                            + "&grade_id=" + grade_id
+                            + "&project_id=" + project_id
+                            + "&start_time=" + start_time
+                            + "&end_time=" + end_time
+                            + "&year=" + year, "修改课程信息", "700", "484", false,reload);
+                        draggleFun();
+                    }
+                } else {
+                    tipinfo("所选排课日期已结算课酬，请重新选择！", draggleFun());
+                    return false;
+                }
+            } else {
+                tipinfo("所选排课日期在项目日期外，请重新选择！", draggleFun());
+                return false;
+            }
+        })
+
+        // 复制
+        $('#copy').click(function() {
+            // 现在是false
+            // 判断pi表状态
+            var weekStartDate = dateTime; // 本周开始时间
+
+            var projectStatus = $('#status').val();
+            var ids = [];
+            var project_id = $('#project_id').val();
+            var data = $('td input');
+            var grade_id = $('#grade_id').val();
+            $(data).each(function(i,n) {
+                ids.push($(this).val());
+            })
+            if (ids.length == 0) {
+                tipinfo("当前周没有可复制课程");
+                return false;
+            }
+            layer.open({
+                type: 2,
+                title: ['复制', 'font-size:18px;'],
+                shadeClose: false,
+                area: ['600px', '450px'],
+                content: '/classManage/copyClassPage?startTime='+startTime+'&endTime='+endTime,
+                btn: ['确定', '取消'],
+                btnAlign: 'c',
+                yes: function(index, layero) {
+                    var body = layer.getChildFrame('body', index);
+                    var form = layer.getChildFrame('form', index);
+                    var formdata = form.serialize();
+                    var week = $('#week1').val();
+                    var year = $('#year').val();
+
+                    var projectStartTime = $('#projectStartTime').text().substring(5,15); // 项目开始日期
+                    var projectEndTime = $('#projectEndTime').text().substring(5,15); // 项目结束日期
+
+                    var projectStartTimeNumber = Number(projectStartTime.replace(/[-]/g,""));
+                    var projectEndTimeNumber = Number(projectEndTime.replace(/[-]/g,""));
+
+                    var startTime = $(form).find('#test1').val(); // 复制排课选择开始日期
+                    var endTime = $(form).find('#test2').val(); // 复制排课选择结束日期
+                    var kcEndTime = $("#kcEndTime").val();
+
+                    // 开始日期 和 结束日期 不包含当前周的日期
+                    var startTimeNumber = Number(startTime.replace(/[-]/g,""));
+                    var endTimeNumber = Number(endTime.replace(/[-]/g,""));
+                    var kcEndTimeNumber = Number(kcEndTime.replace(/[-]/g,""));
+
+                    if (kcEndTimeNumber != 0) {
+                        if (kcEndTimeNumber >= startTimeNumber && kcEndTimeNumber <= endTimeNumber) {
+                            tipinfo("所选日期已有结算课酬，请重新选择！");
+                            return false;
+                        }
+                    }
+
+                    if (startTimeNumber < endTimeNumber) {
+                        if (startTimeNumber >= projectStartTimeNumber && startTimeNumber <= projectEndTimeNumber && endTimeNumber >= projectStartTimeNumber && endTimeNumber <= projectEndTimeNumber) {// 必须条件
+                            $.post("/classManage/copyClassPlan",
+                                {
+                                    ids:ids.join(","),
+                                    startTime:startTime,
+                                    endTime:endTime,
+                                    projectStartTime:projectStartTime,
+                                    projectEndTime:projectEndTime,
+                                    projectId:project_id,
+                                    weekStartDate:weekStartDate,
+                                    gradeId : grade_id
+                                },
+                                function(data) {
+                                    var message = data.message;
+                                    var result = data.result;
+
+                                    if (result == 'OK') {
+                                        layer.closeAll();
+                                        $('.sb_loading').show();
+                                        setTimeout(function () {
+                                            $('.sb_loading').hide();
+                                            $('.sb_success').show();
+                                        }, 5000);
+                                        setTimeout(function () {
+                                            $('.sb_success').hide();
+                                        }, 5000);
+                                        setTimeout(function () {
+                                            tipinfo("复制成功");
+                                        }, 5000);
+                                        $('.closeBtn').click(function () {
+                                            $('.sb_success').hide();
+                                        });
+                                        layer.close();
+                                    } else {
+                                        layer.closeAll();
+                                        $('.sb_loading').show();
+                                        setTimeout(function () {
+                                            $('.sb_loading').hide();
+                                            $('.sb_success').show();
+                                        }, 5000);
+                                        setTimeout(function () {
+                                            $('.sb_success').hide();
+                                        }, 5000);
+                                        setTimeout(function () {
+                                            tipinfo(message);
+                                        }, 5000);
+                                        $('.closeBtn').click(function () {
+                                            $('.sb_success').hide();
+                                        });
+                                    }
+                                }
+                            );
+                        } else {
+                            tipinfo("所选日期在项目日期之外，请重新选择！", draggleFun());
+                            return false;
+                        }
+                    } else {
+                        tipinfo("开始时间必须大于结束时间!");
+                        return false;
+                    }
+                }
+            });
+            draggleFun();
+        })
+
+        // -------------------------------------------------------------------------------------------------------------
+        draggleFun();
+        // 拖动复制
+        $('.joysupply-plan-table tbody td:not(".head")').droppable({
+            drop: function(event, ui,e) {
+                var projectStatus = $('#status').val();
+                var sourceElement = $(ui.helper);
+                var targetElement = $(this);
+                var templeteA = $('#planItem').html().replace('{msg}', $(ui.helper).html());
+                var tarScheduleId = $(templeteA).find('input').val();
+
+                var data_timeStop = $(this).attr("data-timeStop"); // 月-日-星期-开始时间-结束时间
+                var arr = data_timeStop.split("-");
+
+                var year = arr[0];
+                var month = arr[1];
+                var day = arr[2];
+                var week_day = arr[3];
+                var start_time = arr[4];
+                var end_time = arr[5];
+                var ymd = year + "-" + month + "-" + day;
+
+                var projectStartTime = Number($('#projectStartTime').text().substring(5,15).replace(/[-]/g,""));
+                var projectEndTime = Number($('#projectEndTime').text().substring(5,15).replace(/[-]/g,""));
+                var nowDay = Number(ymd.replace(/[-]/g,""));
+
+                // 判断拖动是否超出限定日期
+                if (nowDay > projectEndTime || nowDay < projectStartTime) {
+                    tipinfo("排课时间在项目日期之外！", draggleFun());
+                    return false;
+                }
+
+                var kcEndTime = $('#kcEndTime').val();
+                var kcTime = Number(kcEndTime.replace(/[-]/g,""));
+                if (kcTime != 0) {
+                    if (nowDay <= kcTime) {
+                        tipinfo("所选时间已结算课酬！", draggleFun());
+                        return false;
+                    }
+                }
+
+                var pkCount = Number($('input[name="pkCount"]').val());
+                var count_hour = Number($('input[name="count_hour"]').val());
+
+                var targetId = $(this).attr('id');
+                var targetStartTime = targetId.substring(2,6);
+                var targetEndTime = end_time;
+                var targetWeek = targetId.substring(0,1);
+                var scheduleId = tarScheduleId;
+
+                var ids = [];
+                for (var i = 0; i < list.length; i++) {
+                    var week_day = list[i].week_day;
+                    var start_time = list[i].start_time.replace(":","");
+                    var end_time = list[i].end_time.replace(":","");
+
+                    // for所有条时间表，获取每一条 开始时间和结束时间
+                    // if (start_time 在时间段范围内， id为原本开始时间，非现在课程时间)
+                    for (var j = 0; j < timeSheetList.length; j++) {
+                        var st = Number(timeSheetList[j].start_time.replace(":",""));
+                        var et = Number(timeSheetList[j].end_time.replace(":",""));
+                        var pkStartTime = timeSheetList[j].start_time.replace(":","");
+                        var startTime = Number(start_time);
+                        var endTime = Number(end_time);
+                        if (startTime >= st && startTime <= et) {
+                            var id = week_day + "_" + pkStartTime;
+                            ids.push(id);
+                            continue;
+                        }
+                    }
+                }
+
+                // 获取目标格子，是否是超长时段
+                var map = {
+                    "targetStartTime" : targetStartTime,
+                    "targetWeek" : targetWeek,
+                    "scheduleId" : scheduleId, // 原本框的scheduleId
+                    "ymd" : ymd,
+                    "status" : "0"
+                };
+                // 判断是否为当前格子 周_开始时间
+                // 格子内日期
+                // 判断放置位置id与原始位置是否一样 -- 获取原始框id,或日期
+                $.ajax({
+                    type : "post",
+                    url : "/classManage/copyClass",
+                    data : JSON.stringify(map),
+                    contentType:"application/json",
+                    success : function(param) {
+                        console.log(param.result)
+                        // 先判断result是否为空
+                        var tarStatus = param.status;
+                        if (tarStatus == "teacherNoTime") {
+                            tipinfo("当前时段该教师已排课！",draggleFun());
+                        } else if (tarStatus == "scheduleInTime"){
+                            tipinfo("当前时段已有课程安排！",draggleFun());
+                        } else if (tarStatus == "noLangTime"){
+                            tipinfo("当前时段已有长时段课程安排！",draggleFun());
+                        } else {
+                            var targetSt = param.start_time;
+                            var targetEt = param.end_time;
+
+                            var targetKc = param.fee_total;
+
+                            var idA = param.week_day;
+                            var idB = targetSt.replace(":","");
+                            var tid = idA + "_" + idB;
+                            var targetScheduleId = param.schedule_id;
+                            var targetCourseName = param.class_name;
+                            var targetClassRoomType = param.classroom_name;
+                            var targetTeacherName = param.teacher_name;
+                            var targetProjectId = param.project_id;
+
+                            var html =
+                                "<div class='courseItem' id='" + tid + "'>" +
+                                    "<div class='courseItem1 ' style='position: relative;'>" +
+                                        "<input type='hidden' value='" + targetScheduleId + "'>" + targetCourseName + "  " + targetClassRoomType +
+                                    "</div>" +
+                                    "<div class='courseItem2 ' style='position: relative;'>" +
+                                        targetTeacherName + "  " +
+                                    "</div>" +
+                                    "<div class='courseItem3 ' style='position: relative;'>" +
+                                        targetSt + "-" + targetEt +
+                                    "</div>" +
+                                    "<div class='courseItem4' style='position: relative; '>" +
+                                        "课酬合计 : " + targetKc +
+                                    "</div>" +
+                                "</div>"
+                            $('#'+tid).html(html);
+
+                            draggleFun();
+
+                            // 清除时间段
+                            $('.joysupply-plan-table tr').each(function(){
+                                var val = $(this).find('td').eq(0).text();
+                                if( val != undefined && val != '') {
+                                    $(this).find('td').each(function(index) {
+                                        if(index>0) {
+                                            var a = $(this).find('.courseItem3 ').text();
+                                            if (a != undefined && a != "") {
+                                                var time = a.substring(a.length-11,a.length);
+                                                if (time == val) {
+                                                    $(this).find('.courseItem3 ').html(a.substring(0,a.length-11));
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            })
+                            tipinfo("复制成功！");
+                        }
+                    },
+                    error: function (param) {
+                        tipinfo("网络连接中断，请稍后再试！",reload());
+                    }
+                });
+            }
+        });
+
+        function draggleFun(){
+            $(".courseItem").draggable({
+                start:function(event, ui) {
+                    var projectStatus = $('#status').val();
+                    var templeteA = $('#planItem').html().replace('{msg}', $(this).html());
+                    $(this).parent('td').css('position','relative');
+                    $(this).css({'position':'absolute','width':'fit-content'});
+                    $(this).parent().append(templeteA);
+                },
+                revert: false,
+                stop: function(event, ui) {
+                    $(this).remove();
+                }
+            });
+        }
+        draggleFun();
+    });
+
+    function reload() {
+        location.reload();
+    }
+
+    function reload2() {
+        setTimeout("location.reload()",1000);
+    }
+
+    window.onload = function () {
+        setTimeout(function () {
+            tipAlert();
+        }, 300 );
+    }
+
+</script>
+</html>

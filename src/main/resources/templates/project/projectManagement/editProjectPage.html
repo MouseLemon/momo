@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-tab-title {
+        border-bottom-width: 0px !important;
+    }
+
+    .layui-tab-title li {
+        padding: 0 5px !important;
+    }
+
+    .layui-tab-title li:first-child {
+        margin-left: 66px;
+    }
+
+    .layui-tab-title li > span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-tab-title li.layui-this > span {
+        border: 1px #00c1de solid;
+        background: #00c1de;
+        color: #fff;
+    }
+
+    .layui-tab-brief > .layui-tab-title .layui-this:after {
+        border: none !important;
+    }
+
+    .layui-tab-title li > i {
+        width: 100px;
+        height: 1px;
+        display: inline-block;
+        background: #ccc;
+        margin: 0 0 4px 10px;
+    }
+
+    .complete {
+        position: absolute;
+        right: 88px;
+        top: 30px;
+    }
+
+    .complete span {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        display: inline-block;
+        border-radius: 50%;
+        border: 1px #ccc solid;
+        margin-right: 7px;
+    }
+
+    .layui-form-select .layui-input {
+        padding-right: 0 !important;
+    }
+
+    .layui-disabled {
+        background: rgba(181, 181, 181, 0.16);
+    }
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <div class="layui-tab layui-tab-brief" lay-filter="tab1">
+        <ul class="layui-tab-title">
+            <li class="layui-this"><span>1</span>填写项目基本信息<i></i></li>
+            <li><span>2</span>填写项目收益信息<i></i></li>
+        </ul>
+        <div class="complete"><span>3</span>完成</div>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <form class="layui-form" action="">
+                    <input type="hidden" id="projectId" th:value="${projectId}">
+                    <input type="hidden" id="status" th:value="${status}">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required">项目名称:</span></label>
+                        <div class="layui-input-block">
+                            <input type="text" id="projectName" autocomplete="off" class="layui-input" th:value="${projectName}">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-show">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目类型:</span></label>
+                            <div class="layui-input-block">
+                                <select id="projectType" lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${projectTypeItem.code}" th:each="projectTypeItem : ${projectTypeList}" th:text="${projectTypeItem.name}"
+                                            th:selected="${projectTypeItem.name eq projectType}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目语种:</span></label>
+                            <div class="layui-input-block">
+                                <select id="language" lay-verify="required" lay-search="">
+                                    <option value=""></option>
+                                    <option th:value="${languageItem.code}" th:each="languageItem : ${languageList}" th:text="${languageItem.name}"
+                                            th:selected="${languageItem.name eq language}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-show">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目部名称:</span></label>
+                            <div class="layui-input-block">
+                                <select id="depName" lay-verify="required">
+                                    <option value=""></option>
+                                    <option th:value="${organizeStruct.organizeCode}" th:each="organizeStruct : ${structList}" th:text="${organizeStruct.organizeName}"
+                                            th:selected="${organizeStruct.organizeCode eq depCode}"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">项目编码:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" id="projectCode" lay-verify="required" autocomplete="off" placeholder="请输入" class="layui-input" th:value="${projectCode}"
+                                       onblur="checkProjectCode()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">项目说明:</label>
+                        <div class="layui-input-block">
+                            <textarea id="projectDesc" class="layui-textarea" th:text="${projectDesc}" rows="8"></textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">开始时间:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" class="layui-input" id="startTime" th:value="${startTime}">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">结束时间:</span></label>
+                            <div class="layui-input-block">
+                                <input type="text" class="layui-input" id="endTime" th:value="${endTime}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">课时总数:</span></label>
+                            <div class="layui-input-block">
+                                <input type="test" id="countHour" autocomplete="off" class="layui-input" th:value="${countHour}">
+                            </div>
+                        </div>
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="required">启动人数:</span></label>
+                            <div class="layui-input-block">
+                                <input type="test" id="startPersonCount" autocomplete="off" class="layui-input" th:value="${startPersonCount}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="next()">下一步</button>
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">退班人数:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="returnFeeCount" autocomplete="off" class="layui-input" th:value="${returnFeeCount}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">插班人数:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="joinClassCount" autocomplete="off" class="layui-input" th:value="${joinClassCount}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">当前人数:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="currentCount" autocomplete="off" disabled class="layui-input layui-disabled" th:value="${currentCount}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label"><span class="required">收费方式:</span></label>
+                            <div class="layui-input-block">
+                                <select id="feeType" lay-verify="required" class="layui-input" lay-search lay-filter="feeType">
+                                    <option value=""></option>
+                                    <option th:value="${feeTypeItem.code}" th:each="feeTypeItem : ${feeTypeList}" th:text="${feeTypeItem.name}"
+                                            th:selected="${feeTypeItem.name eq feeType}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label"><span class="required">学时学费:</span></label>
+                            <div class="layui-input-block">
+                                <input type="test" id="feeHour" autocomplete="off" th:disabled="${'按人' eq feeType}" class="layui-input" th:value="${feeHour}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label"><span class="required">单人学费:</span></label>
+                            <div class="layui-input-block">
+                                <input type="test" id="feeSingle" autocomplete="off" th:disabled="${'按课时' eq feeType}" class="layui-input" th:value="${feeSingle}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">启动学费:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="startFee" autocomplete="off" class="layui-input layui-disabled" th:value="${startFee}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">增加学费:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="addFee" autocomplete="off" class="layui-input" th:value="${addFee}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">减少学费:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="subFee" autocomplete="off" class="layui-input" th:value="${subFee}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">当前收入:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="currentIncome" autocomplete="off" disabled class="layui-input" th:value="${currentIncome}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">课酬支出:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="kcExpend" autocomplete="off" class="layui-input" th:value="${kcExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">硬件支出:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="hardwareExpend" autocomplete="off" class="layui-input" th:value="${hardwareExpend}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">管理支出:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="manageExpend" autocomplete="off" class="layui-input" th:value="${manageExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">广告支出:</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="adExpend" autocomplete="off" class="layui-input" th:value="${adExpend}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline ml50">
+                            <label class="layui-form-label">代理支出</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="agentExpend" autocomplete="off" class="layui-input" th:value="${agentExpend}">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">总收益</label>
+                            <div class="layui-input-block">
+                                <input type="test" id="totalIncome" autocomplete="off" disabled class="layui-input layui-disabled" th:value="${totalIncome}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div style="margin-bottom: 0px;text-align: center">
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+                    <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var projectId = $("#projectId").val();
+    function checkProjectCode() {
+        var projectCode = $("#projectCode").val();
+        if(projectCode == null || projectCode == ''){
+            tipinfo("项目编码不能为空!");
+            return;
+        }
+        var map = {
+            "projectCode": projectCode,
+            "projectId":projectId
+        };
+        $.ajax({
+            type: "post",
+            url: "/project/isProjectCodeExist",
+            data: JSON.stringify(map),
+            async: false,
+            contentType: 'application/json',
+            success: function (data) {
+                if (data.isProjectCodeExist) {
+                    tipinfo("该项目编码已存在!");
+                } else {
+                }
+            },
+            error: function (data) {
+                tipinfo("该项目编码已存在!");
+            }
+        });
+    }
+    function isPosNum(obj) {
+        var number = $(obj).val();
+        var test = $(obj).parent().prev().text();
+        number = Number(number);
+        if (isNaN(number) || number < 1) {
+            $(obj).val(0);
+        }
+        $(obj).val(number.toFixed(0));
+        var reg = /^([1-9]\d*|0)$/;
+        if (!reg.test(number)) {
+            tipinfo(test + "只能是非负整数");
+            $(obj).val(0);
+        }
+        calculate();
+    }
+
+    $(function () {
+        var val = $("#feeType").val();
+        if (val == "a02") {
+            $("#feeSingle").addClass("layui-disabled");
+        } else {
+            $("#feeHour").addClass("layui-disabled");
+        }
+    });
+
+    function isMoneyNum(obj) {
+        var number = $(obj).val();
+        var test = $(obj).parent().prev().text();
+        number = Number(number);
+        if (isNaN(number) || number < 1) {
+            $(obj).val(0);
+        }
+        $(obj).val(Number(number.toFixed(2)).toFixed(2));
+        var reg = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
+        if (!reg.test(number)) {
+            tipinfo(test + "不是金钱格式,最多保留2位小数");
+            $(obj).val(0);
+        }
+        calculate();
+    }
+
+    $("#startPersonCount").blur(
+        function () {
+            isPosNum(this);
+        }
+    )
+    $("#returnFeeCount").blur(
+        function () {
+            isPosNum(this);
+        }
+    )
+
+    function calculate() {
+        //计算当前人数
+        var startPersonCount = Number($("#startPersonCount").val());
+        var returnFeeCount = Number($("#returnFeeCount").val());
+        var joinClassCount = Number($("#joinClassCount").val());
+        $("#currentCount").val(startPersonCount + joinClassCount - returnFeeCount);
+        var feeType = $("#feeType option:selected").val();
+        if (feeType == "a01") {
+            //按人计算
+            //计算启动学费
+            var currentCount = Number($("#currentCount").val());
+            var feeSingle = Number($("#feeSingle").val());
+            $("#startFee").val((currentCount * 100 * feeSingle / 100).toFixed(2));
+            //计算当前收入
+            var startFee = Number($("#startFee").val());
+            var addFee = Number($("#addFee").val());
+            var subFee = Number($("#subFee").val());
+            $("#currentIncome").val(((startFee * 100 + addFee * 100 - subFee * 100) / 100).toFixed(2));
+            //计算总收益
+            var currentIncome = Number($("#currentIncome").val());
+            var kcExpend = Number($("#kcExpend").val());
+            var hardwareExpend = Number($("#hardwareExpend").val());
+            var manageExpend = Number($("#manageExpend").val());
+            var adExpend = Number($("#adExpend").val());
+            var agentExpend = Number($("#agentExpend").val());
+            $("#totalIncome").val(((currentIncome * 100 - kcExpend * 100 - hardwareExpend * 100 - manageExpend * 100 - adExpend * 100 - agentExpend * 100) / 100).toFixed(2));
+            var totalIncome = Number($("#totalIncome").val());
+        } else if (feeType == "a02") {
+            //按学时计算
+            var countHour = Number($("#countHour").val());
+            var feeHour = Number($("#feeHour").val());
+            //计算启动学费
+            $("#startFee").val((countHour * 100 * feeHour / 100).toFixed(2));
+            var startFee = Number($("#startFee").val());
+            var addFee = Number($("#addFee").val());
+            var subFee = Number($("#subFee").val());
+            //计算当前收入
+            $("#currentIncome").val(((startFee * 100 + addFee * 100 - subFee * 100) / 100).toFixed(2));
+            var currentIncome = Number($("#currentIncome").val());
+            var kcExpend = Number($("#kcExpend").val());
+            var hardwareExpend = Number($("#hardwareExpend").val());
+            var manageExpend = Number($("#manageExpend").val());
+            var adExpend = Number($("#adExpend").val());
+            var agentExpend = Number($("#agentExpend").val());
+            //计算总收益
+            $("#totalIncome").val(((currentIncome * 100 - kcExpend * 100 - hardwareExpend * 100 - manageExpend * 100 - adExpend * 100 - agentExpend * 100) / 100).toFixed(2));
+            var totalIncome = Number($("#totalIncome").val());
+        }
+
+    }
+
+    $("#joinClassCount").blur(
+        function () {
+            isPosNum(this);
+        }
+    )
+    $("#feeSingle").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    );
+    $("#countHour").blur(
+        function () {
+            isPosNum(this);
+        }
+    );
+    $("#feeHour").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#addFee").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#subFee").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#kcExpend").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#hardwareExpend").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#manageExpend").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#adExpend").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    $("#agentExpend").blur(
+        function () {
+            isMoneyNum(this);
+        }
+    )
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate', 'upload'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#startTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#startTime").val("");
+                    tipinfo("开始时间不能晚于结束时间");
+                }
+            }
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'date',
+            done: function (value, date) {
+                var flg = compareData();
+                if (flg) {
+                    $("#endTime").val("");
+                    tipinfo("结束时间不能早于开始时间");
+                }
+            }
+        });
+        form.on('select(feeType)', function (data) {
+            var val = data.value; //得到被选中的值
+            if (val == "a01") {
+                $("#feeHour").attr("disabled", "true").addClass("layui-disabled").val("");
+                $("#feeSingle").removeAttr("disabled").removeClass("layui-disabled").val("");
+            } else if (val == "a02") {
+                $("#feeHour").removeAttr("disabled").removeClass("layui-disabled").val("");
+                $("#feeSingle").attr("disabled", "true").addClass("layui-disabled").val("");
+            } else {
+                $("#feeHour").attr("disabled", "true").addClass("layui-disabled").val("");
+                $("#feeSingle").attr("disabled", "true").addClass("layui-disabled").val("");
+            }
+            calculate();
+        });
+
+        function compareData() {
+            var start = $("#startTime").val();
+            var end = $("#endTime").val();
+            if (start == null || start == "" || start == undefined) {
+                return false;
+            } else if (end == null || end == "" || end == undefined) {
+                return false;
+            } else {
+                if (end < start) {
+                    return true;
+                } else {
+                    return false;
+                }
+                return true;
+            }
+        };
+    });
+
+    function next() {
+        $('.layui-tab-title').children().eq(0).removeClass('layui-this').next().addClass('layui-this');
+        $('.layui-tab-content').children().eq(0).removeClass('layui-show').next().addClass('layui-show');
+    }
+
+    function isPositiveNum(param) {
+        var reg = /^(([1-9][0-9]*)|0)$/;
+        if (null == param.match(reg)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function isMoney(param) {
+        var reg = /^(([1-9][0-9]*)|(([0]\.\d{1,2}|[1-9][0-9]*\.\d{1,2})))$/;
+        if (null == param.match(reg)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function save() {
+        var projectId = $("#projectId").val();
+        var projectCode = $("#projectCode").val();
+        var projectName = $("#projectName").val();
+        var projectType = $("#projectType option:selected").val();
+        var language = $("#language option:selected").val();
+        var depName = $("#depName option:selected").val();
+        var projectDesc = $("#projectDesc").val();
+        var startTime = $("#startTime").val();
+        var endTime = $("#endTime").val();
+        var countHour = $("#countHour").val();
+        var startPersonCount = $("#startPersonCount").val();
+        var returnFeeCount = $("#returnFeeCount").val() == "" ? 0 : $("#returnFeeCount").val();
+        var joinClassCount = $("#joinClassCount").val() == "" ? 0 : $("#joinClassCount").val();
+        var currentCount = $("#currentCount").val() == "" ? 0 : $("#currentCount").val();
+        var feeType = $("#feeType option:selected").val();
+        var feeHour = $("#feeHour").val() == "" ? 0 : $("#feeHour").val();
+        var feeSingle = $("#feeSingle").val() == "" ? 0 : $("#feeSingle").val();
+        var startFee = $("#startFee").val() == "" ? 0 : $("#startFee").val();
+        var addFee = $("#addFee").val() == "" ? 0 : $("#addFee").val();
+        var subFee = $("#subFee").val() == "" ? 0 : $("#subFee").val();
+        var currentIncome = $("#currentIncome").val() == "" ? 0 : $("#currentIncome").val();
+        var kcExpend = $("#kcExpend").val() == "" ? 0 : $("#kcExpend").val();
+        var hardwareExpend = $("#hardwareExpend").val() == "" ? 0 : $("#hardwareExpend").val();
+        var manageExpend = $("#manageExpend").val() == "" ? 0 : $("#manageExpend").val();
+        var adExpend = $("#adExpend").val() == "" ? 0 : $("#adExpend").val();
+        var agentExpend = $("#agentExpend").val() == "" ? 0 : $("#agentExpend").val();
+        var totalIncome = $("#totalIncome").val();
+
+        if (projectName == null || projectName == "") {
+            tipinfo("项目名称不能为空");
+            return;
+        }
+        if (projectCode == null || projectCode == "") {
+            tipinfo("项目编码不能为空");
+            return;
+        }
+        if (projectType == null || projectType == "") {
+            tipinfo("请选择项目类型");
+            return;
+        }
+        if (language == null || language == "") {
+            tipinfo("请选择项目语种");
+            return;
+        }
+        if (depName == null || depName == "") {
+            tipinfo("请选择项目部");
+            return;
+        }
+        if (startTime == null || startTime == "") {
+            tipinfo("请选择开始日期");
+            return;
+        }
+        if (endTime == null || endTime == "") {
+            tipinfo("请选择结束日期");
+            return;
+        }
+        if (countHour < 1) {
+            tipinfo("课时总数不能小于1");
+            return;
+        }
+        if (startPersonCount < 1) {
+            tipinfo("启动人数不能小于1");
+            return;
+        }
+        if (feeType == null || feeType == "") {
+            tipinfo("请选择收费方式");
+            return;
+        }
+        var map = {
+            status: status,
+            projectId: projectId,
+            projectCode: projectCode,
+            projectName: projectName,
+            projectType: projectType,
+            language: language,
+            depName: depName,
+            projectDesc: projectDesc,
+            startTime: startTime,
+            endTime: endTime,
+            countHour: countHour,
+            startPersonCount: startPersonCount,
+            returnFeeCount: returnFeeCount,
+            joinClassCount: joinClassCount,
+            currentCount: currentCount,
+            feeType: feeType,
+            feeHour: feeHour,
+            feeSingle: feeSingle,
+            startFee: startFee,
+            addFee: addFee,
+            subFee: subFee,
+            currentIncome: currentIncome,
+            kcExpend: kcExpend,
+            hardwareExpend: hardwareExpend,
+            manageExpend: manageExpend,
+            adExpend: adExpend,
+            agentExpend: agentExpend,
+            totalIncome: totalIncome
+        };
+        $.ajax({
+            type: "post",
+            url: "/project/updProject",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                if (data.result == "FAILURE") {
+                    tipinfo(data.message);
+                } else {
+                    tipinfo("项目保存成功!");
+                    closewindow(1);
+                }
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+
+</html>

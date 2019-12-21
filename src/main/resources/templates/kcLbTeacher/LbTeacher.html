@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <!--<section>-->
+            <div style="padding: 15px; background-color: #FFFFFF; margin: 15px; min-height: 95%;"
+                    class="layui-anim layui-anim-upbit">
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">教师类别课酬</h2>
+                <hr/>
+                <form class="layui-form" id="form1">
+                    <div class="layui-row">
+                        <div class="layui-col-lg6 layui-col-md12">
+                            <div class="layui-col-md6">
+                                <label class="layui-form-label">教师类别：</label>
+                                <div class="layui-input-block">
+                                    <select name="teacherType" id="teacherType" class="layui-input" lay-search="">
+                                        <option value=""></option>
+                                        <option th:each="item:${teacherType}" th:value="${item.code}"
+                                                th:text="${item.name}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6">
+                                <label class="layui-form-label">年月:</label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="time" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-col-lg6 layui-col-md12 mt5">
+                                <button type="button" id="search" class="layui-btn layui-btn-sm ml20" >搜索</button>
+                                <button type="button" class="layui-btn layui-btn-sm" id="export" th:each="func:${session.funcList}" th:if="${func == 'jslbkc_export'}">导出</button>
+                                <!--<button type="button" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'jslbkc_print'}">打印</button>-->
+                        </div>
+
+                    </div>
+                </form>
+                <div>
+                    <div class="layui-form">
+                        <table class="layui-table" id="kcTable" lay-filter="kcTable" lay-skin="line">
+                            <thead>
+                            </thead>
+                            <tbody class="layui-table">
+                            </tbody>
+                        </table>
+                        <div id="tablePage"></div>
+                    </div>
+                </div>
+            </div>
+        <!--</section>-->
+    </div>
+</div>
+</body>
+<script>
+    var dataParam = {page: 1, limit: 10};
+    var count = 0;
+    var headHtml1 = "<tr>" +
+        "<th lay-data=\"{field:'yedar', fixed: 'left',width:100,align: 'center'} \" >年份</th>" +
+        "<th lay-data=\"{field:'mosdfnth', fixed: 'left',width:80,align: 'center'}\">月份</th>" +
+        "<th lay-data=\"{field:'teacdasher',width:160,fixed: 'left',align: 'center'}\">教师类别</th>";
+    var headHtml2 = "<th lay-data=\"{field:'yeqaar',width:120,align: 'center'}\">工作量扣除</th>" +
+        "<th lay-data=\"{field:'year', fixed: 'riqqght',width:120,fixed: 'right',align: 'center'}\">课酬合计</th>" +
+        "</tr> ";
+    layui.use(['form', 'laydate', 'table', 'laypage'], function () {
+        var laydate = layui.laydate;
+        var form = layui.form;
+        var laypage = layui.laypage;
+        var table = layui.table;
+        laydate.render({
+            elem: '#time',
+            type: 'month'
+        });
+        window.laypageInit = function () {
+            laypage.render({
+                elem: 'tablePage',
+                count: count,
+                prev: '<em class="layui-icon" style="margin-right: 0px">&#xe603;</em>',
+                next: '<em class="layui-icon" style="margin-right: 0px">&#xe602;</em>',
+                layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+                jump: function (obj) {
+                    var page = obj.curr;
+                    var limit = obj.limit;
+                    dataParam.page = page;
+                    dataParam.limit = limit;
+                    tableHtml();
+                }
+            });
+        }
+
+        function tableHtml() {
+            var total = [];
+            $.ajax({
+                type: "GET",
+                url: "/teacherKc/queryKcTeacherData",
+                dataType: "JSON",
+                async: false,
+                data: dataParam,
+                success: function (data) {
+                    if (data[0] == null) {
+                        $("#kcTable").find("tbody").html("");
+                        $("#kcTable").find("thead").html("");
+                        $("#tablePage").addClass("layui-hide")
+                        $("#tablePage").hide();
+                        table.init('kcTable', {});
+                        return;
+                    }
+                    $("#tablePage").show();
+                    $("#tablePage").removeClass("layui-hide");
+                    count = data[0].count; //数据的总个数
+                    var dataBody = data[0].data; //数据
+                    var dataHead = data[1].data==null?0:data[1].data; //数据的表头
+                    var widthtd = ($('#scoreTable').width() - 726) / dataHead.length;
+                    //数据表头
+                    var thHtml = headHtml1;
+                    if (dataHead != null && dataHead != "") {
+                        for (var i = 0; i < dataHead.length; i++) {
+                            thHtml += "<th lay-data=\"{field:'" + dataHead[i].depCode + "', width:" + widthtd + ",align: 'center'}\">" + dataHead[i].depName + "</th>";
+                        }
+                    }
+                    thHtml += headHtml2;
+                    $("#kcTable").find("thead").html(thHtml);
+                    //数据体
+                    var bodyhtml = "";
+                    //初始化合计
+                    for(var i = 0 ; i < (dataHead.length+2) ; i ++ ){
+                        total.push(0);
+                    }
+                    if (dataBody != null && dataBody != "") {
+                        for (var i = 0; i < dataBody.length; i++) {
+                            var cost = dataBody[i].deduction;
+                            var sumNum = 0;
+                            bodyhtml += "<tr>";
+                            bodyhtml += "<td>" + dataBody[i].year + "</td>";
+                            bodyhtml += "<td>" + dataBody[i].month + "</td>";
+                            bodyhtml += "<td>" + dataBody[i].teacherType + "</td>";
+                            for (var j = 0; j < dataBody[i].depVal.length; j++) {
+                                sumNum += Number(dataBody[i].depVal[j]);
+                                total[j]=Number(Number(total[j])+Number(dataBody[i].depVal[j])).toFixed(2);
+                                bodyhtml += "<td>" + Number(dataBody[i].depVal[j]).toFixed(2) + "</td>";
+                            }
+                            bodyhtml += "<td>" + Math.abs(dataBody[i].deduction).toFixed(2) + "</td>";
+                            bodyhtml += "<td>" + Number(sumNum + cost).toFixed(2) + "</td>";
+                            bodyhtml += "</tr>";
+                            total[dataBody[i].depVal.length]=Number(Number(total[dataBody[i].depVal.length])+Math.abs(dataBody[i].deduction)).toFixed(2);
+                            // total[dataBody[i].depVal.length+1]=Number(Number(total[dataBody[i].depVal.length+1]) + Math.abs(dataBody[i].lecture)).toFixed(2);
+                            // total[dataBody[i].depVal.length+2]=Number(Number(total[dataBody[i].depVal.length+2]) + Math.abs(dataBody[i].replacement)).toFixed(2);
+                            total[dataBody[i].depVal.length+1]=Number(Number(total[dataBody[i].depVal.length+1]) + Number(sumNum + cost)).toFixed(2);
+                        }
+                    }
+                    $("#kcTable").find("tbody").html(bodyhtml);
+                }
+            });
+            table.init('kcTable', {
+                totalRow: true,
+                limit:dataParam.limit
+            });
+            //放数据
+            $('#kcTable').next().find('.layui-table-total td').eq(0).children().html("合计");
+            for(var i = 0 ; i < total.length ; i ++ ){
+                $('#kcTable').next().find('.layui-table-total td').eq(i+3).children().html(total[i]);
+            }
+        }
+
+        $(function () {
+            tableHtml();
+            if(count>0){
+                laypageInit();
+            }
+        });
+
+        $("#search").click(function () {
+            param();
+            tableHtml();
+            laypageInit();
+        });
+
+        function param() {
+            var teacherCode = $("#teacherType").val();
+            var yearAndMonth = $("#time").val();
+            var year, month;
+            dataParam.year = "";
+            dataParam.month = "";
+            if (yearAndMonth != "") {
+                var arr = yearAndMonth.split("-");
+                year = arr[0];
+                month = Number(arr[1]);
+                dataParam.year = year;
+                dataParam.month = month;
+            }
+            dataParam.teacherTypeCode = teacherCode;
+        }
+        
+        $('#export').click(function () {
+            param();
+            location.href="/teacherKc/exportTeacher?data="+encodeURI(JSON.stringify(dataParam));
+        })
+    });
+
+
+</script>
+</html>

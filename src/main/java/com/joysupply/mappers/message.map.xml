@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.MessageDao">
+
+	<!-- 获取模板内容 -->
+	<select id="getContent" parameterType="string" resultType="string">
+		SELECT content FROM custom_message WHERE type = #{type}
+	</select>
+	
+	<!-- 添加推送消息数据 -->
+	<insert id="addMessage" parameterType="map">
+		insert into person_message (row_id,person_code,message_content,message_time,type)
+			values 
+		(#{row_id},#{personCode},#{content},NOW(),#{type});
+	</insert>
+	<insert id="addMessages" parameterType="map">
+		insert into person_message (row_id,person_code,message_content,message_time,is_reading,type) values
+		<foreach collection="list" item="msg" separator=",">
+			(#{msg.rowId},#{msg.personCode},#{msg.content},#{msg.messageTime},#{msg.isReading},#{msg.type})
+		</foreach>
+	</insert>
+
+	<!-- 查询自定义消息列表 -->
+	<select id="getCustomMessage" resultType="map">
+		SELECT row_id,content,type,name
+		 FROM custom_message
+	</select>
+	
+	<!-- 查询用户未读消息列表 -->
+	<select id="getUnreadMessageList" parameterType="string" resultType="map">
+		SELECT row_id rowId,message_content content,message_time msgTime,is_reading isReading,type FROM person_message WHERE person_code = #{personCode} AND is_reading = 0
+	</select>
+
+	<!-- 查询用户所有消息列表:未读第一,最近日期第一,无论已读和未读 -->
+	<select id="getAllMessageList" parameterType="string" resultType="map">
+		SELECT
+			row_id rowId,
+			message_content content,
+			message_time msgTime,
+			is_reading isReading,
+			type
+		FROM person_message
+		WHERE person_code = #{personCode}
+		order by isReading, msgTime desc;
+	</select>
+	
+	<!-- 修改消息为已读 -->
+	<update id="updateMessageStatus" parameterType="string">
+		UPDATE person_message SET is_reading = 1 WHERE row_id = #{messageId}
+	</update>
+	
+	<!-- 修改自定义消息内容 -->
+	<update id="updateCustomMessageContent" parameterType="map">
+		UPDATE custom_message SET content = #{content} WHERE row_id = #{id}
+	</update>
+
+	<select id="getMessageList" parameterType="string" resultType="map">
+		select row_id rowId,message_content content,message_time msgTime,is_reading isReading,type from person_message where person_code = #{personCode}
+	</select>
+	
+	<!-- 查询教师姓名 -->
+	<select id="getTeacherNameByPersonCode" parameterType="string" resultType="string">
+		SELECT teacher_name FROM teacher_info WHERE teacher_code = #{personCode};
+	</select>
+	<!-- 查询用户姓名 -->
+	<select id="getPersonNameByPersonCode" parameterType="string" resultType="string">
+		SELECT `name` FROM person WHERE person_code = #{personCode};
+	</select>
+	
+	<select id="getProjectNameById" parameterType="string" resultType="string">
+		SELECT project_name FROM project_info WHERE project_id = #{projectId};
+	</select>
+</mapper>

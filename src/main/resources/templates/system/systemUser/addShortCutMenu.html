@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-form-checkbox[lay-skin=primary] {
+        width: 150px;
+        margin-bottom: 5px;
+    }
+</style>
+<div style="padding: 15px;min-height: 180px" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <input type="checkbox" name="shortCut" th:each="menu : ${allShortCutMenusList}" th:checked="${menu.isSelected eq 1}"
+                   lay-skin="primary" lay-filter="checkMenu" th:title="${menu.menuName}" th:attr="menuCode=|${menu.menuCode}|">
+        </div>
+    </form>
+</div>
+<div class="layui-form-item">
+    <div class="layui-form-item" style="text-align: center;">
+        <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+        <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+    </div>
+</div>
+
+</body>
+<script th:inline="javascript">
+    var shortCutList = [[${shortCutList}]];
+</script>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        form.on('checkbox(checkMenu)', function (data) {
+            var currentDom = data.elem;
+            var menuCode = currentDom.getAttribute("menuCode");
+            var index = $.inArray(menuCode, shortCutList);
+            if (currentDom.checked) {
+                if (index == -1) {
+                    shortCutList.push(menuCode);
+                }
+            } else {
+                if (index != -1) {
+                    shortCutList.splice(index,1);
+                }
+            }
+            form.render('checkbox');
+        });
+    });
+
+    function save() {
+        /*var shortCut = document.getElementsByName('shortCut');
+        for (var i = 0; i < shortCut.length; i++) {
+            if (shortCut[i].checked) {
+                shortCutList.push(shortCut[i].getAttribute("menuCode"));
+            }
+        }*/
+        var map = {
+            "shortCutList": shortCutList
+        };
+        $.ajax({
+            type: "post",
+            url: "/systemUser/updShortCutMenus",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                tipinfo("保存成功!");
+                closewindow(1);
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>

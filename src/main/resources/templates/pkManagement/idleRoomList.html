@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+ <link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<head th:replace="fragments/layout::htmlhead">
+
+<body>
+	<div class="layui-layout layui-layout-admin">
+		<div th:replace="fragments/layout :: header">Header</div>
+		<div th:replace="fragments/layout :: sidebar">sidebar</div>
+		<div class="layui-body" style="background-color: #f2f2f2">
+			<div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;" class="layui-anim layui-anim-upbit">
+				<section>
+					<div class="layui-row layui-col-space10">
+						<div class="layui-anim layui-anim-upbit">
+							<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">教室信息</h2>
+							<hr />
+							<div class="layui-row">
+								<div class="layui-form layui-col-md12 layui-col-lg10">
+									<form class="layui-form layui-col-md12" id="form1" style="margin-top: 35px">
+										<div class="layui-form-item layui-col-md12">
+											<div class="layui-col-md3">
+												<label class="layui-form-label">起始日期：</label>
+												<div class="layui-input-block">
+													<input type="text" id="startTime" placeholder="请选择日期" name="startTime" class="layui-input" >
+												</div>
+											</div>
+											<div class="layui-col-md3">
+												<label class="layui-form-label">结束日期：</label>
+												<div class="layui-input-block">
+													<input type="text" id="endTime" placeholder="请选择日期" name="endTime" class="layui-input" >
+												</div>
+											</div>
+											<div class="layui-col-md3">
+												<label class="layui-form-label">起始时间：</label>
+												<div class="layui-input-block">
+													<select name="start" id="start" class="layui-input"  lay-search  >
+														<option value=""></option>
+														<option th:each="item:${timeTable}" th:value="${item.start_time}"
+															th:text="${item.start_time}"></option>
+														<!-- th:selected="${classRoom?.roomLoc eq item.code}" -->
+													</select>
+												</div>
+											</div>
+											<div class="layui-col-md3">
+												<label class="layui-form-label">结束时间：</label>
+												<div class="layui-input-block">
+													<select name="end" id="end" class="layui-input"  lay-search  >
+														<option value=""></option>
+														<option th:each="item:${timeTable}" th:value="${item.end_time}"
+															th:text="${item.end_time}"></option>
+														<!-- th:selected="${classRoom?.roomLoc eq item.code}" -->
+													</select>
+												</div>
+											</div>
+											<input type="hidden" id="status">
+										</div>
+									</form>
+									<form class="layui-form layui-col-md12" id="form2">
+										<div class="layui-form-item layui-col-md12">
+										<div class="layui-col-md3">
+												<label class="layui-form-label">所属位置：</label>
+												<div class="layui-input-block">
+													<select name="roomLoc" id="roomLoc" class="layui-input"  lay-search  lay-filter="getRoomLoc">
+														<option value=""></option>
+														<option th:each="item:${roomLoc}" th:value="${item.dataCode}"
+																th:text="${item.buildingName}"></option>
+														<!-- th:selected="${classRoom?.roomLoc eq item.code}" -->
+													</select>
+												</div>
+											</div>
+											<div class="layui-col-md3">
+												<label class="layui-form-label">教室号：</label>
+												<div class="layui-input-block">
+													<select name="roomNum" id="roomNum" class="layui-input"  lay-search lay-filter="getRoomNum">
+														<option value=""></option>
+														<!-- <option th:each="item:${roomNum}" th:value="${item.code}"
+															th:text="${item.name}"></option> -->
+														<!-- th:selected="${classRoom?.roomLoc eq item.code}" -->
+													</select>
+												</div>
+											</div>
+											<div class="layui-col-md6">
+											<label class="layui-form-label">星期：</label>
+												<div class="layui-input-block">
+										            <select  name="weekDay" xm-select="select2" xm-select-search="" xm-select-skin="primary">
+										            	<option value=""></option>
+														<option value="0">星期一</option>
+														<option value="1">星期二</option>
+														<option value="2">星期三</option>
+														<option value="3">星期四</option>
+														<option value="4">星期五</option>
+														<option value="5">星期六</option>
+														<option value="6">星期日</option>
+										            </select>
+										        </div>
+											</div>
+										</div>
+									</form>
+								</div>
+								<div class="layui-form layui-col-md12 layui-col-lg2" style="margin-top: 40px">
+								  <div class="layui-inline">
+									<button class="layui-btn layui-btn-sm search" style="margin-left: 40px;">搜索</button>
+								</div>
+								</div>
+								<div class="layui-form-item">
+									<p style="margin-left: 23px;color: #ff0000;margin-bottom: -16px;">请选择日期和时间范围后再查看空闲教室信息</p>
+								</div>
+								<div class="layui-form">
+									<table class="layui-table" lay-skin="line"
+										   lay-filter="equipment" id="classRoom">
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<script type="text/html" id="barDemo">
+							<a class="joysupply-txt-color-on" lay-event="detail" th:each="func:${session.funcList}" th:if="${func == 'kxjs_detail'}">空闲详情</a>
+					</script>
+				</section>
+			</div>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript">
+    var table;
+	layui.use([ 'laypage', 'layer', 'table', 'form', 'laydate', 'formSelects','element'], function() {
+		table = layui.table;
+        element =layui.element;
+		var laypage = layui.laypage;
+		var layer = layui.layer;
+		var form = layui.form;
+		var laydate = layui.laydate;
+		var formSelects = layui.formSelects;
+		var week = []
+		formSelects.on('select2', function(id, vals, val, isAdd, isDisabled){
+				if(isAdd) {
+					week.push(val.value)
+				}else {
+					week.splice(week.indexOf(val.value), 1); 
+				}
+	        });
+		// 绑定表格
+		var tableIns = table.render({
+			id : 'id',
+			elem : '#classRoom',
+			url : '/classRoom/idleRoomListData',
+			where : {},
+			skin : 'line',
+			page : true, //开启分页
+			limits : [ 10, 20, 30, 40, 50 ],
+			cols : [ [ //表头
+			{
+				type : 'numbers',
+				title : '序号',
+				width : '10%',
+				filed : 'roomId',
+                align: 'center',
+			}, {
+				field : 'roomNum',
+				title : '教室号',
+				width : '10%',
+				align: 'center'
+			}, {
+				field : 'roomLoc',
+				title : '所属位置',
+				width : '15%',
+				align: 'center'
+			}, {
+				field : 'seating',
+				title : '座位数',
+				width : '10%',
+				align: 'center'
+			},
+
+			{
+				field : 'roomType',
+				title : '教室类型',
+				width : '10%',
+				align: 'center'
+			}, {
+				field : 'createTime',
+				title : '星期',
+				width : '20%',
+				align: 'center'
+
+			} ,{
+				toolbar : '#barDemo',
+				title : '操作',
+				width : '25%',
+				align : 'center'
+			}			
+			] ]
+		});
+	
+		
+		var ins1 = laydate.render({
+			  elem: '#startTime'
+			 ,format: 'yyyy-MM-dd' //可任意组合
+			});
+		var ins2 = laydate.render({
+			  elem: '#endTime'
+			 ,format: 'yyyy-MM-dd' //可任意组合
+			});
+		
+		
+		// 搜索，重置表格
+		$('.search').click(function() {
+            var startTime = $('#startTime').val();
+			var endTime = $('#endTime').val();
+		    if(Date.parse(startTime) > Date.parse(endTime)) {
+		        layer.msg("结束时间不能小于起始时间")
+				return false;
+			}
+			tableIns.reload({
+				where : {
+					roomLoc : $('select[name="roomLoc"]').val(),
+					roomNum : $('select[name="roomNum"]').val(),
+					startTime : startTime,
+					endTime : endTime,
+					start : $('#start').val(),
+					end : $('#end').val(),
+					weekDay : week.join(","),
+					r : Math.random()
+				},page: {
+                    curr: 1
+                }
+			});
+		});
+		
+		// 点击查询空闲教室
+		form.on('select(getRoomLoc)', function(data){
+			var roomLoc = data.value;
+			if(roomLoc == '') {
+				$('#roomNum').html('');
+				form.render('select');
+				return false;
+			}
+	    	 var success = function(response){
+	 			if(response.success == true){
+	 				var idleRoom = response.idleRoom;
+	 				var html = "<option value=''>请选择</option>";
+	 				for(var i = 0; i<idleRoom.length; i++) {
+	 					html+="<option value='"+idleRoom[i].roomId+"'>"+idleRoom[i].roomNum+"</option>"
+	 					
+	 				}
+	 				$('#roomNum').html(html);
+	 				form.render('select');
+	 				
+	 			}else{
+	 				$("select[name='roomLoc']").val("");
+	 				$("select[name='roomNum']").val("");
+	 				form.render('select');
+	 				layer.alert(response.msg, {icon: 2}, function(){
+	 					layer.closeAll();
+	 				})
+	 			}
+	 		} 
+	 		
+	 		$.ajax({
+	 			url : "/classRoom/getIdleRoom",
+	 			type : "post",
+	 			data : {roomLoc:roomLoc},
+	 			dataType : "json",
+	 			success : success,
+	 			error : function(jqXHR, textStatus, errorThrown) {
+					layer.msg('网络异常',{icon: 2})
+	 			}
+
+	 		});
+		});
+
+        // 监听工具条
+        table.on('tool(equipment)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var roomId = data.roomId;
+            var roomLocName = data.roomLoc;
+            var startTime = $('#startTime').val();
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            var tr = obj.tr; //获得当前行 tr 的DOM对象
+            if (layEvent === 'detail') {//可用时间设置
+                layer.open({
+                    type: 2,
+                    //					title: ['排课', 'font-size:18px;'],
+                    closeBtn: 0,
+                    title: false,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/classRoom/idleRoomDetail?roomId='+roomId+'&roomLocName='+roomLocName+'&date='+startTime,
+                    success: function(layero, index) {
+                        console.log(layero, index);
+                        layer.full(index);
+                    }
+                    /*       end: function() { //销毁后触发
+                              tableIns.reload({
+                                  where: { //设定异步数据接口的额外参数，任意设
+                                      keyword: $('.keyword').val(),
+                                      roomLoc : $('select[name="roomLoc"]').val(),
+                                      roomNum : $('select[name="roomNum"]').val(),
+                                      roomType : $('#roomType').val(),
+                                      useSeason : $('#useSeason').val(),
+                                      r : Math.random()
+                                  },
+                                  page: {
+                                      curr: 1 //重新从第 1 页开始
+                                  }
+                              });
+                          } */
+                });
+            }
+        });
+
+	});
+</script>
+</html>
+
+

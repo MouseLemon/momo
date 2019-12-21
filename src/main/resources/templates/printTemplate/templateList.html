@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <div class="layui-row layui-col-space10">
+                    <div class="layui-anim layui-anim-upbit">
+                        <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle" >证书及成绩模板</h2>
+                        <hr/>
+                        <input type="hidden" id="status">
+                        <div class="layui-form">
+                            <button id="add" class="layui-btn layui-btn-sm"  th:each="func:${session.funcList}" th:if="${func == 'zsjcjzm_add'}">新建</button>
+                            <table class="layui-table" lay-skin="line" id="dataList" lay-filter="tableContent" style="margin-top: 0px;">
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+        <script type="text/html" id="operation">
+            <!--{{# if(d.isDefault == 0){ }}-->
+                <!--<a class="joysupply-txt-color-on" th:each="func:${session.funcList}" th:if="${func == 'zsjcjzm_isDefault'}" lay-event="isDefault">设为默认模板</a>-->
+            <!--{{# }else{ }}-->
+                <!--<a class="joysupply-txt-color-error" lay-event="cancelDefault" th:each="func:${session.funcList}" th:if="${func == 'zsjcjzm_cancelDefault'}">取消默认</a>-->
+            <!--{{# } }}-->
+            <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'zsjcjzm_edits'}">编辑</a>
+            <a class="joysupply-txt-color-error joysupply-txt-color-on" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'zsjcjzm_deletes'}">删除</a>
+        </script>
+<script type="text/javascript">
+    var parentCode = $("#parentCode").val();
+    var table;
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $("#add").click(function () {
+            // openwindow("/scoreTemplateController/addTempalte", "新建模板", "800", "750", false, reload);
+            layer.open({
+                type: 2,
+                title: '新建模板',
+                area: ['880px', '550px'],
+                shade: 0.3,
+                offset: 'auto',
+                content: '/scoreTemplateController/addTempaltePage',
+                btnAlign: 'c',
+                end: function () {
+                    var status = $("#status").val();
+                    if (status == '1') {
+                        layer.msg('保存成功', {icon: 1})
+                        tableIns.reload({
+                            page: {
+                                curr: 1
+                            }
+                        });
+                        $("#status").val("");
+                    }
+
+                }
+            });
+        })
+
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#dataList',
+            cellMinWidth: 80,
+            url: '/scoreTemplateController/listData',
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        type:'numbers'
+                    },
+                    {
+                        field: 'templateType',
+                        title: '模板类型',
+                        templet : function (d) {
+                            if(d.templateType == 1) {
+                                return '成绩证明';
+                            }else if(d.templateType == 2) {
+                                return '证书证明';
+                            }else {
+                                return '';
+                            }
+                        }
+                    },
+                    {
+                        field: 'templateName',
+                        title: '模板名称',
+                        align: 'center'
+                    },
+                    // {
+                    //     field: 'isDefault',
+                    //     title: '是否默认',
+                    //     align: 'center',
+                    //     templet : function (d) {
+                    //         if(d.isDefault == 1) {
+                    //             return '是';
+                    //         }else {
+                    //             return '否';
+                    //         }
+                    //     }
+                    // },
+                    {
+                        field: 'createTime',
+                        title: '创建时间',
+                        align: 'center',
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        toolbar: '#operation'
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+
+        // 搜索
+        $('#search').click(function () {
+            var params = {
+                name: $('#name').val()
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+
+        // 操作
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var templateId = data.templateId;
+            var templateType = data.templateType;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                layer.open({
+                    type: 2,
+                    title: '编辑模板',
+                    area: ['880px', '550px'],
+                    shade: 0.3,
+                    offset: 'auto',
+                    content: '/scoreTemplateController/addTempaltePage?templateId='+templateId,
+                    btnAlign: 'c',
+                    end: function () {
+                        var status = $("#status").val();
+                        if (status == '1') {
+                            layer.msg('保存成功', {icon: 1})
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                            $("#status").val("");
+                        }
+
+                    }
+                });
+
+            } else if (layEvent === 'deletes') {
+                layer.confirm("您确定要删除吗？", {
+                        icon: 3,
+                        title: "删除确认"
+                    },
+                    function (index) {
+                        var map = {templateId: templateId};
+                        $.ajax({
+                            type: "post",
+                            url: '/scoreTemplateController/delete',
+                            data: map,
+                            dataType: "json",
+                            success: function (data) {
+                                tipinfo("删除成功!");
+                                tableIns.reload({
+                                    page: {
+                                        curr: 1
+                                    }
+                                });
+                            },
+                            error: function () {
+                                tipinfo("系统异常");
+                            }
+                        })
+                        layer.close(index);
+                    },
+                    function (index) {
+                        layer.close(index);
+                    }
+                );
+            } else if (layEvent === 'isDefault') {
+                setdefault('1',templateId,templateType);
+            } else if (layEvent === 'cancelDefault') {
+                setdefault('0',templateId,templateType);
+            }
+        });
+
+        function setdefault(isDefault,templateId,templateType) {
+            var confirm = "您确定要设为默认吗？";
+            if(isDefault != '1') {
+                confirm = "您确定要取消默认吗？";
+            }
+            layer.confirm(confirm, {
+                    icon: 3,
+                    title: "确认框"
+                },
+                function (index) {
+                    var map = {templateId: templateId,templateType:templateType,isDefault:isDefault};
+                    $.ajax({
+                        type: "post",
+                        url: '/scoreTemplateController/isDefault',
+                        data: map,
+                        dataType: "json",
+                        success: function (data) {
+                            tipinfo("设置成功!");
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        },
+                        error: function () {
+                            tipinfo("系统异常");
+                        }
+                    })
+                    layer.close(index);
+                },
+                function (index) {
+                    layer.close(index);
+                }
+            );
+        }
+    });
+</script>
+</body>
+</html>

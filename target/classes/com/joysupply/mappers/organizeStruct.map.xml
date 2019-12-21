@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.OrganizeStructDao">
+    <!-- 岗位 -->
+    <resultMap type="JobType" id="jobTypeMap">
+        <id property="jobCode" column="job_code"/>
+        <result property="jobName" column="job_name"/>
+    </resultMap>
+
+    <resultMap type="OrganizeType" id="OrganizeTypeMap">
+        <id property="typeCode" column="type_code"/>
+        <result property="typeName" column="type_name"/>
+    </resultMap>
+
+    <resultMap type="OrganizeStruct" id="organizeStructMap">
+        <id property="organizeCode" column="organize_code"/>
+        <result property="organizeName" column="organize_name"/>
+        <result property="organizeType" column="organize_type"/>
+        <result property="upCode" column="up_code"/>
+        <result property="companyCode" column="company_code"/>
+        <result property="leader" column="leader"/>
+    </resultMap>
+
+    <select id="getJobTypeList" resultMap="jobTypeMap">
+        select code job_code,name job_name from data_dic where parent_code = 23
+    </select>
+
+    <select id="getOrganizeTypeList" resultMap="organizeStructMap">
+        select type_code,type_name from organize_type
+    </select>
+
+    <select id="getOrganizeStruct" parameterType="string" resultMap="organizeStructMap">
+        select organize_code,organize_name,organize_type,up_code,company_code,leader from organize_struct where organize_code = #{organizeCode}
+    </select>
+
+    <select id="queryFirstOrganizeList" resultType="hashMap">
+        select organize_code id,organize_name name,organize_type,up_code parentId,company_code companyCode
+          from organize_struct
+          where up_code = '' or up_code is null
+          order by convert(organize_name using gb2312)
+    </select>
+
+    <select id="querySonOrganizeList" parameterType="hashMap" resultType="hashMap">
+        select organize_code id,organize_name name,organize_type,up_code parentId,company_code companyCode
+            from organize_struct
+            where up_code = #{id}
+            order by convert(organize_name using gb2312)
+    </select>
+
+    <select id="getProjectDepList" resultMap="organizeStructMap">
+        select organize_code,organize_name,organize_type,up_code,leader from organize_struct
+        where up_code in (select organize_code from organize_struct where up_code = '' or up_code is null)
+    </select>
+
+    <select id="getOrganizeCodeList" resultType="string">
+        select organize_code organizeCode from organize_struct
+    </select>
+
+    <insert id="addOrganizeStruct" parameterType="OrganizeStruct">
+        insert into organize_struct values(#{organizeCode},#{organizeName},#{organizeType},#{upCode},#{companyCode},#{leader})
+    </insert>
+
+    <delete id="delOrganizeStruct" parameterType="OrganizeStruct">
+        delete from organize_struct where organize_code = #{organizeCode}
+    </delete>
+
+    <update id="updOrganizeStruct" parameterType="OrganizeStruct">
+        update organize_struct
+        <set>
+            <if test="organizeName != null and organizeName != ''">organize_name = #{organizeName},</if>
+            <if test="upCode != null and upCode != ''">up_code = #{upCode},</if>
+            <if test="companyCode != null and companyCode != ''">company_code = #{companyCode}</if>
+        </set>
+        where organize_code = #{organizeCode}
+    </update>
+    <update id="updSonCompanyCode" parameterType="OrganizeStruct">
+        update organize_struct set company_code = #{companyCode} where up_code = #{organizeCode}
+    </update>
+
+    <select id="getOrganizePeopleList" parameterType="hashMap" resultType="hashMap">
+        select p.person_code personCode,p.name,p.telphone,p.create_time createTime,j.name jobName,o.organize_name organizeName,s.user_name userName,s.is_enable isEnable,
+        GROUP_CONCAT(r.role_name) roleName , GROUP_CONCAT(r.role_code) roleCode
+        from person p
+        left join organize_struct o on p.organize_code = o.organize_code
+        left join data_dic j on p.job_type = j.code
+        left join system_user s on p.person_code = s.person_code
+        left join person_role pr on p.person_code = pr.person_code
+        left join role r on pr.role_code = r.role_code
+        <where>
+            <if test="organizeStructList != null and organizeStructList.size()>0">
+                p.organize_code in
+                <foreach collection="organizeStructList" open="(" separator="," close=")" item="organizeStruct">
+                    #{organizeStruct.organizeCode}
+                </foreach>
+            </if>
+            <if test="name != null and name != ''">
+                and p.name like "%${name}%"
+            </if>
+            <if test="telphone != null and telphone != ''">
+                and p.telphone like "%${telphone}%"
+            </if>
+        </where>
+        group by p.person_code
+        order by p.create_time desc
+    </select>
+
+    <select id="getParent" parameterType="OrganizeStruct" resultMap="organizeStructMap">
+        select organize_code,organize_name,organize_type,up_code,leader from organize_struct
+        <where>
+            <if test="upCode == null or upCode ==''">
+                organize_code is null
+            </if>
+            <if test="upCode != null and upCode !=''">
+                organize_code = #{upCode}
+            </if>
+        </where>
+    </select>
+    <select id="getSon" parameterType="OrganizeStruct" resultMap="organizeStructMap">
+        select organize_code,organize_name,organize_type,up_code,leader from organize_struct where up_code = #{organizeCode}
+    </select>
+    <select id="getOrganizeStructByPersonCode" parameterType="string" resultMap="organizeStructMap">
+        select organize_code,organize_name,organize_type,up_code,leader from organize_struct where organize_code =(
+          select organize_code from person where person_code = #{personCode}
+        )
+    </select>
+
+    <select id="getAll" resultMap="organizeStructMap">
+    	select organize_code,organize_name,up_code from organize_struct 
+    </select>
+
+    <select id="getPeopleCount" resultType="java.lang.Integer">
+        select count (0) from person where organize_code in
+        <foreach collection="list" open="(" separator="," close=")" item="item">
+            #{item.organizeCode}
+        </foreach>
+    </select>
+    <update id="upProjectInfoOsCode" parameterType="OrganizeStruct" statementType="CALLABLE">
+        {call upProjectInfoOsCode(#{organizeCode},#{companyCode})}
+    </update>
+</mapper>

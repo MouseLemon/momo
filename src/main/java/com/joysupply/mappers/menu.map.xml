@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.MenuDao">
+
+    <!-- 菜单 -->
+    <resultMap type="Menu" id="menuTypeMap">
+        <id property="menuCode" column="menu_code"/>
+        <result property="menuName" column="menu_name"/>
+        <result property="menuUrl" column="menu_url"/>
+        <result property="isEnable" column="is_enable"/>
+        <result property="icon" column="icon"/>
+        <result property="parentCode" column="parent_code"/>
+    </resultMap>
+
+    <!-- 菜单与功能 -->
+    <resultMap type="MenuFunc" id="menuFuncTypeMap">
+        <id property="menuCode" column="menu_code"/>
+        <result property="funcCode" column="func_code"/>
+        <result property="funcUrl" column="func_url"/>
+        <result property="funcName" column="func_name"/>
+        <result property="funcIcon" column="func_icon"/>
+        <result property="isEnable" column="is_enable"/>
+    </resultMap>
+
+    <sql id="menuFuncField">menu_code,func_code,func_url,func_name,func_icon,is_enable</sql>
+
+    <!-- 根据角色查询对应的菜单列表数据 -->
+    <select id="getMenuListByRoleCode" resultSetType="SCROLL_INSENSITIVE" resultMap="menuTypeMap">
+        SELECT
+            m.menu_code,
+            m.menu_name,
+            m.menu_url,
+            m.is_enable,
+            m.icon,
+            m.parent_code
+        FROM menu_role mr
+        JOIN menu m ON mr.menu_code = m.menu_code
+        WHERE m.is_enable = 1
+        <if test="roleCode !=null and roleCode !=''">
+            AND mr.role_code = #{roleCode}
+        </if>
+    </select>
+
+    <!-- 根据menuCode查询menu_func表的list是否有记录 -->
+    <select id="getMenuFuncList" resultSetType="SCROLL_INSENSITIVE" resultMap="menuFuncTypeMap">
+        select
+            <include refid="menuFuncField"/>
+        from menu_func
+        where menu_code=#{menuCode}
+    </select>
+
+    <!-- 插入menu_func表 -->
+    <insert id="saveMenusFunc" parameterType="hashmap">
+        insert into menu_func (`menu_code`,`func_code`,`func_url`,`func_name`,`func_icon`,`is_enable` )
+        values
+        <foreach collection="menuFuncList1" item="menuFunc" index="index" separator=",">
+            (#{menuFunc.menuCode},#{menuFunc.funcCode},#{menuFunc.funcUrl},#{menuFunc.funcName},#{menuFunc.funcIcon}
+            ,0)
+        </foreach>
+    </insert>
+
+    <!-- 根据menuCode删除menu_func表对应记录 -->
+    <delete id="deleteMenuFuncByMenuCode" parameterType="string">
+		delete from menu_func
+		where menu_code=#{menuCode}
+	</delete>
+
+    <!--根据用户查询菜单列表-->
+    <select id="getMenuListByUser" parameterType="SystemUser" resultMap="menuTypeMap">
+		select
+		    menu_code,
+		    menu_name,
+		    menu_url,
+		    is_enable,
+		    icon,
+		    parent_code
+		from menu
+		where menu_code in (
+	        select distinct menu_code from menu_role
+	        where role_code in (
+		        select role_code from person_role
+		        where person_code = #{personCode}
+	        )
+        )
+        and is_enable = 1 order by index_order
+	</select>
+
+    <!--教师查询菜单列表-->
+    <select id="getMenuListByTeacher" parameterType="SystemUser" resultMap="menuTypeMap">
+        select
+            menu_code,
+            menu_name,
+            menu_url,
+            is_enable,
+            icon,
+            parent_code
+        from menu
+        where menu_code in (
+            select menu_code from menu_role
+            where role_code = 13
+        )
+        and is_enable = 1
+        order by index_order
+    </select>
+
+    <select id="getAllMenus" resultMap="menuTypeMap">
+         select
+             menu_code,
+             menu_name,
+             menu_url,
+             is_enable,
+             icon,
+             parent_code
+         from menu
+         where is_enable = 1
+    </select>
+
+    <select id="getShortCutMenuByUser" parameterType="SystemUser" resultMap="menuTypeMap">
+        select
+            m.menu_code,
+            m.menu_name,
+            m.menu_url,
+            m.is_enable,
+            m.icon,
+            m.parent_code
+        from shortcut_menu sm
+        left join menu m on sm.menu_code = m.menu_code
+        where sm.person_code = #{personCode}
+        and m.is_enable = 1
+        order by sm.show_order
+    </select>
+
+    <select id="getMenuIndexUrl" parameterType="Menu" resultType="string">
+        select menu_url from menu
+        where menu_code = (select parent_code from menu where menu_code = #{parentCode})
+    </select>
+
+    <delete id="delShortCutMenuByUser" parameterType="hashMap">
+        delete from shortcut_menu where person_code = #{personCode}
+    </delete>
+
+    <insert id="addShortCutMenuByUser" parameterType="hashMap">
+        insert into shortcut_menu(person_code,menu_code,show_order)values
+        <foreach collection="shortCutList" item="shortCut" index="index" separator=",">
+            (#{personCode},#{shortCut.menuCode},#{shortCut.showOrder})
+        </foreach>
+    </insert>
+</mapper>

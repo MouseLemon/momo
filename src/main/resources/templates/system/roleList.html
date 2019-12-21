@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height:95%;" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">角色管理</h2>
+                <hr/>
+                <div class="layui-form layui-row" action="">
+                    <button id="add" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'jsgl_add'}">新建</button>
+                </div>
+                <table class="layui-table" lay-skin="line" id="roleTb" lay-filter="tableContent">
+                </table>
+                <script type="text/html" id="operation">
+                    {{# if(d.isFixed == 0){ }}
+                    <a class="joysupply-txt-color-on joysupply-txt-color-error" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'jsgl_del'}">删除</a>
+                    {{# }else{ }}
+                    {{# } }}
+                    <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'jsgl_edit'}">编辑</a>
+                    <a class="joysupply-txt-color-on" lay-event="editItems" th:each="func:${session.funcList}" th:if="${func == 'jsgl_editRoleMenu'}">编辑角色菜单</a>
+                </script>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //JavaScript代码区域
+    var table;
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $("#add").click(function () {
+            openwindow("/role/addRolePage", "新建角色", "700", "200", false, reload);
+        })
+
+        window.reload = function () {
+            tableIns.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#roleTb',
+            cellMinWidth: 80,
+            url: '/role/getRoleList', //数据接口
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '20%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'roleName',
+                        title: '名称',
+                        align: 'center'
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        width: '20%',
+                        toolbar: '#operation',
+                        fixed: 'right',
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        $('#search').click(function () {
+            var params = {
+                name: $('#name').val()
+            };
+            tableIns.reload({
+                where: params,
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var roleCode = data.roleCode;
+            var roleName = data.roleName;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/role/editRolePage?roleCode=" + roleCode, "修改角色", "700", "200", false, reload);
+            } else if (layEvent === 'deletes') {
+                layer.alert('', {icon: 3, title: '删除确认', content: '您确定要删除吗？', closeBtn: 1}, function (index) {
+                    var map = {"roleCode": roleCode};
+                    $.ajax({
+                        type: "post",
+                        url: '/role/delRole',
+                        data: JSON.stringify(map),
+                        contentType: "application/json",
+                        success: function (data) {
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        },
+                        error: function () {
+                            tipinfo(data.message);
+                        }
+                    })
+                    layer.close(index);
+                });
+            } else if (layEvent === 'editItems') {
+                openwindow("/role/editRoleMenus?roleCode=" + roleCode, "修改_"+roleName+"_角色_菜单_按钮", "1000", "880", false, reload);
+            }
+        });
+    });
+</script>
+</body>
+</html>

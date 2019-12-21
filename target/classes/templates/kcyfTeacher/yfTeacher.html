@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+.layui-table td {
+	text-align: center;
+}
+#kcTable th {
+	text-align: center;
+}
+body .layui-layer-title {
+	background-color: #01AAED;
+	color: #fff;
+	font-size: 14px;
+}
+.trBackground{
+	background-color: #fdf5e5;
+}
+.totalBackground{
+	background-color: #f7e7c8;
+}
+</style>
+<script src="/static/js/jquery.js" ></script>
+<script src="/static/js/laydate/laydate.js"></script>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+	<div class="layui-layout layui-layout-admin">
+		<div th:replace="fragments/layout :: header">Header</div>
+		<div th:replace="fragments/layout :: sidebar">sidebar</div>
+		<div class="layui-body" style="background-color: #f2f2f2">
+			<section>
+				<div class="layui-row layui-col-space10">
+					<div
+						style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height:95%;"
+						class="layui-anim layui-anim-upbit">
+						<h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">已发教师课酬</h2>
+						<hr />
+						<div id="app">
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">教师姓名：</label>
+									<div class="layui-input-inline">
+										<input type="text" id="teacherName" autocomplete="off" class="layui-input">
+									</div>
+								</div>
+								<div class="layui-inline">
+									<label class="layui-form-label">年月：</label>
+								    <div class="layui-input-inline">
+									    <input type="text" id="time" class="layui-input">
+								    </div>
+								</div>
+								<div class="layui-inline">
+									<button type="button" v-on:click="search()" class="layui-btn layui-btn-sm" >搜索</button>
+									<button type="button" v-on:click="exportExcel()" class="layui-btn layui-btn-sm" >导出</button>
+								</div>
+							</div>
+							<div>
+								<table class="layui-table" lay-skin="line" id="kcTable"> 
+									<thead>
+										<tr>
+											<th></th>
+											<th>序号</th>
+											<th>年份</th>
+											<th>月份</th>
+											<th>教师类别</th>
+											<th>一卡通号</th>
+											<th>姓名</th>
+											<th>身份证号</th>
+											<th>银行卡号</th>
+											<th>国籍</th>
+											<th v-for="pname in productName">{{pname.projectName}}</th>
+											<th>课酬合计</th>
+										</tr> 
+									</thead> 
+									<tbody v-for="kcList in kcInfo" class="layui-table">
+										<tr v-for="kc in kcList" :class="kc.px=='小计'?'trBackground':kc.px=='合计' ?'totalBackground':'' ">
+											<td v-if="kc.px != '小计'  &&  kc.px !='合计' " >
+												<input name="teacherKcSend" type="checkbox" v-model="teacherCodeList" 
+													:value="kc.serialNumber+'_'+kc.teacherCode+'_'+kc.depType+'_'+kc.approveOrder">
+											</td>
+											<td v-if="kc.px == '小计'  ||  kc.px =='合计' "></td>
+											<td>{{ kc.px }}</td>
+											<td>{{ kc.year }}</td>
+											<td>{{ kc.month }}</td>
+											<td>{{ kc.teacherType }}</td>
+											<td></td>
+											<td><a href="javascript:void(0)" style="color: blue;" v-on:click="userInfo()">{{ kc.teacherName }}</a></td>
+											<td>{{ kc.idCard }}</td>
+											<td>{{ kc.bankCode }}</td>
+											<td>{{ kc.guoji }}</td>
+											<td v-for="pname in productName">{{kc[pname.projectId]==null?"":kc[pname.projectId]}}</td>
+											<td><a href="javascript:void(0)" style="color: blue;" v-on:click="KCInfo(kc.year,kc.month)">{{ kc.totalCount }}</a></td>
+										</tr>
+									</tbody>
+								</table>
+								<div style="float: right;" id="jqPager"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+	</div>
+</body>
+<script src="/static/js/jquery.js" ></script>
+<script src="/static/js/laydate/laydate.js"></script>
+<script src="/static/js/kcManager/teacherKcSend.js"></script>
+<script>
+vm.personCode = '[[${user.personCode}]]';
+laydate.render({
+  elem: '#time',
+  type:'month'
+});
+</script>
+</html>

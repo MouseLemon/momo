@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+    <script src="js/echarts.min.js"></script>
+<body>
+<style type="text/css">
+    .onClick {
+        background-color: #00c1de;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px; min-height: 95%" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">部门维度课酬</h2>
+                <hr/>
+                <div class="layui-form layui-row">
+                    <div class="layui-col-lg6 layui-col-md12">
+                        <div class="layui-col-md6">
+                            <label class="layui-form-label">起始时间</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="startTime" placeholder="请选择" autocomplete="off" class="layui-input" id="startTime">
+                            </div>
+                        </div>
+                        <div class="layui-col-md6">
+                            <label class="layui-form-label">结束时间</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="endTime" placeholder="请选择" autocomplete="off" class="layui-input" id="endTime">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md6 mt5" >
+                                <button class="layui-btn layui-btn-sm layuiadmin-btn-list" style="margin-left: 20px;"
+                                        lay-submit="" lay-filter="LAY-app-contlist-search ml20" onclick="search()">搜索</button>
+                                <button class="layui-btn layui-btn-sm layuiadmin-btn-list tijiao" lay-submit="" lay-filter="LAY-app-contlist-search" onclick="exportExcel()"
+                                        th:each="func:${session.funcList}" th:if="${func == 'bmwdkc_export'}">导出</button>
+                                <button onclick="histogram()" class="layui-btn layui-btn-sm layuiadmin-btn-list tijiao"
+                                                    lay-submit="" lay-filter="LAY-app-contlist-search" th:each="func:${session.funcList}" th:if="${func ==
+                                                    'bmwdkc_graph'}">柱状图</button>
+                            </div>
+                </div>
+                <table class="layui-table" lay-skin="line" id="kcWdDepartment" lay-filter="kcWdDepartment"></table>
+                <script type="text/html" id="operation">
+                    <a class="joysupply-txt-color-on" lay-event="shouldDetail" th:each="func:${session.funcList}" th:if="${func == 'bmwdkc_detail'}">应付明细</a>
+                    <a class="joysupply-txt-color-on" lay-event="detail" th:each="func:${session.funcList}" th:if="${func == 'bmwdkc_detail'}">已付明细</a>
+                </script>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="/js/ExcelUtil.js"></script>
+<script type="text/javascript">
+    /*部门维度课酬页面*/
+    var table;
+    layui.use(['element', 'form', 'table', "jquery", 'laypage', 'laydate'], function () {
+        var element = layui.element;
+        table = layui.table;
+        var form = layui.form;
+        var laypage = layui.laypage;
+        var laydate = layui.laydate;
+        //日历
+        laydate.render({
+            elem: '#startTime',
+            type: 'month'
+        });
+        laydate.render({
+            elem: '#endTime',
+            type: 'month'
+        });
+        tableIns = table.render({
+            id: 'id',
+            elem: '#kcWdDepartment',
+            cellMinWidth: 80,
+            url: '/teacherKc/getVdoingInfo', //数据接口
+            skin: 'line',
+            where: {},
+            totalRow: true,
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {type: 'checkbox', width: '5%', totalRowText: '合计'},
+                    {title: '序号', type: 'numbers', width: '5%', style: 'height:45px;', align: 'center'},
+                    {field: 'organizeName', title: '项目部名称', width: '30%', style: 'height:45px;', align: 'center'},
+                    {field: 'countHour', title: '总课时', width: '10%', style: 'height:45px;', align: 'center', totalRow: true, decimals: '0'},
+                    {field: 'totalFee', title: '应付课酬(元)', width: '15%', style: 'height:45px;', align: 'center', totalRow: true},
+                    {field: 'hourActual', title: '已付课时', width: '10%', style: 'height:45px;', align: 'center', totalRow: true, decimals: '0'},
+                    {field: 'feeCourse', title: '已付课酬(元)', width: '15%', style: 'height:45px;', align: 'center', totalRow: true},
+                    {title: '操作', width: '15%', align: 'center', toolbar: '#operation', style: 'height:45px;', fixed: 'right'}
+                ]
+            ],
+        });
+        table.on('tool(kcWdDepartment)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            var startTime = $('#startTime').val();
+            var endTime = $('#endTime').val();
+            if (layEvent === 'detail') {//展示已付明细数据
+                window.location.href = "/teacherKc/departDetail?organizeCode=" + data.organizeCode + "&type="+"0" + "&startTime=" + startTime + "&endTime="+endTime;
+            }
+            if(layEvent === 'shouldDetail'){ //展示应付明细数据
+                window.location.href = "/teacherKc/departDetail?organizeCode=" + data.organizeCode + "&type="+"1" + "&startTime=" + startTime + "&endTime="+endTime;
+            }
+        });
+    });
+
+
+    // 搜索按钮
+    function search() {
+        if ($('#completePk').is(":checked")) {
+            var completePk = 1;
+        } else {
+            var completePk = 0;
+        }
+        if ($('#completeProom').is(":checked")) {
+            var completeProom = 1;
+        } else {
+            var completeProom = 0;
+        }
+        var startTime = $('#startTime').val();
+        var endTime = $('#endTime').val();
+        if(startTime > endTime){
+            failureMsg("开始时间不能大于结束时间！");
+            return false;
+        }
+        var params = {
+            startTime: $('#startTime').val(),
+            endTime: $('#endTime').val(),
+            completePk: completePk,
+            completeProom: completeProom
+        };
+        tableIns.reload({
+            where: params,
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+
+
+    };
+    
+	function exportExcel(){
+		var startTime = $("#startTime").val();
+		var endTime = $("#endTime").val();
+        if(startTime > endTime){
+            failureMsg("开始时间不能大于结束时间！");
+        }
+		window.location.href="/teacherKc/exportTeacherKC?startTime="+startTime+"&endTime="+endTime;
+	}
+	
+	function histogram(){
+	    var startTime = $("#startTime").val();
+	    var endTime = $("#endTime").val();
+        if(startTime > endTime){
+            failureMsg("开始时间不能大于结束时间！");
+        }
+		openwindow("/teacherKc/histogram?startTime="+startTime+"&endTime="+endTime, "柱状图", "1200", "500", false, null);
+	}
+
+</script>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<style>
+    .layui-form-checkbox[lay-skin=primary] {
+        width: 150px;
+        margin-bottom: 5px;
+    }
+</style>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <!--<div class="layui-form-item">-->
+        <input type="hidden" id="roleCode" th:value="${roleCode}">
+        <div th:each="indexMenuItem : ${indexMenu}">
+            <input type="checkbox" name="indexMenuItem" th:attr="menuCode=|${indexMenuItem.menuCode}|" th:checked="${indexMenuItem.isSelected eq 1}" lay-skin="primary"
+                   lay-filter="checkIndex" th:title="${indexMenuItem.menuName}">
+            <div th:each="menuDirItem : ${menuDir}" th:if="${menuDirItem.parentCode eq indexMenuItem.menuCode}" style="margin-left: 50px">
+                <input type="checkbox" name="menuDirItem" th:attr="parentCode=|${menuDirItem.parentCode}|, menuCode=|${menuDirItem.menuCode}|"
+                       th:checked="${menuDirItem.isSelected eq 1}" lay-skin="primary" lay-filter="checkDir" th:title="${menuDirItem.menuName}">
+                <div style="margin-left: 50px" th:each="menuListItem : ${menuList}" th:if="${menuListItem.parentCode eq menuDirItem.menuCode}">
+                    <input type="checkbox" name="menuListItem" th:attr="parentCode=|${menuListItem.parentCode}|, menuCode=|${menuListItem.menuCode}|"
+                           th:checked="${menuListItem.isSelected eq 1}" lay-skin="primary" lay-filter="checkList" th:title="${menuListItem.menuName}">
+                    <div style="margin-left: 50px">
+                        <input type="checkbox" name="funcDir" th:attr="funcDirCode=|${menuListItem.menuCode}|" th:checked="${menuListItem.allFuncSelected eq 1}"
+                               lay-skin="primary" lay-filter="checkFuncDir" th:title="全选" th:if="${#lists.size(menuListItem.funcList)}>0">
+                        <div style="margin-left: 50px">
+                            <input type="checkbox" name="funcListItem" th:attr="funcCode=|${func.funcCode}|, funcMenuCode=|${func.menuCode}|"
+                                   th:each="func : ${menuListItem.funcList}" th:if="${func.menuCode eq menuListItem.menuCode}"
+                                   th:checked="${func.isSelected eq 1}" lay-skin="primary" lay-filter="checkFunc" th:title="${func.funcName}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+        </div>
+    </form>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    var menuDir = [[${menuDir}]];
+</script>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        form.on('checkbox(checkFunc)', function (data) {
+            var currentDom = data.elem;
+            var menuCode = currentDom.getAttribute("funcMenuCode");
+            var brothers = $("[funcMenuCode =" + menuCode + "]");
+            var s = 0;
+            var parent = $("[menuCode =" + menuCode + "]")[0];
+            if (currentDom.checked) {
+                parent.checked = currentDom.checked;
+                for (var i = 0; i < brothers.length; i++) {
+                    if (brothers[i].checked) {
+                        s++;
+                    }
+                }
+                if(s == brothers.length){
+                    $("[funcDirCode =" + menuCode + "]")[0].checked = true;
+                }
+                var inputItem = parent;
+                var fatherCode = inputItem.getAttribute("parentCode");
+                var sisters = $("[parentCode =" + fatherCode + "]");
+                var c = 0;
+                for (var i = 0; i < sisters.length; i++) {
+                    if (sisters[i].checked) {
+                        c++;
+                    }
+                }
+                if (c == sisters.length) {
+                    $("[menuCode =" + fatherCode + "]")[0].checked = true;
+                    var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                    var menudirs = $("[parentCode =" + indexMenuCode + "]");
+                    var countDir = 0;
+                    for (var i = 0; i < menudirs.length; i++) {
+                        if (menudirs[i].checked) {
+                            countDir++;
+                        }
+                    }
+                    if (countDir == menudirs.length) {
+                        $("[menuCode =" + indexMenuCode + "]")[0].checked = true;
+                    }
+                } else {
+                    $("[menuCode =" + fatherCode + "]")[0].checked = false;
+                    var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                    $("[menuCode =" + indexMenuCode + "]")[0].checked = false;
+                }
+            }else{
+                $("[funcDirCode =" + menuCode + "]")[0].checked = false;
+            }
+            form.render('checkbox');
+        });
+        form.on('checkbox(checkFuncDir)', function (data) {
+            var currentDom = data.elem;
+            var funcDirCode = currentDom.getAttribute("funcDirCode");
+            var parent = $("[menuCode =" + funcDirCode + "]")[0];
+            var children = $("[funcMenuCode =" + funcDirCode + "]");
+            if(currentDom.checked){
+                parent.checked = currentDom.checked;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].checked = true;
+                }
+                var inputItem = parent;
+                var fatherCode = inputItem.getAttribute("parentCode");
+                var sisters = $("[parentCode =" + fatherCode + "]");
+                var c = 0;
+                for (var i = 0; i < sisters.length; i++) {
+                    if (sisters[i].checked) {
+                        c++;
+                    }
+                }
+                if (c == sisters.length) {
+                    $("[menuCode =" + fatherCode + "]")[0].checked = true;
+                    var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                    var menudirs = $("[parentCode =" + indexMenuCode + "]");
+                    var countDir = 0;
+                    for (var i = 0; i < menudirs.length; i++) {
+                        if (menudirs[i].checked) {
+                            countDir++;
+                        }
+                    }
+                    if (countDir == menudirs.length) {
+                        $("[menuCode =" + indexMenuCode + "]")[0].checked = true;
+                    }
+                } else {
+                    $("[menuCode =" + fatherCode + "]")[0].checked = false;
+                    var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                    $("[menuCode =" + indexMenuCode + "]")[0].checked = false;
+                }
+            }else{
+                for (var i = 0; i < children.length; i++) {
+                    children[i].checked = false;
+                }
+            }
+            form.render('checkbox');
+        });
+        form.on('checkbox(checkList)', function (data) {
+            var inputItem = data.elem;
+            var fatherCode = inputItem.getAttribute("parentCode");
+            var menuCode = inputItem.getAttribute("menuCode");
+            var sisters = $("[parentCode =" + fatherCode + "]");
+            var c = 0;
+            for (var i = 0; i < sisters.length; i++) {
+                if (sisters[i].checked) {
+                    c++;
+                }
+            }
+            if (c == sisters.length) {
+                $("[menuCode =" + fatherCode + "]")[0].checked = true;
+                var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                var menudirs = $("[parentCode =" + indexMenuCode + "]");
+                var countDir = 0;
+                for (var i = 0; i < menudirs.length; i++) {
+                    if (menudirs[i].checked) {
+                        countDir++;
+                    }
+                }
+                if (countDir == menudirs.length) {
+                    $("[menuCode =" + indexMenuCode + "]")[0].checked = true;
+                }
+            } else {
+                $("[menuCode =" + fatherCode + "]")[0].checked = false;
+                var indexMenuCode = $("[menuCode =" + fatherCode + "]")[0].getAttribute("parentCode");
+                $("[menuCode =" + indexMenuCode + "]")[0].checked = false;
+            }
+            if(!inputItem.checked){
+                $("[funcDirCode =" + menuCode + "]")[0].checked = false;
+                var children = $("[funcMenuCode =" + menuCode + "]");
+                for (var i = 0; i < children.length; i++) {
+                    children[i].checked = false;
+                }
+            }
+            form.render('checkbox');
+        });
+        form.on('checkbox(checkDir)', function (data) {
+            var inputItem = data.elem;
+            var menuCode = inputItem.getAttribute("menuCode");
+            var fatherCode = inputItem.getAttribute("parentCode");
+            var children = $("[parentCode =" + menuCode + "]");
+            var sisters = $("[parentCode =" + fatherCode + "]");
+            var c = 0;
+            for (var i = 0; i < sisters.length; i++) {
+                if (sisters[i].checked) {
+                    c++;
+                }
+            }
+            //同步父节点
+            if (c == sisters.length) {
+                $("[menuCode =" + fatherCode + "]")[0].checked = true;
+            } else {
+                $("[menuCode =" + fatherCode + "]")[0].checked = false;
+            }
+            //同步子节点
+            for (var i = 0; i < children.length; i++) {
+                children[i].checked = data.elem.checked;
+            }
+            form.render('checkbox');
+        });
+        form.on('checkbox(checkIndex)', function (data) {
+            var inputItem = data.elem;
+            var menuCode = inputItem.getAttribute("menuCode");
+            var children = $("[parentCode =" + menuCode + "]");
+            //同步子节点
+            for (var i = 0; i < children.length; i++) {
+                children[i].checked = data.elem.checked;
+                var childCode = children[i].getAttribute("menuCode");
+                var grandSons = $("[parentCode =" + childCode + "]");
+                //同步孙节点
+                for (var k = 0; k < grandSons.length; k++) {
+                    grandSons[k].checked = data.elem.checked;
+                }
+            }
+            form.render('checkbox');
+        });
+    });
+
+    function save() {
+        var roleCode = $("#roleCode").val();
+        var menuList = [];
+        var funcList = [];
+        var menuDom = document.getElementsByName('menuListItem');
+        var funcDom = document.getElementsByName('funcListItem');
+        for (var i = 0; i < menuDom.length; i++) {
+            if (menuDom[i].checked) {
+                var menuCode = menuDom[i].getAttribute("menuCode");
+                var parentCode = menuDom[i].getAttribute("parentCode");
+                menuList.push(menuCode);
+                if ($.inArray(parentCode, menuList) == -1) {
+                    menuList.push(parentCode);
+                }
+                var indexMenu = $("[menuCode =" + parentCode + "]")[0];
+                var grandParentCode = indexMenu.getAttribute("parentCode");
+                if ($.inArray(grandParentCode, menuList) == -1) {
+                    menuList.push(grandParentCode);
+                }
+            }
+        }
+        for(var i = 0; i < funcDom.length; i++){
+            if (funcDom[i].checked) {
+                var funcCode = funcDom[i].getAttribute("funcCode");
+                funcList.push(funcCode);
+            }
+        }
+        var map = {
+            "roleCode": roleCode,
+            "menuList": menuList,
+            "funcList": funcList
+        };
+        $.ajax({
+            type: "post",
+            url: "/role/updateMenuByRole",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                tipinfo("修改成功!");
+                closewindow(1);
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>

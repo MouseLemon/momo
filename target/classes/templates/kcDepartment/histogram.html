@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+	 .joysupply-main-bL2 {
+        height: 300px;
+        margin-top: 26px;
+    }
+</style>
+<head th:replace="fragments/layout::htmlhead">
+<body >
+		<div id="main2" class="joysupply-main-bL2"></div>
+</body>
+<script type="text/javascript" th:src="@{/js/echarts/echarts.js}"></script>
+<script th:inline="javascript">
+	var startTime = [[${startTime}]];
+	var endTime = [[${endTime}]];
+	//基于准备好的dom，初始化echarts实例
+	var myChart2 = echarts.init(document.getElementById('main2'));
+	option = {
+		title : {
+			text : '',
+		},
+		tooltip : {
+			trigger : 'axis'
+		},
+		toolbox : {
+			show : true
+		},
+		calculable : true,
+		xAxis : [ {
+			type : 'category',
+			data : []
+		} ],
+		yAxis : [ {
+			type : 'value'
+		} ],
+		series : [ {
+			//name: '蒸发量',
+			type : 'bar',
+			barWidth : 30,
+			itemStyle : {
+				normal : {
+					color : '#5B9BD5'
+				}
+			},
+			label : {
+				normal : {
+					show : true,
+					color : '#333',
+					position : 'top'
+
+				}
+			},
+			data : []
+		} ]
+	};
+	// 使用刚指定的配置项和数据显示图表。
+	myChart2.setOption(option);
+	//使图标自适应屏幕的宽度
+	window.onresize = myChart2.resize;
+	$.get("/teacherKc/getDimensionHistogram?startTime="+startTime+"&endTime="+endTime, function(rep) {
+		console.log(rep)
+		setOption2(rep);
+	});
+
+	function setOption2(rep) {
+		myChart2.setOption({
+			tooltip : {
+				formatter : function(data) {
+					return data[0].name + '<br />' + '课酬：' + data[0].value;
+				}
+			},
+			xAxis : [ {
+				data : rep.name
+
+			} ],
+			series : [ {
+				label : {
+					normal : {
+						show : true,
+						color : '#333',
+						position : 'top'/* ,
+												formatter: function(data){
+													//console.log(data)
+													return data.value+'\n('+rep.rates[data.dataIndex]+')'
+												} */
+					}
+				},
+				data : rep.fee
+			} ]
+		});
+	}
+</script>
+</html>

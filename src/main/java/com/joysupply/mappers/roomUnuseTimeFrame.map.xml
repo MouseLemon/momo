@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.RoomUnuseTimeFrameDao">
+	<resultMap type="RoomUnuseTimeFrame" id="roomUnuseTimeFrameDaoMap">
+    	<id property="frameId" column="frame_id" />  
+        <result property="roomId" column="room_id" />   
+        <result property="year" column="year" />   
+        <result property="week" column="week" />   
+        <result property="month" column="month" />   
+        <result property="day" column="day" />   
+        <result property="weekDay" column="week_day" />   
+        <result property="startTime" column="start_time" />   
+        <result property="endTime" column="end_time" />   
+    </resultMap> 
+    <sql id="roomUnuseTimeFrameDaoField">
+		frame_id,room_id,year,week,month,day,week_day,start_time,end_time
+	</sql>
+    <!-- 根据roomId查询不可用时间段列表 -->
+    <select id="getRoomUnuseTimeFrameListByRoomID" parameterType="hashmap" flushCache="true" resultMap="roomUnuseTimeFrameDaoMap">
+		select 
+			<include refid="roomUnuseTimeFrameDaoField"/>
+		from
+			room_unuse_time_frame
+		<where>
+			<if test="roomId != null and roomId != ''">
+    			and room_id = #{roomId}
+    		</if>
+    		<if test="years != null and years.size > 0">
+    			and year in
+				<foreach collection="years" open="(" separator="," close=")" item="year">
+					#{year}
+				</foreach>
+    		</if>
+    		<if test="month != null and month != ''">
+    			and month = #{month}
+    		</if>
+    		<if test="day != null and day != ''">
+    			and day = #{day}
+    		</if>
+    		<if test="week != null and week != ''">
+    			and week = #{week}
+    		</if>
+    		<if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+    			and NOT ((end_time &lt; #{startTime})
+				OR (start_time &gt; #{endTime}))
+    		</if>
+    	</where>
+	</select> 
+	
+	 <!-- 插入记录 -->
+    <insert id="saveRoomUnuseTimeFram" parameterType="hashmap">
+		insert into room_unuse_time_frame (`frame_id`,`room_id`,`year`,`week`,`month`,`day`,`week_day`,`start_time`,`end_time`  ) 
+		values 
+		(#{frameId},#{roomId},#{year},#{week},#{month},#{day},#{weekDay},#{startTime},#{endTime})
+	</insert>
+	<!-- 删除记录 -->
+	<delete id="deleteRoomUnuseTimeFram" parameterType="hashmap">
+		<![CDATA[
+			delete  from room_unuse_time_frame  where frame_id=#{frameId}
+		]]> 
+	</delete>
+	
+	<!-- 根据当前周删除当前教室的不可用时间段 -->
+	<delete id="deleteRoomUnuseTime" >
+		delete  from room_unuse_time_frame  where room_id =#{roomId} and year = #{year} and week = #{week}
+	
+	</delete>
+	
+	<!-- 批量添加 -->
+	<insert id="saveUnUseTime">
+		insert into room_unuse_time_frame values
+		<foreach collection="list" separator="," item="item">
+			(#{item.frameId},#{item.roomId},#{item.year},#{item.week},#{item.month},#{item.day},#{item.weekDay},#{item.startTime},#{item.endTime})
+		</foreach>
+	</insert>
+	
+	
+	<!-- 修改记录 -->
+	<update id="updateRoomUnuseTimeFram" parameterType="hashmap">
+		update  
+			room_unuse_time_frame
+		set  
+    		room_id =#{roomId}
+		<where>
+			<if test="year != null and year != ''">
+    			and year = #{year}
+    		</if>
+    		<if test="month != null and month != ''">
+    			and month = #{month}
+    		</if>
+    		<if test="day != null and day != ''">
+    			and day = #{day}
+    		</if>
+    		<if test="startTime != null and startTime != ''">
+    			and start_time = #{startTime}
+    		</if>
+    		<if test="endTime != null and endTime != ''">
+    			and end_time = #{endTime}
+    		</if>
+    	</where>
+	</update>
+	
+	<select id="selIsSet" resultType="java.lang.String">
+		select * from
+		(SELECT
+				CONCAT(
+				`year`,
+				'/',
+				`month`,
+				'/',
+				`day`,
+				'/',
+				start_time,
+				'/',
+				end_time
+				) AS noCopyDateTime
+			FROM
+				`room_unuse_time_frame`
+			WHERE
+			<!--`year` IN-->
+			<!--<foreach collection="others" open="(" separator="," close=")" item="item">-->
+				<!--#{item.year}-->
+			<!--</foreach>-->
+			<!---->
+			room_id = #{roomId}) temp where
+		noCopyDateTime in
+		<foreach collection="others" open="(" separator="," close=")" item="item">
+			#{item.year}"/"#{item.month}"/"#{item.day}"/"#{item.startTime}"/"#{item.endTime}
+		</foreach>
+	</select>
+	
+	<delete id="deleteIsSet">
+-- 		delete from `room_unuse_time_frame`
+-- 		WHERE
+-- 		`year` IN
+		<foreach collection="list"  item="item">
+			delete from `room_unuse_time_frame`
+			WHERE
+			`year` =
+			#{item.year}  and `month` = #{item.month} and `day` = #{item.day} and start_time = #{startTime} and end_time = #{endTime}
+		</foreach>
+		<!---->
+		<!--AND `day` IN -->
+		<!--<foreach collection="list" open="(" separator="," close=")" item="item">-->
+			<!--#{item.day}-->
+		<!--</foreach>	-->
+		<!--AND `month` in-->
+		<!--<foreach collection="list" open="(" separator="," close=")" item="item">-->
+			<!--#{item.month}-->
+		<!--</foreach>-->
+	</delete>
+</mapper>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.SettingDao">
+    <!-- 查询时间表信息数量 -->
+    <select id="getTimeTableCount" parameterType="hashmap" resultType="int">
+        select
+        count(0)
+        from
+        time_sheet
+        <where>
+            <if test="year != null and year != ''">and year like "%"#{year}"%"</if>
+        </where>
+    </select>
+
+    <!-- 查询时间表信息列表 -->
+    <select id="getTimeTableInfo" parameterType="hashmap" resultType="hashmap">
+        select
+        year,
+        step,
+        section,
+        start_time,
+        end_time
+        from time_sheet
+        <where>
+            <if test="year != null and year != ''">and year like "%"#{year}"%"</if>
+        </where>
+        order by start_time
+    </select>
+
+    <!-- 编辑所有时间，保存按钮 -->
+    <update id="saveTimeTable" parameterType="hashmap">
+        <foreach collection="list" index="index" item="item" open="" separator=";" close="">
+            update time_sheet set
+            start_time = #{item.start_time}, end_time = #{item.end_time}
+            where section = #{item.section}
+        </foreach>
+    </update>
+
+    <!-- 编辑单个时间段 -->
+    <update id="editTime" parameterType="hashmap">
+        <foreach collection="list" item="item" index="index" separator=";">
+            update time_sheet set
+                step = #{item.step},
+                start_time = #{item.start_time},
+                end_time = #{item.end_time}
+            where section = #{item.section}
+        </foreach>
+	</update>
+
+    <!-- 添加时间段 -->
+    <insert id="addTime" parameterType="hashmap">
+		insert into time_sheet values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.step},#{item.start_time},#{item.end_time},#{item.year},#{item.section})
+        </foreach>
+	</insert>
+
+    <!-- 删除时间段 -->
+    <delete id="deleteTime" parameterType="TimeSheet">
+		delete from time_sheet where section = #{section}
+    </delete>
+
+    <select id="getTimeSheet" resultType="hashMap">
+		select
+			start_time,
+			end_time,
+			year,
+			section
+		from time_sheet
+		where year = #{year}
+	</select>
+    <select id="queryTimeByTableAll" resultType="hashMap">
+		SELECT  CASE t.step WHEN '1' THEN '上午' WHEN '2' THEN '下午' WHEN '3' THEN '晚上' END step ,section,CONCAT(start_time,"-",end_time) time, total 
+		FROM time_sheet t LEFT JOIN (select count(step) total,step from time_sheet WHERE year = 2018 GROUP BY step) c on t.step = c.step
+		WHERE t.year = 2018
+		ORDER BY t.start_time , t.end_time
+	</select>
+    <select id="queryTableData" resultType="hashMap" parameterType="hashMap">
+        SELECT cr.room_num roomNum ,dd1.name floorName ,cr.seating numberOfStudent ,cr.room_id roomId , dl.goClassDate
+        goClassDate, dl.goClassTime goClassTime , dl.goClassProjectName goClassProjectName , dl.weekDay weekDay
+        FROM class_room cr
+        LEFT JOIN data_dic dd1 ON cr.room_loc = dd1.code
+        LEFT JOIN
+        (
+        SELECT cr.room_num roomNum ,dd1.name floorName ,cr.seating numberOfStudent , psp.week_day weekDay
+        ,cr.room_loc room_loc
+        ,GROUP_CONCAT(psp.class_date) AS goClassDate
+        ,GROUP_CONCAT(psp.start_time,"-",psp.end_time) AS goClassTime
+        ,GROUP_CONCAT(pi.project_name) AS goClassProjectName
+        ,cr.room_id room_id
+        FROM class_room cr
+        LEFT JOIN data_dic dd1 ON cr.room_loc = dd1.code
+        LEFT JOIN project_schedule_plan psp ON psp.class_room_id = cr.room_id
+        LEFT JOIN project_info pi ON pi.project_id = psp.project_id
+        <where>
+            <choose>
+                <when test="weekDay != null and weekDay != ''">
+                    AND psp.week_day = #{weekDay}
+                </when>
+                <otherwise>
+                    AND psp.week_day =
+                    (SELECT MIN(psp.week_day)
+                    FROM class_room cr,project_schedule_plan psp
+                    <where>
+                        psp.class_room_id = cr.room_id
+                        <![CDATA[ AND psp.class_date >= #{startTime} AND psp.class_date <= #{endTime} ]]>
+                        <if test="personBuildingAuth != null and personBuildingAuth.size>0 ">
+                            AND cr.room_loc in
+                            <foreach collection="personBuildingAuth" item="item" open="(" separator="," close=")">
+                                #{item.dataCode}
+                            </foreach>
+                        </if>
+                        <if test="roomNum != null and roomNum != ''">
+                            AND cr.room_id = #{roomNum}
+                        </if>
+                    </where>
+                    )
+                </otherwise>
+            </choose>
+            <![CDATA[ AND psp.class_date >= #{startTime} AND psp.class_date <= #{endTime} ]]>
+            <if test="personBuildingAuth != null and personBuildingAuth.size>0 ">
+                AND cr.room_loc in
+                <foreach collection="personBuildingAuth" item="item" open="(" separator="," close=")">
+                    #{item.dataCode}
+                </foreach>
+            </if>
+            <if test="roomNum != null and roomNum != ''">
+                AND cr.room_id = #{roomNum}
+            </if>
+        </where>
+        GROUP BY cr.room_id
+        ) dl on dl.room_id = cr.room_id
+       <where>
+            <if test="personBuildingAuth != null and personBuildingAuth.size >0 ">
+                AND cr.room_loc in
+                <foreach collection="personBuildingAuth" item="item" open="(" separator="," close=")">
+                    #{item.dataCode}
+                </foreach>
+            </if>
+            <if test="roomNum != null and roomNum != ''">
+                AND cr.room_id = #{roomNum}
+            </if>
+        </where>
+    </select>
+
+    <select id="getTimeSheetList" parameterType="hashmap" resultType="hashmap">
+        select
+          start_time,
+          end_time,
+          year
+        from time_sheet
+        where year = #{year}
+    </select>
+
+    <select id="getTimes" parameterType="hashmap" resultType="hashmap">
+        select
+          start_time,
+          end_time,
+          year
+        from time_sheet
+        where year = #{year} and start_time = #{start_time}
+    </select>
+
+    <!-- 验证开始时间是否合理 -->
+    <select id="selectStart" parameterType="hashmap" resultType="hashmap">
+        select * FROM time_sheet
+        where #{start_time} > start_time and end_time > #{start_time}
+        LIMIT 1
+    </select>
+
+    <!-- 验证结束时间是否合理 -->
+    <select id="selectEnd" parameterType="hashmap" resultType="hashmap">
+        SELECT * FROM time_sheet
+        where #{end_time} > start_time and end_time > #{end_time}
+        LIMIT 1
+    </select>
+
+    <!-- 查询开始时间的 下一个时段 -->
+    <select id="selectStartNext" parameterType="hashmap" resultType="hashmap">
+        SELECT * FROM time_sheet
+        where start_time > #{start_time} ORDER BY start_time LIMIT 1
+    </select>
+
+    <select id="selectBeginStartTime" parameterType="hashmap" resultType="hashmap">
+        SELECT * FROM time_sheet
+        where #{beginStartTime} > start_time
+        ORDER BY start_time desc
+        LIMIT 1
+    </select>
+
+    <select id="selectBeginEndTime" parameterType="hashmap" resultType="hashmap">
+        SELECT * FROM time_sheet
+        where start_time >= #{beginEndTime}
+        ORDER BY start_time
+        LIMIT 1
+    </select>
+
+    <sql id="timeByParam">
+        <![CDATA[ AND psp.class_date >= #{startTime} AND psp.class_date <= #{endTime} ]]>
+        <if test="personBuildingAuth != null and personBuildingAuth.size>0 ">
+            AND cr.room_loc in 
+            <foreach collection="personBuildingAuth" item="item" index="index" close=")" open="(" separator=",">
+                #{item.dataCode}
+            </foreach>
+        </if>
+        <if test="roomNum != null and roomNum != ''">
+            AND cr.room_id = #{roomNum}
+        </if>
+    </sql>
+</mapper>

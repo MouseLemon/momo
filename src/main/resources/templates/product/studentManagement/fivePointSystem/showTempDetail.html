@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;background-color: #FFFFFF;min-height:95%;" class="layui-anim layui-anim-upbit">
+    <table class="layui-table" lay-skin="line" id="fivePoint" lay-filter="tableContent" style="margin-top: 0px !important;">
+    </table>
+</div>
+<script th:inline="javascript">
+    var parentCode = [[${fivePointCode}]];
+</script>
+
+<script type="text/javascript">
+    //JavaScript代码区域
+    var table;
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#fivePoint',
+            cellMinWidth: 80,
+            url: '/student/queryScoreList?parentCode=' + parentCode, //数据接口
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        align: 'center'
+                    },
+                    {
+                        field: 'pointName',
+                        title: '评级',
+                        align: 'center'
+                    },
+                    {
+                        field: 'section',
+                        title: '分数区间',
+                        align: 'center'
+                    },
+                ]
+            ],
+            done: function () {
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;background-color: #FFFFFF;margin: 15px;min-height:95%;" class="layui-anim layui-anim-upbit">
+    <div class="layui-form layui-row" action="">
+        <button id="add" class="layui-btn layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'cjmb_add'}">新建</button>
+    </div>
+    <table class="layui-table" lay-skin="line" id="fivePoint" lay-filter="tableContent">
+    </table>
+    <script type="text/html" id="operation">
+        <a class="joysupply-txt-color-on joysupply-txt-color-error" lay-event="deletes" th:each="func:${session.funcList}" th:if="${func == 'cjmb_del'}">删除</a>
+        <a class="joysupply-txt-color-on" lay-event="edits" th:each="func:${session.funcList}" th:if="${func == 'cjmb_edit'}">编辑</a>
+    </script>
+</div>
+<script th:inline="javascript">
+    var parentCode = [[${fivePointCode}]];
+</script>
+
+<script type="text/javascript">
+    //JavaScript代码区域
+    var table;
+    layui.use(['element', 'form', 'table'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        table = layui.table;
+        $("#add").click(function () {
+            openwindow("/student/addScorePage?parentCode=" + parentCode, "新建分制", "700", "280", false, reload);
+        })
+
+        window.reload = function () {
+            tableIns.reload({
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        }
+
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#fivePoint',
+            cellMinWidth: 80,
+            url: '/student/queryScoreList?parentCode=' + parentCode, //数据接口
+            where: {},
+            page: true, //开启分页
+            limits: [10, 20, 30, 40, 50],
+            cols: [
+                [
+                    {
+                        title: '序号',
+                        type: 'numbers',
+                        width: '20%',
+                        align: 'center'
+                    },
+                    {
+                        field: 'pointName',
+                        title: '分制',
+                        align: 'center'
+                    },
+                    {
+                        field: 'section',
+                        title: '分数区间',
+                        align: 'center'
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        width: '20%',
+                        toolbar: '#operation',
+                    }
+                ]
+            ],
+            done: function () {
+            }
+        });
+        var data = [];
+        table.on('tool(tableContent)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var fivePointCode = data.fivePointCode;
+            var pointName = data.pointName;
+            var section = data.section;
+            var layEvent = obj.event;
+            if (layEvent === 'edits') {
+                openwindow("/student/addScorePage?fivePointCode=" + fivePointCode + "&pointName=" + pointName + "&section=" + section, "修改分制", "700", "280", false, reload);
+            } else if (layEvent === 'deletes') {
+                confirm("您确定要删除吗？", del);
+
+                function del() {
+                    var map = {"fivePointCode": fivePointCode};
+                    $.ajax({
+                        type: "post",
+                        url: '/student/delFivePointByCode',
+                        data: map,
+                        success: function (data) {
+                            tipinfo(data.message);
+                            tableIns.reload({
+                                page: {
+                                    curr: 1
+                                }
+                            });
+                        },
+                        error: function () {
+                            tipinfo(data.message);
+                        }
+                    })
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

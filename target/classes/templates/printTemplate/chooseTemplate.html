@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+    <form class="layui-form" action="">
+        <div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择模板：</label>
+                <div class="layui-input-block">
+                    <select required="required" lay-verify="required" name="templateId" id="templateId" lay-search
+                            class="layui-input" >
+                        <option value=""></option>
+                        <option th:each="item:${listTemplate}" th:value="${item.templateId}"
+                                th:text="${item.templateName}" ></option>
+                    </select>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+</body>
+
+<script th:inline="javascript">
+</script>
+
+<script type="text/javascript">
+    function getTemplateId() {
+        var templateId = $('#templateId').val();
+        return templateId;
+    }
+    layui.use(['laypage', 'layer', 'table', 'form', 'laydate', 'upload', 'formSelects'], function () {
+        var layer = layui.layer;
+        var form = layui.form;
+
+    });
+
+
+</script>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+	<div class="layui-layout layui-layout-admin">
+		<div id="app">
+			<div class="layui-form">
+				<table class="layui-table" id="kcTable"> 
+					<thead>
+						<tr>
+							<th>教师类别</th>
+							<th>姓名</th>
+							<th>国籍</th>
+							<th>身份证号/护照号</th>
+							<th>银行卡号</th>
+							<th>出生日期</th>
+							<th>联系电话</th>
+							<th>入境日期</th>
+						</tr> 
+					</thead> 
+					<tbody  class="layui-table">  
+						<tr>
+							<td>{{ teacherInfo.teacher_type }}</td>
+							<td>{{ teacherInfo.teacher_name }}</td>
+							<td>{{ teacherInfo.nationality }}</td>
+							<td>{{ teacherInfo.id_card }}</td>
+							<td>{{ teacherInfo.bank_code }}</td>
+							<td>{{ teacherInfo.birth_day }}</td>
+							<td>{{ teacherInfo.tele_num }}</td>
+							<td>{{ teacherInfo.entry_date }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="layui-form-item" style="text-align:center;margin-top: 40px">
+				<button class="layui-btn layui-btn-sm close" type="button" >关闭</button>
+			</div>
+		</div>
+	</div>
+</body>
+
+
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/kcManagerTeacher/teacherInfo.js}"></script>
+<script>
+	vm.teacherCode = '[[${teacherCode}]]';
+	$(".close").click(function(){
+		var index = parent.layer.getFrameIndex(window.name);  
+	    parent.layer.close(index);//关闭当前页
+	})
+</script>
+</html>

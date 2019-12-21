@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .clearfix:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+
+    .clearfix {
+        zoom: 1;
+    }
+
+    .tabNav {
+        margin: 2% 0 .5%;
+    }
+
+    .tabNav li {
+        font-size: 14px;
+        background: #ccc;
+        width: 5%;
+        padding: 2px 0;
+        margin-left: 1%;
+        float: left;
+        text-align: center;
+        color: #fff;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .tabNav li:after {
+        background: #ccc none repeat scroll 0 0;
+        content: "";
+        display: block;
+        height: 10px;
+        width: 10px;
+        box-shadow: -1px -1px 0px 0px rgba(255, 255, 255, 1);
+        transform: rotate(-45deg) translate(6px, 6px);
+        position: absolute;
+        top: 70%;
+        left: 30%;
+        border: 1px solid #ccc;
+        z-index: -1;
+    }
+
+    .tabNav li.tabOn {
+        background: #00c1de;
+    }
+
+    .tabNav li.tabOn:after {
+        background: #00c1de none repeat scroll 0 0;
+        border: 1px solid #00c1de;
+    }
+
+    @media screen and (max-width: 1500px) {
+        .tabNav li:after {
+            left: 26% !important;
+        }
+    }
+
+    .layui-table-cell {
+        height: auto;
+        overflow: visible;
+        text-overflow: inherit;
+        white-space: normal;
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;min-height: 95%;background-color: #FFFFFF; margin: 15px;"
+             class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-col-space10">
+                <section>
+                    <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">总课表</h2>
+                    <hr/>
+                    <div class="layui-row">
+                        <form class="layui-form layui-col-lg10 layui-col-md12" action="">
+                            <div class="layui-form-item layui-col-md12">
+                                <div class="layui-col-md6">
+                                    <div class="layui-col-md6">
+                                        <label class="layui-form-label">时间：</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="startTime" autocomplete="off" class="layui-input"
+                                                   id="test1" placeholder="yyyy-MM-dd" th:value="${startTime}">
+                                        </div>
+                                    </div>
+                                    <div class="layui-col-md6">
+                                        <label style="float: left;padding: 9px;text-align: center;">-</label>
+                                        <div class="layui-input-block" style="margin-left: 25px;margin-right: 85px;">
+                                            <input type="text" name="endTime" autocomplete="off" class="layui-input"
+                                                   id="test2" placeholder="yyyy-MM-dd" th:value="${endTime}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md3">
+                                    <label class="layui-form-label">所属位置：</label>
+                                    <div class="layui-input-block">
+                                        <select lay-verify="required" name="roomLoc" lay-filter="roomLoc">
+                                            <option value=""></option>
+                                            <option th:each="ro,room:${roomLoc}" th:value="${ro.dataCode}"
+                                               th:selected="${roomLocSel eq ro.dataCode}"     th:text="${ro.buildingName}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-col-md3">
+                                    <label class="layui-form-label">教室号：</label>
+                                    <div class="layui-input-block">
+                                        <select lay-verify="required" name="roomNum">
+                                            <option value=""></option>
+                                            <option th:if="${roomNum != null && roomNum != ''}" selected th:value="${roomNum}" th:text="${roomName}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </form>
+                        <div class="layui-form layui-col-lg2 layui-col-md12" style="margin-top: 5px;">
+                            <button class="layui-btn layui-btn-sm" id="search" style="margin-left: 20px;">搜索</button>
+                            <button class="layui-btn layui-btn-sm" id="export">导出</button>
+                        </div>
+                    </div>
+                    <div class="tabNav clearfix" style="margin-top: 0px;">
+                        <ul>
+                            <li data-val="0">星期一</li>
+                            <li data-val="1">星期二</li>
+                            <li data-val="2">星期三</li>
+                            <li data-val="3">星期四</li>
+                            <li data-val="4">星期五</li>
+                            <li data-val="5">星期六</li>
+                            <li data-val="6">星期日</li>
+                        </ul>
+                    </div>
+                    <table class="layui-table" id="allCourse" lay-filter="allCourse" style="margin-top: 0px;">
+                    </table>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var dataTime = [[${data.time}]];
+        var dataStep = [[${data.step}]];
+        var startTime = [[${startTime}]]
+        var endTime = [[${endTime}]]
+    </script>
+    <script>
+        var table;
+        var dataHeadOne = [{field: 'floorName', align: 'center', fixed: 'left', width: '10%', title: '所属位置', rowspan: 2}
+            , {field: 'roomNum', align: 'center', fixed: 'left', title: '教室号', width: '10%', rowspan: 2}
+            , {field: 'numberOfStudent', align: 'center', fixed: 'left', width: '10%', title: '人数', rowspan: 2}];
+        var dataHeadTwo = [];
+        $(function () {
+            for (var i = 0; i < dataStep.length; i++) {
+                var v = {align: 'center', title: dataStep[i].step, colspan: dataStep[i].total};
+                dataHeadOne.push(v);
+            }
+            for (var i = 0; i < dataTime.length; i++) {
+                var v = {field: dataTime[i].time, width: '110', align: 'center', title: dataTime[i].time};
+                dataHeadTwo.push(v);
+            }
+            /*if(startTime != null && startTime!=""){
+                reload();
+            }*/
+        })
+
+        //JavaScript代码区域
+        layui.use(['table', 'form', 'laydate', 'element'], function () {
+            table = layui.table;
+            element = layui.element;
+            var form = layui.form;
+            var laydate = layui.laydate;
+
+            laydate.render({
+                elem: '#test1', //指定元素
+                type: 'date',
+                value: startTime
+            })
+            laydate.render({
+                elem: '#test2', //指定元素
+                type: 'date',
+                value: endTime
+            })
+            //监听联动
+            form.on('select(roomLoc)', function (data) {
+                debugger;
+                var roomNum = data.value;
+                $.ajax({
+                    type: "GET",
+                    url: "/classRoom/getIdleRoom",
+                    data: {roomLoc: roomNum},
+                    dataType: "JSON",
+                    success: function (data) {
+                        var flg = data.success;
+                        var da = data.idleRoom;
+                        var html = "<option value=\"\"></option>";
+                        if (flg) {
+                            for (var i = 0; i < da.length; i++) {
+                                html += "<option value='" + da[i].roomId + "'>" + da[i].roomNum + "</option>";
+                            }
+                        }
+                        $("select[name='roomNum']").html(html);
+                        form.render();
+                    }
+                })
+            });
+
+            $('#search').click(function () {
+                var startTime = $("input[name='startTime']").val();
+                if (startTime == undefined || startTime == null || startTime == "") {
+                    tipinfo("请选择开始日期");
+                    return;
+                }
+                var endTime = $("input[name='endTime']").val();
+                if (endTime == undefined || endTime == null || endTime == "") {
+                    tipinfo("请选择终止日期");
+                    return;
+                }
+                if (startTime > endTime) {
+                    tipinfo("开始时间不能大于终止时间");
+                    return;
+                }
+                $(".tabNav li").removeClass('tabOn');
+                reload();
+            });
+            //总课表数据
+            window.reload = function() {
+                var weekDay = $('.tabNav').find(".tabOn").data("val");
+                weekDay == undefined ? weekDay = "" : "";
+                loading(true);
+                table.render({
+                    id: 'id',
+                    elem: '#allCourse',
+                    url: '/scheduleView/queryCurseSearchData',
+                    page: true,
+                    cols: [dataHeadOne, dataHeadTwo],
+                    where: {
+                        startTime: $("input[name='startTime']").val()
+                        , endTime: $("input[name='endTime']").val()
+                        , roomLoc: $("select[name='roomLoc']").val()
+                        , roomNum: $("select[name='roomNum']").val()
+                        , weekDay: weekDay
+                    },
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    },
+                    done: function (res, curr, count) {
+                        if (res != null && res.data != null && res.data.length > 0) {
+                            var weekDay = "";
+                            for (var i = 0; i < res.data.length; i++) {
+                                weekDay = res.data[i].weekDay;
+                                if (weekDay != undefined) {
+                                    break;
+                                }
+                            }
+                            $(".tabNav li[data-val='" + weekDay + "']").addClass('tabOn').siblings().removeClass('tabOn');
+                        }
+                        loading(false);
+                    }
+                });
+            }
+            if (startTime != null && endTime != null) {
+                reload();
+            }
+        });
+        //tab切换
+        $('.tabNav li').click(function () {
+            var startTime = $("input[name='startTime']").val();
+            if (startTime == undefined || startTime == null || startTime == "") {
+                tipinfo("请选择开始日期");
+                return;
+            }
+            var endTime = $("input[name='endTime']").val();
+            if (endTime == undefined || endTime == null || endTime == "") {
+                tipinfo("请选择终止日期");
+                return;
+            }
+            if (startTime > endTime) {
+                tipinfo("开始时间不能大于终止时间");
+                return;
+            }
+            $(this).addClass('tabOn').siblings().removeClass('tabOn');
+            reload();
+        })
+        $("#export").click(function () {
+            var startTime = $("input[name='startTime']").val();
+            if (startTime == undefined || startTime == null || startTime == "") {
+                tipinfo("请选择开始日期");
+                return;
+            }
+            var endTime = $("input[name='endTime']").val();
+            if (endTime == undefined || endTime == null || endTime == "") {
+                tipinfo("请选择终止日期");
+                return;
+            }
+            if (startTime > endTime) {
+                tipinfo("开始时间不能大于终止时间");
+                return;
+            }
+            var startTime = $("input[name='startTime']").val()
+            var endTime = $("input[name='endTime']").val()
+            var roomLoc = $("select[name='roomLoc']").val()
+            var roomNum = $("select[name='roomNum']").val()
+            location.href = "/scheduleView/excel?startTime="+startTime+"&endTime="+endTime+"&roomLoc="+roomLoc+"&roomNum="+roomNum;
+        });
+    </script>
+</div>
+</body>
+</html>

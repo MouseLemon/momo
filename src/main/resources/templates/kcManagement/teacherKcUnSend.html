@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<style type="text/css">
+    .table_box_big {
+        width: 100%;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        position: relative;
+        height: 600px;
+    }
+
+    .table_box {
+        overflow: hidden;
+        position: absolute;
+    }
+
+    .table_tbody_box {
+        height: 600px;
+        overflow: scroll;
+    }
+
+    table {
+        border: 1px solid #eeeeee;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    .layui-table-cell {
+        width: 80px;
+        height: 28px;
+        line-height: 28px;
+        padding: 0 15px;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    /*修改滚动条样式*/
+    .table_tbody_box::-webkit-scrollbar {
+        /*滚动条整体样式*/
+        width: 0px;
+        /*高宽分别对应横竖滚动条的尺寸*/
+        height: 0px;
+    }
+
+    .layui-table td {
+        text-align: center;
+    }
+
+    #kcTable th {
+        text-align: center;
+    }
+
+    body .layui-layer-title {
+        font-size: 14px;
+    }
+
+    .layui-table[lay-skin=line] td {
+        border-width: 0 0 0px !important;
+    }
+
+    .trBackground {
+        background-color: #fdf5e5;
+    }
+
+    .totalBackground {
+        background-color: #f7e7c8;
+    }
+    .table_box_big{
+        overflow: auto;
+    }
+</style>
+<script src="/static/js/jquery.js"></script>
+<script src="/static/js/laydate/laydate.js"></script>
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<div class="layui-layout layui-layout-admin" id="app">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px; background-color: #FFFFFF; margin: 15px;min-height:95%;"
+             class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">未发教师课酬</h2>
+                <hr/>
+                <div>
+                    <div class="layui-row" style="margin-bottom: 10px;">
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">教师姓名：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="teacherName" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">年月：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="time" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-md3">
+                            <label class="layui-form-label">备注：</label>
+                            <div class="layui-input-block">
+                                <input type="text" id="note" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-col-md3 mt5">
+                            <button type="button" v-on:click="search()" class="layui-btn layui-btn-sm ml20">搜索</button>
+                            <button type="button" v-on:click="exportExcel()" class="layui-btn layui-btn-sm"
+                                    th:each="func:${session.funcList}" th:if="${func == 'wfjskc_export'}">导出
+                            </button>
+                            <button type="button" v-on:click="returnExamine()" class="layui-btn layui-btn-sm"
+                                    th:each="func:${session.funcList}" th:if="${func == 'wfjskc_return'}">退回
+                            </button>
+                            <button type="button" v-on:click="ensureSend()" class="layui-btn layui-btn-sm"
+                                    th:each="func:${session.funcList}" th:if="${func == 'wfjskc_send'}">确认发放
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table_box_big">
+                        <div class="table_box" id="kcTable">
+                            <table class="layui-table layui-thead" lay-skin="line">
+                                <thead>
+                                <tr>
+                                    <th><input type="checkbox" name="allCheckBox"></th>
+                                    <th><div style="width: 90px;">序号</div></th>
+                                    <th><div style="width: 90px;">年份</div></th>
+                                    <th><div style="width: 90px;">月份</div></th>
+                                    <th><div style="width: 90px;">教师类别</div></th>
+                                    <th><div style="width: 90px;">一卡通号</div></th>
+
+                                    <th><div style="width: 90px;">国籍</div></th>
+                                    <th><div style="width: 90px;">性别</div></th>
+                                    <th><div style="width: 90px;">出生日期</div></th>
+                                    <th><div style="width: 90px;">入境日期</div></th>
+                                    <th><div style="width: 90px;">预计出境日期</div></th>
+                                    <th><div style="width: 90px;">入职日期</div></th>
+                                    <th><div style="width: 90px;">联系电话</div></th>
+
+                                    <th><div style="width: 90px;">开户姓名</div></th>
+                                    <th><div style="width: 150px;">身份证号</div></th>
+                                    <th><div style="width: 150px;">银行卡号</div></th>
+                                    <th><div style="width: 90px;">所得项目</div></th>
+                                    <th v-for="pname in productName"><div style="width: 90px;">{{pname.depName}}</div></th>
+                                    <th><div style="width: 90px;">工作量扣除</div></th>
+                                    <th><div style="width: 90px;">讲座</div></th>
+                                    <th><div style="width: 90px;">补发课酬</div></th>
+                                    <th><div style="width: 90px;">课酬合计</div></th>
+                                    <th><div style="width: 90px;">备注</div></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template v-for="kcList in kcInfo">
+                                    <tr v-for="kc in kcList" :class="kc.px=='小计'?'trBackground':kc.px=='合计' ?'totalBackground':'' ">
+                                        <td v-if="kc.px != '小计'  &&  kc.px !='合计' ">
+                                            <input name="teacherKcSend" type="checkbox"
+                                                   :value="kc.mergeSerialNumber+'_'+kc.serialNumber+'_'+kc.teacherCode+'_'+kc.projectId+'_'+kc.year+'_'+kc.month+'_'+kc.totalCount">
+                                        </td>
+                                        <td v-if="kc.px == '小计'  ||  kc.px =='合计' "></td>
+                                        <td><div style="width: 90px;">{{ kc.px }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.year }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.month }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.teacherType }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.cardNo }}</div></td>
+
+                                        <td><div style="width: 90px;">{{ kc.nationality }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.sex=='1'?"男":"" }} {{kc.sex=='2'?"女":""}}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.birthDay }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.entryDate }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.prvOutDate }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.joinTime }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.teleNum }}</div></td>
+
+                                        <td><div style="width: 90px;"><a href="javascript:void(0)" style="color: blue;"
+                                                                         v-on:click="userInfo(kc.teacherCode)">{{ kc.accountName }}</a></div></td>
+                                        <td><div style="width: 150px;">{{ kc.idCard }}</div></td>
+                                        <td><div style="width: 150px;">{{ kc.bankCode }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc.projectTeacher }}</div></td>
+                                        <td v-for="pname in productName">
+                                            <div style="width: 90px;">{{ (kc.px == '小计' || kc.px =='合计')?"":(kc[pname.depCode]==null?"0.0":kc[pname.depCode]) }}</div>
+                                        </td>
+                                        <td><div style="width: 90px;">{{ kc['1901'] }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc['1902'] }}</div></td>
+                                        <td><div style="width: 90px;">{{ kc['1903'] }}</div></td>
+                                        <td v-if="kc.px == '小计'  ||  kc.px =='合计' "><div style="width: 90px;">{{ kc.totalCount }}</div></td>
+                                        <td v-else><div style="width: 90px;"><a href="javascript:void(0)" style="color: blue;"
+                                                                                v-on:click="KCInfo(kc.serialNumber,kc.teacherCode,kc.mergeSerialNumber,kc.projectId)">{{kc.totalCount}}</a></div></td>
+                                        <td><div style="width: 90px;">{{ kc.memo }}</div></td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="float: right;" id="jqPager"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div id="shenHe">
+        <form class="layui-form" id="form2">
+            <div class="layui-form-item layui-inline"
+                 style="width:100%;text-align: center;margin-top: 10%;">
+                <div class="layui-input-inline" style="width:90%">
+                    <span style="color: #666666;font-size: 15px;margin-left: 14%;">请务必确认已经提交银行后，再确认发放课酬！</span>
+                </div>
+            </div>
+
+            <div class="layui-form-item" style="width: 80%;">
+                <label class="layui-form-label">消息接收人:</label>
+                <div class="layui-input-block">
+                    <select id="projectIds" name="projectIds" xm-select="selects2" xm-select-search=""
+                            xm-select-skin="primary">
+                        <option v-for="person in personList" :value="person.personCode">{{person.name}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- <div class="layui-form-item layui-form-text" style="margin-left: 9%;">
+                <label class="layui-form-label" style="width: 100px;">消息接收人：</label>
+                <div class="layui-input-block">
+                    <select id="messageReceive"></select>
+                </div>
+            </div> -->
+        </form>
+    </div>
+    <div id="approvePage">
+        <form class="layui-form" id="form2">
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">备注：</label>
+                <div class="layui-input-block">
+                    <textarea style="width:75%;" placeholder="请输入内容" class="layui-textarea"></textarea>
+                </div>
+            </div>
+            <div class="layui-form-item layui-inline" style="margin-top:3%;">
+                <div class="layui-input-inline" style="text-align: center;">
+                    <span>是否退回该月课酬？</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+<script src="/static/js/jquery.js"></script>
+<script src="/static/js/laydate/laydate.js"></script>
+<script src="/static/js/kcManager/teacherKcUnSend.js"></script>
+<script>
+    vm.personCode = '[[${user.personCode}]]';
+    laydate.render({
+        elem: '#time',
+        type: 'month'
+    });
+    $("input[name='allCheckBox']").click(function () {
+        var flg = this.checked;
+        $("input[name='teacherKcSend']").each(function () {
+            if (flg) this.checked = true;
+            if (!flg) this.checked = false;
+        })
+    });
+    window.onload = function () {
+        setTimeout(function () {
+            yanchi();
+        }, 100);
+    }
+
+    function yanchi() {
+        $("input[name='teacherKcSend']").click(function () {
+            var flg = false;
+            $("input[name='teacherKcSend']").each(function () {
+                if (this.checked == true) {
+                    flg = true;
+                } else if (this.checked == false) {
+                    flg = false;
+                    return false;
+                }
+            });
+            if (flg) $("input[name='allCheckBox']").prop("checked", true);
+            if (!flg) $("input[name='allCheckBox']").prop("checked", false);
+        });
+    }
+
+</script>
+</html>

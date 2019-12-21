@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.GenerateCodeDao">
+    <select id="getCurrentVersion" parameterType="hashMap" resultType="hashMap">
+        select id,type,year,month,day,version from encoding
+        where id = (
+        select id from encoding
+        <where>
+            <if test="type != null and type != ''">
+                type = #{type}
+            </if>
+            <if test="year != null and year != ''">
+                and year = #{year}
+            </if>
+            <if test="month != null and month != ''">
+                and month = #{month}
+            </if>
+            <if test="day != null and day != ''and type!='project'">
+                and day = #{day}
+            </if>
+        </where>
+        )
+        for update
+    </select>
+    <update id="updVersion" parameterType="hashMap">
+        update encoding set version = version + 1
+        where id = #{id}
+    </update>
+    <insert id="addVersion" parameterType="hashMap">
+        insert into encoding (id,type,year,month,day,version) values(#{id},#{type},#{year},#{month},#{day},1)
+    </insert>
+</mapper>

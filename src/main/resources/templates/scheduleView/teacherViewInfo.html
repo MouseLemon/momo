@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div>
+    <form>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">教师名称：</label>
+                <div class="layui-input-block">
+                    <input type="text" id="teacher_name" readonly="readonly" lay-verify="required" autocomplete="off" th:value="${teacher_name}" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">课程名称：</label>
+                <div class="layui-input-block">
+                    <input type="text" id="class_name" readonly="readonly" lay-verify="required" autocomplete="off" th:value="${class_name}" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">上课日期：</label>
+                <div class="layui-input-block">
+                    <input type="text" id="class_date" readonly="readonly" lay-verify="required" autocomplete="off" th:value="${class_date}" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始时间：</label>
+                <div class="layui-input-block">
+                    <input type="text" id="start_time" readonly="readonly" lay-verify="required" autocomplete="off" th:value="${start_time}" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">上课时长：</label>
+                <div class="layui-input-block">
+                    <input type="text" id="longTime" readonly="readonly" lay-verify="required" autocomplete="off" th:value="${longTime}" class="layui-input">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+    
+</script>
+</html>

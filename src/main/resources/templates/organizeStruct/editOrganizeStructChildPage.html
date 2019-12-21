@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<div>
+    <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+        <form class="layui-form">
+
+            <div class="layui-form-item layui-show">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-block">
+                    <select id="upCode" lay-search="">
+                        <option value=""></option>
+                        <option th:value="${struct.id}" th:each="struct : ${organizeList}" th:text="${struct.name}"
+                                th:selected="${struct.id eq upCode}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label"><span class="required">公司</span></label>
+                <div class="layui-input-block">
+                    <select id="companyCode" lay-verify="required">
+                        <option value=""></option>
+                        <option th:value="${company.code}" th:each="company : ${companyList}" th:text="${company.name}"
+                                th:selected="${company.code == companyCode}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <input id="organizeCode" type="hidden" th:value="${organizeCode}">
+                <label class="layui-form-label"><span class="required">项目部名称</span></label>
+                <div class="layui-input-block">
+                    <input type="text" id="organizeName" lay-verify="required" autocomplete="off" class="layui-input" th:value="${organizeName}">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-form-item" style="text-align: center">
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+            <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+    });
+
+    function save() {
+        var organizeName = $("#organizeName").val();
+        if (organizeName == null || organizeName == "") {
+            tipinfo("组织名称不能为空");
+            return;
+        }
+
+        var organizeCode = $("#organizeCode").val();
+        var companyCode = $("#companyCode option:selected").val();
+        var upCode = $("#upCode option:selected").val();
+
+        if (companyCode == null || companyCode == "") {
+            tipinfo("公司名称不能为空");
+            return;
+        }
+
+        var map = {
+            "organizeName": organizeName,
+            "organizeCode": organizeCode,
+            "companyCode": companyCode,
+            "upCode": upCode
+        };
+        $.ajax({
+            type: "post",
+            url: "/api/organizeStruct/updOrganizeStruct",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                tipinfo(data.message);
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+                parent.redirect();
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+
+</html>

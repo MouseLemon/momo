@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.StudentDao">
+    <!-- 学生信息 -->
+    <sql id="studentParam">
+        <if test="name != null and name != ''">
+            <![CDATA[AND s.name LIKE "%"#{name}"%"]]>
+        </if>
+        <if test="serial != null and serial != ''">
+            <![CDATA[AND s.serial LIKE "%"#{serial}"%"]]>
+        </if>
+        <if test="telephone != null and telephone != ''">
+            <![CDATA[AND s.telephone LIKE "%"#{telephone}"%"]]>
+        </if>
+        <if test="status != null and status != ''">
+            <![CDATA[AND s.status LIKE "%"#{status}"%"]]>
+        </if>
+        <if test="projectName != null and projectName != ''">
+            <![CDATA[AND pi.project_name LIKE "%"#{projectName}"%"]]>
+        </if>
+    </sql>
+    <insert id="saveStudent" parameterType="Student">
+            INSERT INTO student( student_code,name,englishName,serial,sex,idcard,telephone,pic,status,create_time)
+			VALUES (#{studentCode},#{name},#{englishName},#{serial},#{sex},#{idcard},#{telephone},#{pic},#{status},NOW())
+    </insert>
+    <!--批量导入-->
+    <insert id="saveAllStudent" parameterType="list">
+        INSERT INTO student( student_code,name,englishName,serial,sex,idcard,telephone,pic,status,create_time)
+        VALUES
+        <foreach collection="list" item="it" separator=",">
+            (#{it.studentCode},#{it.name},#{it.englishName},#{it.serial},#{it.sex},#{it.idcard},#{it.telephone},#{it.pic},#{it.status},#{it.createTime})
+        </foreach>
+    </insert>
+    <update id="updateStudent" parameterType="Student">
+			UPDATE
+				student
+			SET 
+				name = #{name}
+				,englishName = #{englishName}
+				,serial = #{serial}
+				,sex = #{sex}
+				,idcard = #{idcard}
+				,telephone = #{telephone}
+				,pic = #{pic}
+				,status = #{status}
+			WHERE 
+				student_code = #{studentCode}
+    </update>
+    <update id="updateStudentStatus" parameterType="hashMap">
+        UPDATE
+            student
+        SET 
+            status = #{status}
+        WHERE 
+            student_code = #{studentCode}
+    </update>
+    <delete id="deleteStudentByCode" parameterType="String">
+        DELETE FROM student WHERE student_code = #{studentCode}
+    </delete>
+    <delete id="deleteProjectStudentByCode" parameterType="String">
+        DELETE FROM project_student WHERE student_code = #{studentCode}
+    </delete>
+    <select id="queryStudentCodes" parameterType="hashMap" resultType="String">
+        SELECT
+        s.student_code studentCode
+        FROM
+        student s
+        LEFT JOIN project_student ps ON s.student_code = ps.student_code
+        LEFT JOIN project_info pi ON ps.project_id = pi.project_id
+        WHERE
+        1=1
+        <include refid="studentParam"/>
+        GROUP BY s.student_code
+        ORDER BY s.create_time DESC
+    </select>
+    <select id="selectStudentByStrCode" parameterType="String" resultType="hashMap">
+			SELECT 
+				student_code studentCode
+				,name name
+				,englishName englishName
+				,serial serial
+				,sex sex
+				,idcard idcard
+				,telephone telephone
+				,pic pic
+				,status status
+			FROM 
+				student
+			WHERE
+				student_code = #{studentCode}
+    </select>
+    <select id="selectStudentBySerial" parameterType="String" resultType="Student">
+			SELECT 
+				student_code studentCode
+				,name name
+				,serial serial
+				,sex sex
+				,idcard idcard
+				,telephone telephone
+				,pic pic
+				,status status
+			FROM 
+				student
+			WHERE
+				serial = #{serial}
+    </select>
+    <select id="queryStudentByParam" parameterType="list" resultType="hashMap">
+        SELECT
+        s.student_code,s.name,s.serial,s.sex,s.idcard,s.telephone,s.pic,s.status,s.create_time
+        ,pi.project_name,pi.project_id,s.pic url
+        FROM
+        student s
+        LEFT JOIN project_student ps ON s.student_code = ps.student_code
+        LEFT JOIN project_info pi ON ps.project_id = pi.project_id
+        WHERE
+        s.student_code IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+        ORDER BY s.create_time DESC
+    </select>
+    <select id="getStudentListByProjectId" parameterType="Project" resultType="String">
+        select distinct student_code studentCode from project_student
+        <where>
+            <if test="list != null and list.size >0">
+                project_id in
+                <foreach collection="list" open="(" close=")" separator="," item="item">
+                    #{item.projectId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="getStudentList" parameterType="hashMap" resultType="hashMap">
+        SELECT
+        s.student_code,s.name,s.serial,s.sex,s.idcard,s.telephone,s.pic,s.status,s.create_time
+        ,GROUP_CONCAT(pi.project_name) as project_name,pi.project_id,s.pic url
+        FROM
+        student s
+        LEFT JOIN project_student ps ON s.student_code = ps.student_code
+        LEFT JOIN project_info pi ON ps.project_id = pi.project_id
+        <where>
+            <if test="studentCodeList != null and studentCodeList.size>0">
+                s.student_code IN
+                <foreach collection="studentCodeList" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="name != null and name != ''">
+                AND s.name LIKE "%"#{name}"%"
+            </if>
+            <if test="serial != null and serial != ''">
+                AND s.serial LIKE "%"#{serial}"%"
+            </if>
+            <if test="telephone != null and telephone != ''">
+                AND s.telephone LIKE "%"#{telephone}"%"
+            </if>
+            <if test="status != null and status != ''">
+                AND s.status LIKE "%"#{status}"%"
+            </if>
+            <if test="projectName != null and projectName != ''">
+                AND pi.project_name LIKE "%"#{projectName}"%"
+            </if>
+        </where>
+        GROUP BY s.student_code
+    </select>
+    <select id="getAllStudentList" parameterType="hashMap" resultType="hashMap">
+        SELECT
+        s.student_code,s.name,s.serial,s.sex,s.idcard,s.telephone,s.pic,s.status,s.create_time
+        ,GROUP_CONCAT(pi.project_name) as project_name, GROUP_CONCAT(pi.project_id) as project_id,s.pic url
+        FROM
+        student s
+        LEFT JOIN project_student ps ON s.student_code = ps.student_code
+        LEFT JOIN project_info pi ON ps.project_id = pi.project_id
+        <where>
+            <if test="name != null and name != ''">
+                AND s.name LIKE "%"#{name}"%"
+            </if>
+            <if test="serial != null and serial != ''">
+                AND s.serial LIKE "%"#{serial}"%"
+            </if>
+            <if test="telephone != null and telephone != ''">
+                AND s.telephone LIKE "%"#{telephone}"%"
+            </if>
+            <if test="status != null and status != ''">
+                AND s.status LIKE "%"#{status}"%"
+            </if>
+            <if test="projectName != null and projectName != ''">
+                AND pi.project_name LIKE "%"#{projectName}"%"
+            </if>
+        </where>
+        GROUP BY s.student_code
+    </select>
+    <select id="getStudentIdcardList" resultType="String">
+          SELECT idcard FROM student
+    </select>
+    <select id="getStudentPhoneList" resultType="String">
+          SELECT telephone FROM student
+    </select>
+    <select id="getStudentSerialList" resultType="String">
+          SELECT serial FROM student
+    </select>
+    <!-- 项目和学生的关联表 -->
+    <insert id="saveProjectStudents" parameterType="list">
+        <![CDATA[
+			INSERT INTO project_student (project_id,student_code,update_time)
+			VALUES 
+		]]>
+        <foreach collection="list" item="it" separator=",">
+            <![CDATA[(#{it.projectId},#{it.studentCode},NOW())]]>
+        </foreach>
+    </insert>
+    <delete id="deleteProjectStudents" parameterType="String">
+         DELETE FROM project_student WHERE student_code = #{studentCode}
+    </delete>
+    <select id="queryProjectStudentsByStuCode" parameterType="hashMap" resultType="hashMap">
+			SELECT 
+				project_id
+				,student_code
+				,update_time
+			FROM
+				project_student
+			WHERE 
+				student_code = #{studentCode}
+    </select>
+    <select id="queryProjectStudentByProCode" parameterType="String" resultType="Student">
+		    SELECT 
+				s.serial serial
+				,s.student_code studentCode
+				,s.name name
+				,ps.project_id projectId
+				, CASE WHEN cs.course_name is null THEN '0' ELSE '1' END ishave
+			FROM
+				 student s LEFT JOIN project_student ps ON ps.student_code = s.student_code 
+				 LEFT JOIN course_score cs ON ps.project_id = cs.project_id AND s.student_code = cs.student_code
+			WHERE 
+				ps.project_id = #{projectId}
+				and s.status = 1
+			GROUP BY s.student_code
+    </select>
+    <!--课程分数-->
+    <insert id="saveClassScore" parameterType="list">
+        <![CDATA[
+			INSERT INTO course_score(project_id,student_code,course_name,score,attend_rate,type,create_time)
+			VALUES 
+		]]>
+        <foreach collection="list" item="it" separator=",">
+            <![CDATA[(#{it.projectId},#{it.studentCode},#{it.courseName},#{it.score},#{it.attendRate},#{it.type},NOW())]]>
+        </foreach>
+    </insert>
+    <delete id="deleteClassScoreByProClaCode" parameterType="ClassScore">
+			DELETE FROM course_score WHERE project_id=#{projectId} AND student_code = #{studentCode}
+    </delete>
+    <delete id="deleteClassScoreByName" parameterType="hashMap">
+			DELETE FROM course_score WHERE course_name = #{courseName} AND student_code=1 AND project_id=#{projectId}
+    </delete>
+    <select id="queryClassScoreCourseName" resultType="String">
+			SELECT course_name AS courseName FROM course_score AND student_code = 1
+    </select>
+    <select id="queryClasScoreByCNameProId" parameterType="ClassScore" resultType="int">
+			SELECT count(0) FROM course_score WHERE project_id = #{projectId} AND student_code = 1 AND course_name = #{courseName}
+    </select>
+    <select id="queryClassScoreCourseNameByProjectId" resultType="String" parameterType="String">
+			SELECT course_name AS courseName FROM course_score WHERE project_id = #{projectId} AND student_code = 1
+    </select>
+    <select id="queryClassScoreCourseNameAll" resultType="hashMap">
+			SELECT project_id projectId ,course_name courseName FROM course_score WHERE student_code = 1
+    </select>
+    <select id="getStudentCodeByIdcard" parameterType="string" resultType="string">
+			SELECT student_code FROM student WHERE idcard = #{_paramter}
+    </select>
+    <select id="getProjectListByStudentCode" parameterType="string" resultType="string">
+			SELECT project_id FROM project_student WHERE student_code = #{_paramter}
+    </select>
+    <sql id="classScoreSql">
+			SELECT 
+				s.student_code studentCode
+				,pi.project_id projectCode
+				,s.name studentName
+				,s.serial serial
+				,s.sex sex
+				,s.telephone telephone
+				,cs.attend_rate attendRate
+				,pi.project_name projectName
+				,pi.project_id projectId
+				,GROUP_CONCAT(cs.course_name,"--",cs.score,"--",f.point_name) AS information
+                ,pi.tempCode tempCode
+			FROM 
+				student s,
+				project_info pi,
+				course_score cs,
+				five_point_system f
+			WHERE 
+				cs.student_code = s.student_code
+				AND pi.project_id = cs.project_id
+				and cs.type = f.fivePoint_code
+    </sql>
+    <sql id="classScoreParam">
+        <if test="studentName != null and studentName != ''">
+            <![CDATA[ AND s.name LIKE "%"#{studentName}"%"]]>
+        </if>
+        <if test="projectName != null and projectName != ''">
+            <![CDATA[ AND pi.project_name LIKE "%"#{projectName}"%"]]>
+        </if>
+        <if test="serial != null and serial !=''">
+            <![CDATA[ AND s.serial LIKE "%"#{serial}"%" ]]>
+        </if>
+        <if test="startTime != null and startTime !=''">
+            <![CDATA[ AND pi.start_time >= #{startTime}]]>
+        </if>
+        <if test="endTime != null and endTime !=''">
+            <![CDATA[ AND pi.end_time <= #{endTime}]]>
+        </if>
+        <!-- 添加项目权限 要是没有项目权限的显示全部的数据 -->
+        <if test=" projectList != null and projectList.size() > 0">
+            AND pi.project_id IN
+            <foreach collection="projectList" open="(" separator="," close=")" index="index" item="item">
+                #{item.projectId}
+            </foreach>
+        </if>
+    </sql>
+    <select id="queryClassScoreSqlParam" parameterType="hashMap" resultType="hashMap">
+        <include refid="classScoreSql"/>
+        <include refid="classScoreParam"/>
+        GROUP BY cs.project_id , cs.student_code
+        ORDER BY  cs.create_time desc
+    </select>
+    <select id="queryScoreAll" resultType="hashMap">
+        select 
+              project_id projectId
+              ,student_code studentCode
+              ,course_name courseName
+              ,score score
+              ,attend_rate attendRate
+              ,type type
+        from 
+              course_score
+        where  
+              student_code != '1'
+    </select>
+    <select id="queryClassScoreName" parameterType="hashMap" resultType="String">
+        SELECT
+        GROUP_CONCAT(courseName) courseName
+        FROM (
+        SELECT
+        GROUP_CONCAT(cs.course_name) courseName
+        , 1 as num
+        FROM
+        student s
+        ,project_info pi
+        ,course_score cs
+        WHERE
+        cs.student_code = s.student_code
+        AND pi.project_id = cs.project_id
+        <include refid="classScoreParam"/>
+        GROUP BY cs.project_id , cs.student_code
+        <if test="pageSize != null and pageSize != ''">
+            LIMIT #{start},#{pageSize}
+        </if>
+        ) as a
+        GROUP BY num
+    </select>
+    <select id="queryClassScoreByProCoscId" resultType="hashMap" parameterType="hashMap">
+        SELECT
+            s.student_code studentCode
+            ,pi.project_id projectCode
+            ,s.name studentName
+            ,s.serial serial
+            ,s.sex sex
+            ,s.telephone telephone
+            ,pi.project_name projectName
+            ,cs.course_name courseName
+            ,cs.score score
+            ,cs.attend_rate attendRate
+            ,cs.type type
+            ,pi.start_time as startTime
+            ,pi.end_time as endTime
+            ,s.idcard
+            ,s.englishName
+        FROM
+            student s
+            ,project_info pi
+            ,course_score cs
+        WHERE
+            cs.student_code = s.student_code
+            AND pi.project_id = cs.project_id
+            AND pi.project_id = #{projectId}
+            AND s.student_code = #{studentCode}
+    </select>
+    <select id="queryClassScoreForPrint" resultType="hashMap" parameterType="hashMap">
+        select temp.*,f.point_name as grade from (
+            SELECT
+                s.student_code studentCode
+                ,pi.project_id projectCode
+                ,s.name studentName
+                ,s.serial serial
+                ,s.sex sex
+                ,s.telephone telephone
+                ,pi.project_name projectName
+                ,cs.course_name courseName
+                ,cs.score score
+                ,cs.attend_rate attendRate
+                ,cs.type type
+                ,pi.start_time as startTime
+                ,pi.end_time as endTime
+                ,s.idcard
+                ,s.englishName
+            FROM
+                student s
+                ,project_info pi
+                ,course_score cs
+            WHERE
+                cs.student_code = s.student_code
+                AND pi.project_id = cs.project_id
+                AND pi.project_id = #{projectId}
+                AND s.student_code = #{studentCode}
+                )temp left join five_point_system  f on temp.type = f.fivePoint_code
+    </select>
+
+    <select id="queryProjectToScoreByProjectCode" resultType="String" parameterType="String">
+        SELECT 
+                dd.`name` scoreName
+        FROM 
+                project_schedule_plan psp,
+                data_dic dd
+        WHERE
+            psp.course_name = dd.`code`
+            AND psp.project_id = #{projectId}
+        GROUP BY dd.`code`
+    </select>
+
+    <!-- 五分制管理信息  -->
+    <select id="isPointNameExist" parameterType="hashMap" resultType="int">
+        select count(*) from five_point_system
+        <where>
+            (parent_code is null or parent_code ="")
+            and point_name = #{pointName}
+            <if test="fivePointCode != null and fivePointCode !=''">
+                and fivePoint_code != #{fivePointCode}
+            </if>
+        </where>
+    </select>
+    <!--添加五分制-->
+    <insert id="insertFivePoint" parameterType="hashMap">
+        insert into five_point_system(fivePoint_code,point_name,section,parent_code,create_time)
+        values (#{fivePointCode},#{pointName},#{section},#{parentCode},#{createTime})
+    </insert>
+    <!--修改五分制-->
+    <update id="updateFivePoint" parameterType="hashMap">
+        update five_point_system
+        <set>
+            <if test="pointName != null and pointName != ''">
+                point_name = #{pointName},
+            </if>
+            <if test="section != null and section != ''">
+                section = #{section},
+            </if>
+        </set>
+        where fivePoint_code = #{fivePointCode}
+    </update>
+    <!--删除五分制-->
+    <delete id="delFivePoint" parameterType="String">
+        delete from five_point_system where fivePoint_code = #{fivePointCode}
+    </delete>
+    <!--通过code获取分制-->
+    <select id="selectFivePintByCode" parameterType="String" resultType="hashMap">
+        select  
+            fivePoint_code fivePointCode
+            ,point_name pointName
+            ,section 
+            ,create_time createTime 
+        from five_point_system 
+        where  fivePoint_code = #{fivePointCode}
+    </select>
+    <!--获取五分制列表-->
+    <select id="selectFivePint" parameterType="hashMap" resultType="hashMap">
+        select  
+            fivePoint_code fivePointCode,point_name pointName,create_time createTime
+        from five_point_system where parent_code is null or parent_code = ''
+        order by create_time ASC
+    </select>
+    <select id="queryScoreList" parameterType="hashMap" resultType="hashMap">
+        select fivePoint_code fivePointCode,point_name pointName,section,create_time createTime
+        from five_point_system where parent_code = #{parentCode}
+        order by create_time ASC
+    </select>
+    <select id="isTempInUse" resultType="int" parameterType="hashMap">
+        select count(*) from project_info where tempCode = #{fivePointCode}
+    </select>
+    <select id="queryAllFivePoint" resultType="hashMap">
+        SELECT 
+                fivePoint_code as fivePointCode
+                ,point_name pointName
+                ,section section
+                ,parent_code parentCode
+        FROM five_point_system
+        WHERE 
+            section != '' and parent_code != ''
+    </select>
+</mapper>

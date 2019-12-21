@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.ScoreTemplateDao">
+
+    <sql id="searchSql">
+        <where>
+            <if test="templateType != null and templateType != ''">
+                template_type = #{templateType}
+            </if>
+            <if test="organizeStructs != null and organizeStructs.size > 0">
+                and organize_code in
+                <foreach collection="organizeStructs" open="(" separator="," close=")" item="item">
+                    #{item.organizeCode}
+                </foreach>
+            </if>
+        </where>
+      order by createTime desc
+    </sql>
+
+    <select id="listData" resultType="com.joysupply.entity.ScoreTemplate">
+        select template_id templateId ,template_type templateType,createTime,
+          isDefault,template_name templateName, template_content templateContent
+        from print_template
+        <include refid="searchSql" />
+
+    </select>
+
+    <insert id="saveTemplate">
+        insert into print_template(template_id,template_type,createTime,template_name,template_content,organize_code)
+        values
+        (#{templateId},#{templateType},#{createTime},#{templateName},#{templateContent},#{organizeCode})
+    </insert>
+
+    <delete id="deleteTemplate">
+        delete from print_template where template_id = #{_parameter}
+    </delete>
+
+    <update id="setDefault">
+        update print_template set isDefault = 0 where isDefault = 1 and template_type = #{templateType}
+    </update>
+
+    <update id="isDefault">
+        update print_template set isDefault = #{isDefault} where template_id = #{templateId}
+    </update>
+
+    <select id="getTemplate" resultType="com.joysupply.entity.ScoreTemplate">
+        select template_id templateId ,template_type templateType,createTime,
+          isDefault,template_name templateName, template_content templateContent,organize_code organizeCode
+        from print_template where template_id = #{templateId}
+    </select>
+    <select id="getTemplateByDefault" resultType="com.joysupply.entity.ScoreTemplate">
+        select template_id templateId ,template_type templateType,createTime,
+          isDefault,template_name templateName, template_content templateContent
+        from print_template where template_type = #{_parameter} and isDefault = 1
+    </select>
+
+    <update id="updateTemplate">
+        update print_template set template_type = #{templateType} ,template_name = #{templateName},organize_code = #{organizeCode},
+         template_content = #{templateContent} where template_id = #{templateId}
+    </update>
+
+    <select id="listTemplate" resultType="com.joysupply.entity.ScoreTemplate" parameterType="map">
+        select template_id templateId ,template_name templateName from print_template
+        where organize_code in
+        <foreach collection="listOrganizeByPersonCode" open="(" separator="," close=")" item="item">
+            #{item.organizeCode}
+        </foreach>
+        and template_type = #{type}
+    </select>
+</mapper>

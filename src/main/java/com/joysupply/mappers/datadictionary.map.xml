@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.joysupply.dao.DataDictionaryDao">
+    <resultMap type="DataDictionary" id="dataDictionaryMap">
+        <id property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="parentCode" column="parent_code"/>
+        <result property="note" column="note"/>
+        <result property="isfixed" column="isfixed"/>
+    </resultMap>
+    <insert id="saveDataDictionary" parameterType="DataDictionary">
+		insert into data_dic (code,name,parent_code,note,createTime) values (#{code},#{name},#{parentCode},#{note},#{createTime})
+	</insert>
+    <update id="updateDataDictionary" parameterType="DataDictionary">
+		update
+			data_dic
+		set
+			name = #{name},note = #{note}
+		where
+			code=#{code}
+	</update>
+
+    <delete id="deleteDataDictionary" parameterType="string">
+		delete  from data_dic  where code=#{code} or parent_code = #{code}
+	</delete>
+
+    <delete id="deleteDataDicItem" parameterType="string">
+        delete  from data_dic  where code=#{code}
+    </delete>
+
+    <select id="getDicList" parameterType="map" resultMap="dataDictionaryMap">
+        select code,name,parent_code,note
+        from data_dic where (parent_code = '' or parent_code is null)
+        <if test="name != null and name != ''">
+            and name like "%"#{name}"%"
+        </if>
+        ORDER BY code DESC,createTime DESC
+    </select>
+    <select id="getDicItemList" parameterType="string" resultMap="dataDictionaryMap">
+        select code,name,parent_code,note,isfixed from data_dic where parent_code = #{parentCode}
+        order by convert(name using gb2312)
+    </select>
+
+    <select id="getCompany" parameterType="java.lang.String" resultType="map">
+        select code,name,parent_code,note,isfixed from data_dic where parent_code = #{parentCode}
+        order by convert(name using gb2312)
+    </select>
+
+    <select id="getDataDic" parameterType="string" resultMap="dataDictionaryMap">
+        select code,name,parent_code,note,isfixed from data_dic where code = #{code}
+    </select>
+</mapper>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <div class="layui-row layui-col-space10">
+                <section>
+                    <div class="layui-col-md12">
+                        <div class="joysupply-full-box">
+                            <div class="joysupply-main-left">
+                                <img class="joysupply-main-headImg" th:src="@{/img/ceshi1.jpg}"/>
+                                <div class="joysupply-main-title-main">
+                                    <p class="joysupply-txt-title">早安，王老师，祝你开心每一天！</p>
+                                    <p class="joysupply-txt-normal joysupply-main-subtitle">没有最好，只有更好！每天进步一点点！</p>
+                                </div>
+                            </div>
+                            <div class="joysupply-main-right">
+                                <div class="joysupply-main-rightItem">
+                                    <p class="joysupply-txt-subtitle joysupply-txt-color-assist">正在进行项目数量</p>
+                                    <p class="joysupply-right-number">2</p>
+                                </div>
+                                <div class="joysupply-main-rightItem">
+                                    <p class="joysupply-txt-subtitle joysupply-txt-color-assist">已完成项目数量</p>
+                                    <p class="joysupply-right-number">4</p>
+                                </div>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md9">
+                        <div class="joysupply-bg-white joysupply-main-Second">
+                            <div class="layui-tab layui-tab-brief " lay-filter="docDemoTabBrief">
+                                <ul class="layui-tab-title">
+                                    <li class="layui-this">我的提交</li>
+                                    <li>我的消息</li>
+                                </ul>
+                                <div class="layui-tab-content">
+                                    <div class="layui-tab-item layui-show">
+                                        <ul class="joysupply-main-list">
+                                            <li>
+                                                <img class="joysupply-main-item-headImg" th:src="@{/img/ceshi1.jpg}"/>
+                                                <div class="joysupply-main-title-main">
+                                                    <p class="joysupply-txt-normal">出国人员培训项目申请表待审批</p>
+                                                    <p class="joysupply-txt-color-assist joysupply-item-date">2018-02-11</p>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <img class="joysupply-main-item-headImg" th:src="@{/img/ceshi2.jpg}"/>
+                                                <div class="joysupply-main-title-main">
+                                                    <p class="joysupply-txt-normal">出国人员培训项目申请表待审批</p>
+                                                    <p class="joysupply-txt-color-assist joysupply-item-date">2018-02-11</p>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <img class="joysupply-main-item-headImg" th:src="@{/img/ceshi3.jpg}"/>
+                                                <div class="joysupply-main-title-main">
+                                                    <p class="joysupply-txt-normal">出国人员培训项目申请表待审批</p>
+                                                    <p class="joysupply-txt-color-assist joysupply-item-date">2018-02-11</p>
+                                                </div>
+                                            </li>
+
+                                        </ul>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="layui-tab-item">
+                                        <ul class="joysupply-main-list">
+                                            <li>
+                                                <img class="joysupply-main-item-headImg" th:src="@{/img/ceshi1.jpg}"/>
+                                                <div class="joysupply-main-title-main">
+                                                    <p class="joysupply-txt-normal">通知,XXXXX</p>
+                                                    <p class="joysupply-txt-color-assist joysupply-item-date">2018-02-11</p>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <div class="clear"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="joysupply-bg-white joysupply-main-Second">
+                            <p class="joysupply-txt-subtitle" style="margin-top: 15px;">课程表</p>
+                            <hr>
+                            <img th:src="@{/img/date.png}" style="width: 100%;"/>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script>
+        //JavaScript代码区域
+        layui.use('element', function () {
+            var element = layui.element;
+        });
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::htmlhead">
+<body>
+<style type="text/css">
+    .onClick {
+        background-color: #00c1de;
+    }
+    .layui-table-view{
+        height:auto!important
+    }
+    .layui-table-body{
+        height:auto!important
+    }
+</style>
+<div class="layui-layout layui-layout-admin">
+    <div th:replace="fragments/layout :: header">Header</div>
+    <div th:replace="fragments/layout :: sidebar">sidebar</div>
+    <div class="layui-body" style="background-color: #f2f2f2">
+        <div style="padding: 15px;background-color: #FFFFFF;margin: 15px;" class="layui-anim layui-anim-upbit">
+            <section>
+                <h2 class="joysupply-txt-subtitle joysupply-normal-subtitle">时间设置</h2>
+                <hr/>
+                <div>
+                    <button class="layui-btn add layui-btn-sm" th:each="func:${session.funcList}" th:if="${func == 'sjsz_add'}">+添加</button>
+                </div>
+                <table class="layui-table" lay-skin="line" id="timeSetting_id" lay-filter="equipment"></table>
+                <script type="text/html" id="option">
+                    <a class="joysupply-txt-color-on" lay-event="edit" th:each="func:${session.funcList}" th:if="${func == 'sjsz_edit'}">编辑</a>
+                    <a class="joysupply-txt-color-error" lay-event="delete" th:each="func:${session.funcList}" th:if="${func == 'sjsz_del'}">删除</a>
+                </script>
+            </section>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        // 添加esc退出子页面
+        $(document).keyup(function (e) {
+            var key = e.which;
+            if (key == 27) {
+                layer.closeAll();
+            }
+        })
+    })
+
+    var table;
+    var tableIns;
+    //JavaScript代码区域
+    layui.use(['table', 'layer', 'laydate','element'], function () {
+        element = layui.element;
+        var layer = layui.layer;
+        table = layui.table;
+        var laydate = layui.laydate;
+        lay('.laytable-cell-1-0-4').each(function () {
+            laydate.render({
+                elem: this
+                , trigger: 'click'
+                , type: 'time'
+                , format: 'HH:mm'
+
+            });
+        });
+
+        var tabledata = [];
+        var tableIns = table.render({
+            id: 'id',
+            elem: '#timeSetting_id',
+            cellMinWidth: 80,
+            width: 900,
+            height: 630,
+            page:false,
+            url: '/setting/timeTable', // 数据接口
+            cols: [
+                [
+                    {
+                        field: 'year',
+                        title: '年份',
+                        hide: true
+                    },
+                    {
+                        field: 'step',
+                        align: 'center',
+                        width: '15%'
+                    },
+                    {
+                        field: 'section',
+                        align: 'center',
+                        width: '15%'
+                    },
+                    {
+                        field: 'start_time',
+                        title: '开始时间',
+                        align: 'center',
+                        width: '25%',
+                    },
+                    {
+                        field: 'end_time',
+                        title: '结束时间',
+                        align: 'center',
+                        width: '25%'
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        toolbar: '#option'
+                    }
+                ]
+            ],
+            done: function (res, curr, count) {
+                merge(res);
+                $("[data-field = 'step']").children().each(function () {
+                    if ($(this).text() == '1') {
+                        $(this).text("上午");
+                    } else if ($(this).text() == '2') {
+                        $(this).text("下午");
+                    } else if ($(this).text() == '3') {
+                        $(this).text("晚上");
+                    }
+                })
+            }
+        });
+
+        // 合并列的方法（根据需要，仅需修改var所定义的值）
+        function merge(res) {
+            var data = res.data;
+            var mergeIndex = 0; // 定位需要添加合并属性的行数
+            var mark = 1; // 这里涉及到简单的运算，mark是计算每次需要合并的格子数
+            var columsName = ['step']; // 需要合并的列名称
+            var columsIndex = [1, 0]; // 需要合并的列索引值
+
+            for (var k = 0; k < columsName.length; k++) { // 这里循环所有要合并的列
+                var trArr = $(".layui-table-body>.layui-table").find("tr"); // 所有行
+                for (var i = 1; i < res.data.length; i++) { // 这里循环表格当前的数据
+                    var tdCurArr = trArr.eq(i).find("td").eq(columsIndex[k]); // 获取当前行的当前列
+                    var tdPreArr = trArr.eq(mergeIndex).find("td").eq(columsIndex[k]); // 获取相同列的第一列
+
+                    if (data[i][columsName[k]] === data[i - 1][columsName[k]]) { // 后一行的值与前一行的值做比较，相同就需要合并
+                        mark += 1;
+                        tdPreArr.each(function () { // 相同列的第一列增加rowspan属性
+                            $(this).attr("rowspan", mark);
+                        });
+                        tdCurArr.each(function () { // 当前行隐藏
+                            $(this).css("display", "none");
+                        });
+                    } else {
+                        mergeIndex = i;
+                        mark = 1;// 一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
+                    }
+                }
+                mergeIndex = 0;
+                mark = 1;
+            }
+        };
+
+        $('.add').click(function () {
+            openwindow("/setting/addOneTimePage", "添加节", "380", "350", false);
+        })
+
+        $('.save').click(function (obj) {
+            layer.alert('', {icon: 3, title: '确认', content: '您确定要保存吗？', closeBtn: 1}, function () {
+                $.ajax({
+                    type: "post",
+                    url: '/setting/saveTimeTable',
+                    data: tabledata,
+                    dataType: "application/json",
+                    success:function () {
+                        tipinfo("修改成功！",reload());
+                    },
+                    error: function () {
+                        tipinfo("修改成功！",reload());
+                    }
+                })
+                layer.close(index);
+            });
+        });
+
+        table.on('tool(equipment)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var section = data.section;
+            var start_time = data.start_time;
+            var end_time = data.end_time;
+            var layEvent = obj.event;
+            if (layEvent === 'edit') {
+                openwindow("/setting/editOneTimePage?section=" + section + "&start_time=" + start_time + "&end_time=" + end_time, "修改时间设置信息", "380", "350", false);
+            } else if (layEvent === 'delete') {
+                layer.alert('', {icon: 3, title: '删除确认', content: '您确定要删除吗？', closeBtn: 1}, function (index) {
+                    var map = {"section": section};
+                    $.ajax({
+                        type: "post",
+                        url: '/setting/deleteTime',
+                        data: JSON.stringify(map),
+                        contentType: "application/json",
+                        success: function (data) {
+                            parent.location.reload();
+                        },
+                        error: function () {
+                            parent.location.reload();
+                        }
+                    })
+                    layer.close(index);
+                });
+            }
+        });
+
+    });
+
+    function reload() {
+        var params = {
+            officeName: $('#officeName').val()
+        };
+        tableIns.reload({
+            where: params,
+        });
+    }
+</script>
+</body>
+</html>

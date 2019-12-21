@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout::dialoghead">
+<body>
+<link rel="stylesheet" th:href="@{/layui/css/formSelects-v4.css}">
+<div>
+    <div>
+        <div style="padding: 15px;" class="layui-anim layui-anim-upbit">
+            <form class="layui-form ">
+                <div class="layui-form-item">
+                    <input id="personCode" type="hidden" th:value="${personCode}">
+                    <label class="layui-form-label"><span class="required">账号名</span></label>
+                    <div class="layui-input-block">
+                        <input type="text" id="userName" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${userName}" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><span class="required">密码</span></label>
+                    <div class="layui-input-block">
+                        <input type="text" id="password" lay-verify="required" autocomplete="off" placeholder="请输入" th:value="${password}" class="layui-input">
+                    </div>
+                </div>
+            </form>
+            <div class="layui-form-item" style="text-align: center">
+                <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="save()">保存</button>
+                <button class="layui-btn layui-btn-sm" style="margin-left: 20px;margin-right: 20px" onclick="closewindow()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script th:inline="javascript">
+    var userType = [[${userType}]];
+</script>
+<script>
+    var formSelects;
+    //JavaScript代码区域
+    layui.use(['element', 'layer', 'form', 'laydate','formSelects'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+        var form = layui.form;
+    });
+
+    function save() {
+        var userName = $("#userName").val();
+        var password = $("#password").val();
+        var personCode = $("#personCode").val();
+        if (userName == null || userName == "") {
+            tipinfo("账户名不能为空");
+            return;
+        }
+        if (password == null || password == "") {
+            tipinfo("密码不能为空");
+            return;
+        }
+        var map = {
+            "personCode": personCode,
+            "password": password,
+            "userName": userName,
+            "userType": userType
+        };
+        $.ajax({
+            type: "post",
+            url: "/systemUser/addSystemUser",
+            data: JSON.stringify(map),
+            contentType: 'application/json',
+            success: function (data) {
+                if(data.result=="FAILURE"){
+                    tipinfo(data.message);
+                }else{
+                    closewindow(1);
+                }
+            },
+            error: function (data) {
+                tipinfo(data.message);
+            }
+        });
+    }
+</script>
+</html>
